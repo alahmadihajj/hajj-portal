@@ -630,8 +630,8 @@ async function renderCamps() {
   el.innerHTML = camps.map(c => `
     <div class="item-card">
       <div class="item-card-body">
-        <div class="item-card-title">🏕️ ${c.name}</div>
-        <div class="item-card-sub">📍 ${c.location||'—'} &nbsp;|&nbsp; 👥 الطاقة: ${c.capacity||'—'}</div>
+        <div class="item-card-title">🏕️ مخيم رقم ${c.camp_num||c.name}</div>
+        <div class="item-card-sub">📍 ${c.location||'—'} &nbsp;|&nbsp; 👥 الطاقة: ${c.capacity||'—'} سرير</div>
         ${c.notes ? `<div class="item-card-sub" style="color:#999;margin-top:4px">📝 ${c.notes}</div>` : ''}
       </div>
       <div class="item-card-actions">
@@ -647,7 +647,7 @@ async function openCampModal(id) {
   const loc = camp.location||'';
   openModal(`
     <h3 class="modal-title">🏕️ ${id?'تعديل':'إضافة'} مخيم</h3>
-    <div class="form-row"><label>اسم المخيم</label><input type="text" id="m-camp-name" value="${camp.name||''}" placeholder="مخيم منى 1"></div>
+    <div class="form-row"><label>رقم المخيم</label><input type="text" id="m-camp-num" value="${camp.camp_num||camp.name||''}" placeholder="101"></div>
     <div class="form-row"><label>الموقع</label>
       <select id="m-camp-location" style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit">
         <option value="">اختر الموقع</option>
@@ -656,7 +656,7 @@ async function openCampModal(id) {
         <option value="مزدلفة" ${loc==='مزدلفة'?'selected':''}>🌙 مزدلفة</option>
       </select>
     </div>
-    <div class="form-row"><label>الطاقة الاستيعابية</label><input type="number" id="m-camp-capacity" value="${camp.capacity||''}" placeholder="100"></div>
+    <div class="form-row"><label>الطاقة الاستيعابية (عدد الأسرة)</label><input type="number" id="m-camp-capacity" value="${camp.capacity||''}" placeholder="100"></div>
     <div class="form-row"><label>ملاحظات</label><textarea id="m-camp-notes" rows="2">${camp.notes||''}</textarea></div>
     <div class="modal-btns">
       <button class="btn-save" onclick="saveCamp('${id||''}')">💾 حفظ</button>
@@ -665,9 +665,9 @@ async function openCampModal(id) {
 }
 
 async function saveCamp(id) {
-  const name = document.getElementById('m-camp-name').value.trim();
-  if(!name) return alert('أدخل اسم المخيم');
-  const obj = { name, location: document.getElementById('m-camp-location').value.trim(), capacity: document.getElementById('m-camp-capacity').value.trim(), notes: document.getElementById('m-camp-notes').value.trim() };
+  const campNum = document.getElementById('m-camp-num').value.trim();
+  if(!campNum) return alert('أدخل رقم المخيم');
+  const obj = { camp_num: campNum, name: campNum, location: document.getElementById('m-camp-location').value.trim(), capacity: document.getElementById('m-camp-capacity').value.trim(), notes: document.getElementById('m-camp-notes').value.trim() };
   try {
     if(id) { await window.DB.Camps.update(parseInt(id), obj); }
     else { await window.DB.Camps.insert(obj); }
@@ -1221,36 +1221,67 @@ async function openPilgrimAssign(pilgrimId) {
   
   const minaCamps = camps.filter(c => c.location === 'منى');
   const arafatCamps = camps.filter(c => c.location === 'عرفات');
-  
+
+  // حساب الأسرة المحجوزة
+  const bookedMinaBeds = ALL_DATA
+    .filter(p => p['mina_camp'] && p['mina_bed'] && String(p['_supabase_id']) !== String(pilgrimId))
+    .map(p => p['mina_camp'] + '-' + p['mina_bed']);
+  const bookedArafatBeds = ALL_DATA
+    .filter(p => p['arafat_camp'] && p['arafat_bed'] && String(p['_supabase_id']) !== String(pilgrimId))
+    .map(p => p['arafat_camp'] + '-' + p['arafat_bed']);
+
+  // دالة لبناء خيارات الأسرة
+  function buildBedOptions(camp, bookedBeds, selectedBed) {
+    if(!camp) return '';
+    const campNum = camp.camp_num || camp.name;
+    const capacity = parseInt(camp.capacity) || 0;
+    let opts = '<option value="">اختر السرير</option>';
+    for(let i = 1; i <= capacity; i++) {
+      const bedKey = campNum + '-' + i;
+      const bedVal = campNum + '-' + i;
+      const isBooked = bookedBeds.includes(bedKey);
+      const isSelected = selectedBed === bedVal;
+      if(!isBooked || isSelected) {
+        opts += `<option value="${bedVal}" ${isSelected?'selected':''}>${bedVal}</option>`;
+      }
+    }
+    return opts;
+  }
+
+  const currentMinaCamp = minaCamps.find(c => (c.camp_num||c.name) === pilgrim['mina_camp']);
+  const currentArafatCamp = arafatCamps.find(c => (c.camp_num||c.name) === pilgrim['arafat_camp']);
+
   openModal(`
     <h3 class="modal-title">✏️ تسكين الحاج: ${pilgrim['اسم الحاج']||''}</h3>
-    
     <div style="background:#fffbf0;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:#666">
       🪪 ${pilgrim['رقم الهوية']||''} &nbsp;|&nbsp; 📋 ${pilgrim['رقم الحجز']||''}
     </div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="form-row">
         <label>🏕️ مخيم منى</label>
-        <select id="pa-mina-camp">
+        <select id="pa-mina-camp" onchange="updateMinaBeds()">
           <option value="">اختر المخيم</option>
-          ${minaCamps.map(c=>`<option value="${c.name}" ${pilgrim['mina_camp']===c.name?'selected':''}>${c.name}</option>`).join('')}
+          ${minaCamps.map(c=>`<option value="${c.camp_num||c.name}" ${pilgrim['mina_camp']===(c.camp_num||c.name)?'selected':''}>${c.camp_num||c.name}</option>`).join('')}
         </select>
       </div>
       <div class="form-row">
         <label>🛏️ رقم السرير في منى</label>
-        <input type="text" id="pa-mina-bed" value="${pilgrim['mina_bed']||''}" placeholder="رقم السرير">
+        <select id="pa-mina-bed">
+          ${buildBedOptions(currentMinaCamp, bookedMinaBeds, pilgrim['mina_bed'])}
+        </select>
       </div>
       <div class="form-row">
         <label>🌄 مخيم عرفات</label>
-        <select id="pa-arafat-camp">
+        <select id="pa-arafat-camp" onchange="updateArafatBeds()">
           <option value="">اختر المخيم</option>
-          ${arafatCamps.map(c=>`<option value="${c.name}" ${pilgrim['arafat_camp']===c.name?'selected':''}>${c.name}</option>`).join('')}
+          ${arafatCamps.map(c=>`<option value="${c.camp_num||c.name}" ${pilgrim['arafat_camp']===(c.camp_num||c.name)?'selected':''}>${c.camp_num||c.name}</option>`).join('')}
         </select>
       </div>
       <div class="form-row">
         <label>🛏️ رقم السرير في عرفات</label>
-        <input type="text" id="pa-arafat-bed" value="${pilgrim['arafat_bed']||''}" placeholder="رقم السرير">
+        <select id="pa-arafat-bed">
+          ${buildBedOptions(currentArafatCamp, bookedArafatBeds, pilgrim['arafat_bed'])}
+        </select>
       </div>
       <div class="form-row">
         <label>👥 الفوج</label>
@@ -1267,20 +1298,61 @@ async function openPilgrimAssign(pilgrimId) {
         </select>
       </div>
     </div>
-
     <div class="modal-btns" style="margin-top:16px">
       <button class="btn-save" onclick="savePilgrimAssign(${pilgrimId})">💾 حفظ التسكين</button>
       <button class="btn-cancel" onclick="closeModals()">إلغاء</button>
     </div>
   `);
+
+  // حفظ البيانات للتحديث عند تغيير المخيم
+  window._assignData = { camps, bookedMinaBeds, bookedArafatBeds, pilgrimId };
 }
 
+function updateMinaBeds() {
+  const campNum = document.getElementById('pa-mina-camp').value;
+  const { camps, bookedMinaBeds } = window._assignData;
+  const camp = camps.find(c => (c.camp_num||c.name) === campNum);
+  const bedSel = document.getElementById('pa-mina-bed');
+  if(!camp) { bedSel.innerHTML = '<option value="">اختر المخيم أولاً</option>'; return; }
+  const cap = parseInt(camp.capacity)||0;
+  const campId = camp.camp_num||camp.name;
+  let opts = '<option value="">اختر السرير</option>';
+  for(let i=1; i<=cap; i++) {
+    const key = campId+'-'+i;
+    if(!bookedMinaBeds.includes(key)) opts += `<option value="${key}">${key}</option>`;
+  }
+  bedSel.innerHTML = opts;
+}
+
+function updateArafatBeds() {
+  const campNum = document.getElementById('pa-arafat-camp').value;
+  const { camps, bookedArafatBeds } = window._assignData;
+  const camp = camps.find(c => (c.camp_num||c.name) === campNum);
+  const bedSel = document.getElementById('pa-arafat-bed');
+  if(!camp) { bedSel.innerHTML = '<option value="">اختر المخيم أولاً</option>'; return; }
+  const cap = parseInt(camp.capacity)||0;
+  const campId = camp.camp_num||camp.name;
+  let opts = '<option value="">اختر السرير</option>';
+  for(let i=1; i<=cap; i++) {
+    const key = campId+'-'+i;
+    if(!bookedArafatBeds.includes(key)) opts += `<option value="${key}">${key}</option>`;
+  }
+  bedSel.innerHTML = opts;
+}
+
+
 async function savePilgrimAssign(pilgrimId) {
+  const minaCampVal = document.getElementById('pa-mina-camp').value;
+  const minaBedVal = document.getElementById('pa-mina-bed').value;
+  const arafatCampVal = document.getElementById('pa-arafat-camp').value;
+  const arafatBedVal = document.getElementById('pa-arafat-bed').value;
   const updates = {
-    mina_camp: document.getElementById('pa-mina-camp').value,
-    mina_bed: document.getElementById('pa-mina-bed').value,
-    arafat_camp: document.getElementById('pa-arafat-camp').value,
-    arafat_bed: document.getElementById('pa-arafat-bed').value,
+    mina_camp: minaCampVal,
+    mina_bed: minaBedVal,
+    mina_seat: minaBedVal,
+    arafat_camp: arafatCampVal,
+    arafat_bed: arafatBedVal,
+    arafat_seat: arafatBedVal,
     group_num: document.getElementById('pa-group').value,
     bus_num: document.getElementById('pa-bus').value,
   };
