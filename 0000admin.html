@@ -1064,6 +1064,15 @@ function switchTab(tab) {
   if(tab==='ann') renderAnnouncements();
 }
 
+function copyAnnJson() {
+  const el = document.getElementById('ann-export-json');
+  if(!el) return;
+  el.select();
+  document.execCommand('copy');
+  const msg = document.getElementById('ann-copy-msg');
+  if(msg) { msg.style.display = 'inline'; setTimeout(()=>msg.style.display='none', 2000); }
+}
+
 // ===== التعاميم =====
 const ANN_KEY = 'haj_announcements';
 
@@ -1088,6 +1097,19 @@ async function renderAnnouncements() {
   const anns = await getAnnouncements();
   const statsEl = document.getElementById('ann-stats');
   const listEl = document.getElementById('ann-list');
+  const exportBox = document.getElementById('ann-export-box');
+  const active_anns = anns.filter(a=>a.active!==false);
+  // تحديث صندوق التصدير
+  if(exportBox) {
+    if(active_anns.length > 0) {
+      exportBox.style.display = 'block';
+      const jsonStr = JSON.stringify(active_anns, null, 2);
+      const el = document.getElementById('ann-export-json');
+      if(el) el.value = jsonStr;
+    } else {
+      exportBox.style.display = 'none';
+    }
+  }
   const total = anns.length;
   const active = anns.filter(a=>a.active!==false).length;
   statsEl.innerHTML = `
