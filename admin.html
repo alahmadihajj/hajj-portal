@@ -393,7 +393,7 @@ function enterAdminPanel(user){
 function acceptConsent() {
   sessionStorage.setItem('admin_consent', '1');
   document.getElementById('consent-overlay').style.display = 'none';
-  render();
+  loadData();
 }
 
 function rejectConsent() {
