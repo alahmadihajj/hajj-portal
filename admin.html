@@ -630,53 +630,78 @@ async function renderCamps() {
 
   const locations = ['منى', 'عرفات', 'مزدلفة'];
   const locIcons = {'منى':'🏕️', 'عرفات':'🌄', 'مزدلفة':'🌙'};
+  const genders = ['رجال', 'نساء'];
+  const genderColors = {
+    'رجال': {bg:'#e8f0fd', color:'#1a5fa8', border:'#b0c8f0'},
+    'نساء': {bg:'#fde8f0', color:'#c0006a', border:'#f0b0d0'}
+  };
+
+  function getCampAssigned(c, loc) {
+    const cNum = c.camp_num||c.name;
+    if(loc==='منى') return ALL_DATA.filter(p=>p['mina_camp']===cNum).length;
+    if(loc==='عرفات') return ALL_DATA.filter(p=>p['arafat_camp']===cNum).length;
+    return 0;
+  }
 
   let html = '';
   locations.forEach(loc => {
     const locCamps = camps.filter(c => c.location === loc);
     if(!locCamps.length) return;
 
-    // إحصائيات
-    const totalBeds = locCamps.reduce((s,c) => s + (parseInt(c.capacity)||0), 0);
-    const assignedBeds = ALL_DATA.filter(p => p['mina_camp'] && locCamps.find(c=>(c.camp_num||c.name)===p['mina_camp']) && loc==='منى').length
-      + ALL_DATA.filter(p => p['arafat_camp'] && locCamps.find(c=>(c.camp_num||c.name)===p['arafat_camp']) && loc==='عرفات').length;
-    const availBeds = totalBeds - assignedBeds;
+    html += `<div style="margin-bottom:32px">
+      <h2 style="font-size:18px;font-weight:700;color:#3d2000;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid #e0d5c5">${locIcons[loc]} مخيمات ${loc}</h2>`;
 
-    html += `
-    <div style="margin-bottom:24px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <h3 style="font-size:16px;font-weight:700;color:#3d2000">${locIcons[loc]} مخيمات ${loc}</h3>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <span style="background:#e8f0fd;color:#1a5fa8;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600">🏕️ ${locCamps.length} مخيم</span>
-          <span style="background:#f0f0f0;color:#555;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600">🛏️ ${totalBeds} سرير</span>
-          <span style="background:#e8f8e8;color:#1a7a1a;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600">✅ ${assignedBeds} مُسكَّن</span>
-          <span style="background:#fde8e8;color:#c00;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600">🔓 ${availBeds} متاح</span>
+    genders.forEach(gender => {
+      const gc = locCamps.filter(c => (c.camp_type||'رجال') === gender);
+      if(!gc.length) return;
+      const gCol = genderColors[gender];
+      const totalBeds = gc.reduce((s,c)=>s+(parseInt(c.capacity)||0),0);
+      const assigned = gc.reduce((s,c)=>s+getCampAssigned(c,loc),0);
+      const avail = totalBeds - assigned;
+
+      html += `
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="background:${gCol.bg};color:${gCol.color};padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;border:1.5px solid ${gCol.border}">${gender==='رجال'?'👨':'👩'} ${gender}</span>
+            <span style="font-size:13px;color:#888">${gc.length} مخيم</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span style="background:#f5f5f5;color:#555;padding:3px 10px;border-radius:16px;font-size:12px;font-weight:600">🛏️ ${totalBeds} سرير</span>
+            <span style="background:#e8f8e8;color:#1a7a1a;padding:3px 10px;border-radius:16px;font-size:12px;font-weight:600">✅ ${assigned} مُسكَّن</span>
+            <span style="background:#fde8e8;color:#c00;padding:3px 10px;border-radius:16px;font-size:12px;font-weight:600">🔓 ${avail} متاح</span>
+          </div>
         </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
-        ${locCamps.map(c => {
-          const cNum = c.camp_num||c.name;
-          const assigned = loc==='منى' ? ALL_DATA.filter(p=>p['mina_camp']===cNum).length : ALL_DATA.filter(p=>p['arafat_camp']===cNum).length;
-          const cap = parseInt(c.capacity)||0;
-          const pct = cap ? Math.round(assigned/cap*100) : 0;
-          return `
-          <div style="background:#fff;border:1.5px solid #e0d5c5;border-radius:12px;padding:14px;cursor:pointer;transition:box-shadow 0.2s" onclick="showCampPilgrims('${cNum}','${loc}')" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-              <span style="font-size:16px;font-weight:700;color:#3d2000">مخيم ${cNum}</span>
-              <span style="background:${c.camp_type==='نساء'?'#fde8f0':'#e8f0fd'};color:${c.camp_type==='نساء'?'#c0006a':'#1a5fa8'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">${c.camp_type==='نساء'?'👩 نساء':'👨 رجال'}</span>
-            </div>
-            <div style="font-size:12px;color:#888;margin-bottom:8px">🛏️ ${assigned}/${cap} سرير</div>
-            <div style="background:#f0f0f0;border-radius:4px;height:6px;overflow:hidden">
-              <div style="background:${pct>=90?'#c00':pct>=60?'#c8971a':'#1a7a1a'};height:100%;width:${pct}%;transition:width 0.3s"></div>
-            </div>
-            <div style="display:flex;gap:6px;margin-top:10px">
-              <button onclick="event.stopPropagation();openCampModal('${c.id}')" class="btn-edit" style="flex:1;font-size:11px;padding:4px">✏️ تعديل</button>
-              <button onclick="event.stopPropagation();deleteCamp('${c.id}')" class="btn-delete" style="font-size:11px;padding:4px 8px">🗑️</button>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px">
+          ${gc.map(c => {
+            const cNum = c.camp_num||c.name;
+            const asgn = getCampAssigned(c, loc);
+            const cap = parseInt(c.capacity)||0;
+            const pct = cap ? Math.round(asgn/cap*100) : 0;
+            const barColor = pct>=90?'#c00':pct>=60?'#c8971a':'#1a7a1a';
+            return `
+            <div
+              onclick="showCampPilgrims('${cNum}','${loc}')"
+              style="background:#fff;border:2px solid ${gCol.border};border-radius:12px;padding:14px;cursor:pointer;transition:all 0.2s;position:relative"
+              onmouseover="this.style.boxShadow='0 6px 20px rgba(0,0,0,0.12)';this.style.transform='translateY(-2px)';this.style.borderColor='${gCol.color}'"
+              onmouseout="this.style.boxShadow='none';this.style.transform='none';this.style.borderColor='${gCol.border}'">
+              <div style="position:absolute;top:8px;left:8px;background:#3d2000;color:#fff;border-radius:6px;padding:2px 6px;font-size:10px">👆 انقر للتفاصيل</div>
+              <div style="font-size:17px;font-weight:700;color:#3d2000;margin-bottom:6px;margin-top:12px">مخيم ${cNum}</div>
+              <div style="font-size:12px;color:#888;margin-bottom:8px">🛏️ ${asgn}/${cap} سرير</div>
+              <div style="background:#f0f0f0;border-radius:4px;height:6px;overflow:hidden;margin-bottom:10px">
+                <div style="background:${barColor};height:100%;width:${pct}%;transition:width 0.3s"></div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button onclick="event.stopPropagation();openCampModal('${c.id}')" class="btn-edit" style="flex:1;font-size:11px;padding:5px">✏️ تعديل</button>
+                <button onclick="event.stopPropagation();deleteCamp('${c.id}')" class="btn-delete" style="font-size:11px;padding:5px 8px">🗑️</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    });
+
+    html += '</div>';
   });
   el.innerHTML = html || '<p style="color:#888;text-align:center;padding:30px">لا توجد مخيمات بعد.</p>';
 }
@@ -684,50 +709,237 @@ async function renderCamps() {
 async function showCampPilgrims(campNum, location) {
   const fieldKey = location === 'منى' ? 'mina_camp' : 'arafat_camp';
   const bedKey = location === 'منى' ? 'mina_bed' : 'arafat_bed';
+  const campFieldKey = fieldKey;
   const pilgrims = ALL_DATA.filter(p => p[fieldKey] === campNum);
   
-  if(!pilgrims.length) {
-    openModal(`
-      <h3 class="modal-title">🏕️ مخيم ${campNum} — ${location}</h3>
-      <div style="text-align:center;padding:30px;color:#aaa">لا يوجد حجاج مُسكَّنون في هذا المخيم بعد</div>
-      <div class="modal-btns"><button class="btn-cancel" onclick="closeModals()">إغلاق</button></div>`);
-    return;
+  // تحميل المخيمات للقوائم المنسدلة
+  const camps = await getCamps();
+  const locCamps = camps.filter(c => c.location === location);
+  
+  // بناء خيارات الأسرة المتاحة لكل مخيم
+  function campBedOptions(c, currentPilgrimId, currentBed) {
+    const cNum = c.camp_num||c.name;
+    const cap = parseInt(c.capacity)||0;
+    const booked = ALL_DATA.filter(p => p[fieldKey]===cNum && p['_supabase_id']!=currentPilgrimId && p[bedKey]).map(p=>p[bedKey]);
+    let opts = '';
+    for(let i=1;i<=cap;i++){
+      const v=cNum+'-'+i;
+      if(!booked.includes(v)||v===currentBed) opts+=`<option value="${v}" ${v===currentBed?'selected':''}>${v}</option>`;
+    }
+    return opts;
   }
 
-  openModal(`
-    <h3 class="modal-title">🏕️ مخيم ${campNum} — ${location} (${pilgrims.length} حاج)</h3>
-    <div style="overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead>
+  const modalEl = document.getElementById('modal-overlay') || document.querySelector('.modal-overlay');
+  
+  const content = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <h3 style="font-size:18px;font-weight:700;color:#3d2000;margin:0">🏕️ مخيم ${campNum} — ${location} (${pilgrims.length} حاج)</h3>
+      <div style="display:flex;gap:8px">
+        <button onclick="printCampReport('${campNum}','${location}')" style="padding:8px 16px;background:#1a5fa8;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600">🖨️ طباعة تقرير</button>
+        <button onclick="closeModals()" style="padding:8px 16px;background:#f5f5f5;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600">✕ إغلاق</button>
+      </div>
+    </div>
+    ${!pilgrims.length ? '<div style="text-align:center;padding:40px;color:#aaa;font-size:15px">لا يوجد حجاج مُسكَّنون في هذا المخيم بعد</div>' : `
+    <div style="overflow-x:auto;max-height:65vh">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:700px">
+        <thead style="position:sticky;top:0;z-index:1">
           <tr style="background:#3d2000;color:#fff">
-            <th style="padding:8px 10px;text-align:right">#</th>
-            <th style="padding:8px 10px;text-align:right">اسم الحاج</th>
-            <th style="padding:8px 10px;text-align:right">رقم الهوية</th>
-            <th style="padding:8px 10px;text-align:right">الجنسية</th>
-            <th style="padding:8px 10px;text-align:right">الجنس</th>
-            <th style="padding:8px 10px;text-align:right">رقم الحجز</th>
-            <th style="padding:8px 10px;text-align:right">رقم المخيم</th>
-            <th style="padding:8px 10px;text-align:right">رقم السرير</th>
+            <th style="padding:10px;text-align:right">#</th>
+            <th style="padding:10px;text-align:right">اسم الحاج</th>
+            <th style="padding:10px;text-align:right">رقم الهوية</th>
+            <th style="padding:10px;text-align:right">الجنسية</th>
+            <th style="padding:10px;text-align:right">الجنس</th>
+            <th style="padding:10px;text-align:right">رقم الجوال</th>
+            <th style="padding:10px;text-align:right">رقم الحجز</th>
+            <th style="padding:10px;text-align:right">المدينة</th>
+            <th style="padding:10px;text-align:right">رقم المخيم</th>
+            <th style="padding:10px;text-align:right">رقم السرير</th>
+            <th style="padding:10px;text-align:right">إجراء</th>
           </tr>
         </thead>
         <tbody>
           ${pilgrims.map((p,i) => `
-          <tr style="background:${i%2===0?'#fff':'#fafafa'};border-bottom:1px solid #eee">
-            <td style="padding:8px 10px">${i+1}</td>
-            <td style="padding:8px 10px;font-weight:600">${p['اسم الحاج']||'—'}</td>
+          <tr style="background:${i%2===0?'#fff':'#f9f9f9'};border-bottom:1px solid #eee" id="camp-row-${p['_supabase_id']}">
+            <td style="padding:8px 10px;color:#888">${i+1}</td>
+            <td style="padding:8px 10px;font-weight:600;min-width:140px">${p['اسم الحاج']||'—'}</td>
             <td style="padding:8px 10px">${p['رقم الهوية']||'—'}</td>
             <td style="padding:8px 10px">${p['الجنسية']||'—'}</td>
             <td style="padding:8px 10px">${p['الجنس']||'—'}</td>
+            <td style="padding:8px 10px">${p['رقم الجوال']||'—'}</td>
             <td style="padding:8px 10px">${p['رقم الحجز']||'—'}</td>
-            <td style="padding:8px 10px">${campNum}</td>
-            <td style="padding:8px 10px;font-weight:600;color:#c8971a">${p[bedKey]||'—'}</td>
+            <td style="padding:8px 10px">${p['المدينة']||'—'}</td>
+            <td style="padding:8px 10px">
+              <select id="camp-sel-${p['_supabase_id']}" onchange="updateBedOptions(${p['_supabase_id']},'${location}')" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">
+                ${locCamps.map(c=>`<option value="${c.camp_num||c.name}" ${p[fieldKey]===(c.camp_num||c.name)?'selected':''}>${c.camp_num||c.name}</option>`).join('')}
+              </select>
+            </td>
+            <td style="padding:8px 10px">
+              <select id="bed-sel-${p['_supabase_id']}" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">
+                ${campBedOptions(locCamps.find(c=>(c.camp_num||c.name)===p[fieldKey])||locCamps[0], p['_supabase_id'], p[bedKey])}
+              </select>
+            </td>
+            <td style="padding:8px 10px;white-space:nowrap">
+              <button onclick="saveCampAssign(${p['_supabase_id']},'${location}')" style="padding:4px 8px;background:#1a7a1a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;margin-left:4px">💾</button>
+              <button onclick="removeCampAssign(${p['_supabase_id']},'${location}')" style="padding:4px 8px;background:#c00;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">🗑️</button>
+            </td>
           </tr>`).join('')}
         </tbody>
       </table>
-    </div>
-    <div class="modal-btns" style="margin-top:16px">
-      <button class="btn-cancel" onclick="closeModals()">إغلاق</button>
-    </div>`);
+    </div>`}`;
+
+  // فتح نافذة كبيرة
+  const overlay = document.getElementById('modal-overlay') || (() => {
+    const d = document.createElement('div');
+    d.id='modal-overlay';
+    document.body.appendChild(d);
+    return d;
+  })();
+  
+  const existingModal = document.querySelector('#modal-overlay .modal-box') || document.querySelector('.modal-overlay .modal-box');
+  
+  openModal(content);
+  
+  // تكبير النافذة
+  setTimeout(() => {
+    const box = document.querySelector('.modal-box') || document.querySelector('[class*="modal"]');
+    if(box) { box.style.maxWidth='95vw'; box.style.width='95vw'; box.style.maxHeight='90vh'; }
+  }, 50);
+  
+  // حفظ البيانات للتحديث
+  window._campViewData = { camps, locCamps, location, campNum, fieldKey, bedKey };
+}
+
+function updateBedOptions(pilgrimId, location) {
+  const { locCamps, bedKey, fieldKey } = window._campViewData;
+  const campSel = document.getElementById('camp-sel-'+pilgrimId);
+  const bedSel = document.getElementById('bed-sel-'+pilgrimId);
+  if(!campSel||!bedSel) return;
+  const selectedCamp = locCamps.find(c=>(c.camp_num||c.name)===campSel.value);
+  if(!selectedCamp) return;
+  const cap = parseInt(selectedCamp.capacity)||0;
+  const cNum = selectedCamp.camp_num||selectedCamp.name;
+  const booked = ALL_DATA.filter(p=>p[fieldKey]===cNum && p['_supabase_id']!=pilgrimId && p[bedKey]).map(p=>p[bedKey]);
+  let opts = '<option value="">اختر السرير</option>';
+  for(let i=1;i<=cap;i++){
+    const v=cNum+'-'+i;
+    if(!booked.includes(v)) opts+=`<option value="${v}">${v}</option>`;
+  }
+  bedSel.innerHTML = opts;
+}
+
+async function saveCampAssign(pilgrimId, location) {
+  const { fieldKey, bedKey } = window._campViewData;
+  const campVal = document.getElementById('camp-sel-'+pilgrimId).value;
+  const bedVal = document.getElementById('bed-sel-'+pilgrimId).value;
+  if(!bedVal) return alert('اختر رقم السرير');
+  const updates = {};
+  updates[fieldKey] = campVal;
+  updates[bedKey] = bedVal;
+  if(location==='منى') { updates.mina_seat = bedVal; }
+  else { updates.arafat_seat = bedVal; }
+  try {
+    await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+    const idx = ALL_DATA.findIndex(p=>String(p['_supabase_id'])===String(pilgrimId));
+    if(idx>=0) { ALL_DATA[idx][fieldKey]=campVal; ALL_DATA[idx][bedKey]=bedVal; }
+    document.getElementById('camp-row-'+pilgrimId).style.background='#e8f8e8';
+    setTimeout(()=>{ const r=document.getElementById('camp-row-'+pilgrimId); if(r) r.style.background=''; },1500);
+  } catch(e) { alert('خطأ: '+e.message); }
+}
+
+async function removeCampAssign(pilgrimId, location) {
+  if(!confirm('هل تريد إلغاء تسكين هذا الحاج؟')) return;
+  const { fieldKey, bedKey } = window._campViewData;
+  const updates = {};
+  updates[fieldKey] = null;
+  updates[bedKey] = null;
+  if(location==='منى') { updates.mina_seat=null; }
+  else { updates.arafat_seat=null; }
+  try {
+    await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+    const idx = ALL_DATA.findIndex(p=>String(p['_supabase_id'])===String(pilgrimId));
+    if(idx>=0) { ALL_DATA[idx][fieldKey]=''; ALL_DATA[idx][bedKey]=''; }
+    document.getElementById('camp-row-'+pilgrimId).style.opacity='0.3';
+    setTimeout(()=>{ showCampPilgrims(window._campViewData.campNum, location); },500);
+  } catch(e) { alert('خطأ: '+e.message); }
+}
+
+function printCampReport(campNum, location) {
+  const fieldKey = location === 'منى' ? 'mina_camp' : 'arafat_camp';
+  const bedKey = location === 'منى' ? 'mina_bed' : 'arafat_bed';
+  const pilgrims = ALL_DATA.filter(p => p[fieldKey] === campNum);
+  const today = new Date().toLocaleDateString('ar-SA');
+  
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>تقرير مخيم ${campNum}</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; direction: rtl; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #3d2000; padding-bottom: 10px; }
+  .company-info { text-align: right; }
+  .company-name { font-size: 16px; font-weight: bold; color: #3d2000; }
+  .report-info { text-align: center; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th { background: #3d2000; color: #fff; padding: 8px; text-align: right; font-size: 12px; }
+  td { padding: 7px 8px; border: 1px solid #ddd; font-size: 11px; }
+  tr:nth-child(even) { background: #f9f9f9; }
+  .footer { display: flex; justify-content: space-between; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 10px; font-size: 12px; font-weight: bold; }
+  @media print { button { display: none; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="company-info">
+    <div class="company-name">شركة محسن بن سالم الاحمدي وشركاه</div>
+    <div>لخدمات حجاج الداخل</div>
+    <div>تسكين مشعر ${location}</div>
+  </div>
+  <div class="report-info">
+    <div>التاريخ: ${today}</div>
+    <div>الموضوع: بيان بأسماء الحجاج</div>
+    <div>عدد الحجاج: ${pilgrims.length} حاج</div>
+  </div>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>اسم الحاج</th>
+      <th>رقم الهوية</th>
+      <th>الجنسية</th>
+      <th>الجنس</th>
+      <th>رقم الجوال</th>
+      <th>رقم الحجز</th>
+      <th>المدينة</th>
+      <th>رقم المخيم</th>
+      <th>رقم السرير</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${pilgrims.map((p,i)=>`<tr>
+      <td>${i+1}</td>
+      <td>${p['اسم الحاج']||'—'}</td>
+      <td>${p['رقم الهوية']||'—'}</td>
+      <td>${p['الجنسية']||'—'}</td>
+      <td>${p['الجنس']||'—'}</td>
+      <td>${p['رقم الجوال']||'—'}</td>
+      <td>${p['رقم الحجز']||'—'}</td>
+      <td>${p['المدينة']||'—'}</td>
+      <td>${campNum}</td>
+      <td>${p[bedKey]||'—'}</td>
+    </tr>`).join('')}
+  </tbody>
+</table>
+<div class="footer">
+  <div>رقم موقع المخيم: ${campNum}</div>
+  <div>إجمالي عدد الحجاج: ${pilgrims.length} حاج</div>
+  <div>صفحة 1 من 1</div>
+</div>
+<script>window.onload=()=>{window.print();}<\/script>
+</body></html>`);
+  printWin.document.close();
 }
 
 async function openCampModal(id) {
@@ -1450,6 +1662,30 @@ async function savePilgrimAssign(pilgrimId) {
   const minaBedVal = document.getElementById('pa-mina-bed').value;
   const arafatCampVal = document.getElementById('pa-arafat-camp').value;
   const arafatBedVal = document.getElementById('pa-arafat-bed').value;
+  
+  // التحقق من تطابق جنس الحاج مع نوع المخيم
+  const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
+  const pilgrimGender = pilgrim ? pilgrim['الجنس'] : '';
+  const camps = await getCamps();
+  
+  if(minaCampVal) {
+    const minaCamp = camps.find(c=>(c.camp_num||c.name)===minaCampVal);
+    if(minaCamp && minaCamp.camp_type) {
+      const expectedGender = minaCamp.camp_type === 'نساء' ? 'أنثى' : 'ذكر';
+      const isMatch = (minaCamp.camp_type==='نساء' && (pilgrimGender==='أنثى'||pilgrimGender==='أنثي'||pilgrimGender==='female')) ||
+                      (minaCamp.camp_type==='رجال' && (pilgrimGender==='ذكر'||pilgrimGender==='male'));
+      if(!isMatch) return alert('⚠️ لا يمكن تسكين ' + (pilgrimGender) + ' في مخيم ' + minaCamp.camp_type + ' بمنى');
+    }
+  }
+  if(arafatCampVal) {
+    const arafatCamp = camps.find(c=>(c.camp_num||c.name)===arafatCampVal);
+    if(arafatCamp && arafatCamp.camp_type) {
+      const isMatch = (arafatCamp.camp_type==='نساء' && (pilgrimGender==='أنثى'||pilgrimGender==='أنثي'||pilgrimGender==='female')) ||
+                      (arafatCamp.camp_type==='رجال' && (pilgrimGender==='ذكر'||pilgrimGender==='male'));
+      if(!isMatch) return alert('⚠️ لا يمكن تسكين ' + (pilgrimGender) + ' في مخيم ' + arafatCamp.camp_type + ' بعرفات');
+    }
+  }
+
   const updates = {
     mina_camp: minaCampVal,
     mina_bed: minaBedVal,
