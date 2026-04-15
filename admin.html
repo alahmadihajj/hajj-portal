@@ -1000,9 +1000,9 @@ let currentSettings = {};
 
 async function loadVisibilitySettings() {
   try {
-    const res = await window.storage.get(SECTIONS_KEY, true);
-    if (res && res.value) {
-      currentSettings = JSON.parse(res.value);
+    if(window.DB) {
+      const val = await window.DB.Settings.get(SECTIONS_KEY);
+      if(val) currentSettings = val;
     }
   } catch(e) {}
   renderToggles();
@@ -1037,7 +1037,7 @@ function toggleSection(id, isOn) {
 
 async function saveVisibilitySettings() {
   try {
-    await window.storage.set(SECTIONS_KEY, JSON.stringify(currentSettings), true);
+    await window.DB.Settings.set(SECTIONS_KEY, currentSettings);
     const msg = document.getElementById('settings-msg');
     if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 3000); }
   } catch(e) {

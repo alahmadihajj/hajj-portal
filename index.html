@@ -782,9 +782,11 @@ const SECTION_IDS = [
 
 async function applyVisibilitySettings() {
   try {
-    const res = await window.storage.get(SECTIONS_KEY, true);
-    if (res && res.value) {
-      const settings = JSON.parse(res.value);
+    let settings = null;
+    if(window.DB) {
+      settings = await window.DB.Settings.get(SECTIONS_KEY);
+    }
+    if (settings) {
       SECTION_IDS.forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
@@ -823,8 +825,7 @@ applyVisibilitySettings();
 
 // تحميل التعاميم من storage
 
-// ===== تعاميم ثابتة (تُحدَّث من لوحة الأدمن) =====
-// لإضافة تعاميم: استبدل [] بالكود المنسوخ من لوحة الأدمن
+// التعاميم تُحمَّل من Supabase مباشرة
 const STATIC_ANNOUNCEMENTS = [];
 
 async function loadAnnouncements() {
