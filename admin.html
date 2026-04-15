@@ -298,6 +298,7 @@ tr:hover td{background:#fffbf0}
           <th>نوع الباقة</th><th>نوع المواصلات</th><th>تاريخ الحجز</th>
           <th>حالة الحجز</th><th>حالة الدفع</th><th>حالة التصريح</th>
           <th>حالة الإركاب</th><th>حالة الحضور في المخيم</th>
+          <th>التسكين</th>
         </tr>
       </thead>
       <tbody id="table-body"></tbody>
@@ -533,6 +534,7 @@ function render() {
       <td>${r['حالة التصريح']}</td>
       <td>${r['حالة الإركاب']}</td>
       <td>${r['حالة الحضور في المخيم']}</td>
+      <td><button onclick="openPilgrimAssign('${r['_supabase_id']}')" style="padding:5px 10px;background:#c8971a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">✏️ تسكين</button></td>
     </tr>`).join('');
   }
 
@@ -1204,6 +1206,103 @@ async function deleteAnn(id) {
   await window.DB.Announcements.delete(parseInt(id));
   renderAnnouncements();
 }
+
+// ===== تسكين الحجاج =====
+async function openPilgrimAssign(pilgrimId) {
+  // تحميل الأفواج والحافلات والمخيمات
+  const [groups, buses, camps] = await Promise.all([
+    window.DB.Groups.getAll(),
+    window.DB.Buses.getAll(),
+    window.DB.Camps.getAll()
+  ]);
+  
+  // إيجاد بيانات الحاج الحالية
+  const pilgrim = ALL_DATA.find(r => String(r['_supabase_id']) === String(pilgrimId)) || {};
+  
+  const minaCamps = camps.filter(c => c.location === 'منى');
+  const arafatCamps = camps.filter(c => c.location === 'عرفات');
+  
+  openModal(`
+    <h3 class="modal-title">✏️ تسكين الحاج: ${pilgrim['اسم الحاج']||''}</h3>
+    
+    <div style="background:#fffbf0;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:#666">
+      🪪 ${pilgrim['رقم الهوية']||''} &nbsp;|&nbsp; 📋 ${pilgrim['رقم الحجز']||''}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-row">
+        <label>🏕️ مخيم منى</label>
+        <select id="pa-mina-camp">
+          <option value="">اختر المخيم</option>
+          ${minaCamps.map(c=>`<option value="${c.name}" ${pilgrim['mina_camp']===c.name?'selected':''}>${c.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row">
+        <label>🛏️ رقم السرير في منى</label>
+        <input type="text" id="pa-mina-bed" value="${pilgrim['mina_bed']||''}" placeholder="رقم السرير">
+      </div>
+      <div class="form-row">
+        <label>🌄 مخيم عرفات</label>
+        <select id="pa-arafat-camp">
+          <option value="">اختر المخيم</option>
+          ${arafatCamps.map(c=>`<option value="${c.name}" ${pilgrim['arafat_camp']===c.name?'selected':''}>${c.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row">
+        <label>🛏️ رقم السرير في عرفات</label>
+        <input type="text" id="pa-arafat-bed" value="${pilgrim['arafat_bed']||''}" placeholder="رقم السرير">
+      </div>
+      <div class="form-row">
+        <label>👥 الفوج</label>
+        <select id="pa-group">
+          <option value="">اختر الفوج</option>
+          ${groups.map(g=>`<option value="${g.num}" ${pilgrim['رقم فوج التفويج الخاص بك']===g.num?'selected':''}>فوج ${g.num} — ${g.name||''}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row">
+        <label>🚌 الحافلة</label>
+        <select id="pa-bus">
+          <option value="">اختر الحافلة</option>
+          ${buses.map(b=>`<option value="${b.num}" ${pilgrim['رقم الحافلة الخاصة بك']===b.num?'selected':''}>حافلة ${b.num} — ${b.driver||''}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn-save" onclick="savePilgrimAssign(${pilgrimId})">💾 حفظ التسكين</button>
+      <button class="btn-cancel" onclick="closeModals()">إلغاء</button>
+    </div>
+  `);
+}
+
+async function savePilgrimAssign(pilgrimId) {
+  const updates = {
+    mina_camp: document.getElementById('pa-mina-camp').value,
+    mina_bed: document.getElementById('pa-mina-bed').value,
+    arafat_camp: document.getElementById('pa-arafat-camp').value,
+    arafat_bed: document.getElementById('pa-arafat-bed').value,
+    group_num: document.getElementById('pa-group').value,
+    bus_num: document.getElementById('pa-bus').value,
+  };
+  try {
+    await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+    // تحديث البيانات المحلية
+    const idx = ALL_DATA.findIndex(r => String(r['_supabase_id']) === String(pilgrimId));
+    if(idx >= 0) {
+      ALL_DATA[idx]['mina_camp'] = updates.mina_camp;
+      ALL_DATA[idx]['mina_bed'] = updates.mina_bed;
+      ALL_DATA[idx]['arafat_camp'] = updates.arafat_camp;
+      ALL_DATA[idx]['arafat_bed'] = updates.arafat_bed;
+      ALL_DATA[idx]['رقم فوج التفويج الخاص بك'] = updates.group_num;
+      ALL_DATA[idx]['رقم الحافلة الخاصة بك'] = updates.bus_num;
+    }
+    closeModals();
+    alert('✅ تم حفظ التسكين بنجاح');
+  } catch(e) {
+    alert('خطأ في الحفظ: ' + e.message);
+  }
+}
+
 
 </script>
 </body>
