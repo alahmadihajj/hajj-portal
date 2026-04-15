@@ -617,9 +617,9 @@ function closeModals() {
 
 // ===== مخيمات =====
 async function getCamps() {
-  try { const r = await window.storage.get(CAMPS_KEY, true); return r ? JSON.parse(r.value) : []; } catch(e) { return []; }
+  try { return window.DB ? await window.DB.Camps.getAll() : []; } catch(e) { return []; }
 }
-async function saveCampsData(data) { await window.storage.set(CAMPS_KEY, JSON.stringify(data), true); }
+async function saveCampsData(data) { /* Supabase يتولى الحفظ مباشرة */ }
 
 async function renderCamps() {
   const camps = await getCamps();
@@ -641,11 +641,19 @@ async function renderCamps() {
 
 async function openCampModal(id) {
   let camp = {};
-  if(id) { const camps = await getCamps(); camp = camps.find(c=>c.id===id)||{}; }
+  if(id) { const camps = await getCamps(); camp = camps.find(c=>c.id==id)||{}; }
+  const loc = camp.location||'';
   openModal(`
     <h3 class="modal-title">🏕️ ${id?'تعديل':'إضافة'} مخيم</h3>
     <div class="form-row"><label>اسم المخيم</label><input type="text" id="m-camp-name" value="${camp.name||''}" placeholder="مخيم منى 1"></div>
-    <div class="form-row"><label>الموقع</label><input type="text" id="m-camp-location" value="${camp.location||''}" placeholder="منى / عرفات / مزدلفة"></div>
+    <div class="form-row"><label>الموقع</label>
+      <select id="m-camp-location" style="width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit">
+        <option value="">اختر الموقع</option>
+        <option value="منى" ${loc==='منى'?'selected':''}>🏕️ منى</option>
+        <option value="عرفات" ${loc==='عرفات'?'selected':''}>🌄 عرفات</option>
+        <option value="مزدلفة" ${loc==='مزدلفة'?'selected':''}>🌙 مزدلفة</option>
+      </select>
+    </div>
     <div class="form-row"><label>الطاقة الاستيعابية</label><input type="number" id="m-camp-capacity" value="${camp.capacity||''}" placeholder="100"></div>
     <div class="form-row"><label>ملاحظات</label><textarea id="m-camp-notes" rows="2">${camp.notes||''}</textarea></div>
     <div class="modal-btns">
@@ -657,23 +665,22 @@ async function openCampModal(id) {
 async function saveCamp(id) {
   const name = document.getElementById('m-camp-name').value.trim();
   if(!name) return alert('أدخل اسم المخيم');
-  const camps = await getCamps();
-  const obj = { id: id||Date.now().toString(), name, location: document.getElementById('m-camp-location').value.trim(), capacity: document.getElementById('m-camp-capacity').value.trim(), notes: document.getElementById('m-camp-notes').value.trim() };
-  if(id) { const i = camps.findIndex(c=>c.id===id); if(i>=0) camps[i]=obj; else camps.push(obj); }
-  else camps.push(obj);
-  await saveCampsData(camps);
-  closeModals(); renderCamps();
+  const obj = { name, location: document.getElementById('m-camp-location').value.trim(), capacity: document.getElementById('m-camp-capacity').value.trim(), notes: document.getElementById('m-camp-notes').value.trim() };
+  try {
+    if(id) { await window.DB.Camps.update(parseInt(id), obj); }
+    else { await window.DB.Camps.insert(obj); }
+    closeModals(); renderCamps();
+  } catch(e) { alert('خطأ في الحفظ: ' + e.message); }
 }
 
 async function deleteCamp(id) {
   if(!confirm('حذف هذا المخيم؟')) return;
-  const camps = (await getCamps()).filter(c=>c.id!==id);
-  await saveCampsData(camps); renderCamps();
+  await window.DB.Camps.delete(parseInt(id)); renderCamps();
 }
 
 // ===== أفواج =====
-async function getGroups() { try { const r = await window.storage.get(GROUPS_KEY, true); return r ? JSON.parse(r.value) : []; } catch(e) { return []; } }
-async function saveGroupsData(d) { await window.storage.set(GROUPS_KEY, JSON.stringify(d), true); }
+async function getGroups() { try { return window.DB ? await window.DB.Groups.getAll() : []; } catch(e) { return []; } }
+async function saveGroupsData(d) { }
 
 async function renderGroups() {
   const groups = await getGroups();
@@ -712,22 +719,22 @@ async function openGroupModal(id) {
 async function saveGroup(id) {
   const num = document.getElementById('m-g-num').value.trim();
   if(!num) return alert('أدخل رقم الفوج');
-  const groups = await getGroups();
-  const obj = { id: id||Date.now().toString(), num, name: document.getElementById('m-g-name').value.trim(), supervisor: document.getElementById('m-g-supervisor').value.trim(), camp: document.getElementById('m-g-camp').value.trim(), notes: document.getElementById('m-g-notes').value.trim() };
-  if(id) { const i = groups.findIndex(x=>x.id===id); if(i>=0) groups[i]=obj; else groups.push(obj); }
-  else groups.push(obj);
-  await saveGroupsData(groups);
-  closeModals(); renderGroups();
+  const obj = { num, name: document.getElementById('m-g-name').value.trim(), supervisor: document.getElementById('m-g-supervisor').value.trim(), camp: document.getElementById('m-g-camp').value.trim(), notes: document.getElementById('m-g-notes').value.trim() };
+  try {
+    if(id) { await window.DB.Groups.update(parseInt(id), obj); }
+    else { await window.DB.Groups.insert(obj); }
+    closeModals(); renderGroups();
+  } catch(e) { alert('خطأ في الحفظ: ' + e.message); }
 }
 
 async function deleteGroup(id) {
   if(!confirm('حذف هذا الفوج؟')) return;
-  await saveGroupsData((await getGroups()).filter(x=>x.id!==id)); renderGroups();
+  await window.DB.Groups.delete(parseInt(id)); renderGroups();
 }
 
 // ===== حافلات =====
-async function getBuses() { try { const r = await window.storage.get(BUSES_KEY, true); return r ? JSON.parse(r.value) : []; } catch(e) { return []; } }
-async function saveBusesData(d) { await window.storage.set(BUSES_KEY, JSON.stringify(d), true); }
+async function getBuses() { try { return window.DB ? await window.DB.Buses.getAll() : []; } catch(e) { return []; } }
+async function saveBusesData(d) { }
 
 async function renderBuses() {
   const buses = await getBuses();
@@ -767,22 +774,22 @@ async function openBusModal(id) {
 async function saveBus(id) {
   const num = document.getElementById('m-b-num').value.trim();
   if(!num) return alert('أدخل رقم الحافلة');
-  const buses = await getBuses();
-  const obj = { id: id||Date.now().toString(), num, plate: document.getElementById('m-b-plate').value.trim(), driver: document.getElementById('m-b-driver').value.trim(), driverPhone: document.getElementById('m-b-phone').value.trim(), capacity: document.getElementById('m-b-capacity').value.trim(), group: document.getElementById('m-b-group').value.trim() };
-  if(id) { const i = buses.findIndex(x=>x.id===id); if(i>=0) buses[i]=obj; else buses.push(obj); }
-  else buses.push(obj);
-  await saveBusesData(buses);
-  closeModals(); renderBuses();
+  const obj = { num, plate: document.getElementById('m-b-plate').value.trim(), driver: document.getElementById('m-b-driver').value.trim(), driver_phone: document.getElementById('m-b-phone').value.trim(), capacity: document.getElementById('m-b-capacity').value.trim(), group_num: document.getElementById('m-b-group').value.trim() };
+  try {
+    if(id) { await window.DB.Buses.update(parseInt(id), obj); }
+    else { await window.DB.Buses.insert(obj); }
+    closeModals(); renderBuses();
+  } catch(e) { alert('خطأ في الحفظ: ' + e.message); }
 }
 
 async function deleteBus(id) {
   if(!confirm('حذف هذه الحافلة؟')) return;
-  await saveBusesData((await getBuses()).filter(x=>x.id!==id)); renderBuses();
+  await window.DB.Buses.delete(parseInt(id)); renderBuses();
 }
 
 // ===== مستخدمو النظام =====
-async function getSysUsers() { try { const r = await window.storage.get(SYS_USERS_KEY, true); return r ? JSON.parse(r.value) : []; } catch(e) { return []; } }
-async function saveSysUsersData(d) { await window.storage.set(SYS_USERS_KEY, JSON.stringify(d), true); }
+async function getSysUsers() { try { return window.DB ? await window.DB.SysUsers.getAll() : []; } catch(e) { return []; } }
+async function saveSysUsersData(d) { }
 
 async function renderSysUsers() {
   const users = await getSysUsers();
@@ -838,26 +845,30 @@ async function saveSysUser(existingUsername) {
   const active = document.getElementById('m-u-active').value === 'true';
   if(!username) return alert('أدخل اسم المستخدم');
   const users = await getSysUsers();
-  if(existingUsername) {
-    const i = users.findIndex(u=>u.username===existingUsername);
-    if(i>=0) { users[i] = {...users[i], name, role, active, ...(password?{password}:{})}; }
-  } else {
-    if(!password) return alert('أدخل كلمة المرور');
-    if(users.find(u=>u.username===username)) return alert('اسم المستخدم موجود مسبقاً');
-    users.push({ username, name, password, role, active });
-  }
-  await saveSysUsersData(users);
-  closeModals(); renderSysUsers();
+  try {
+    if(existingUsername) {
+      const users = await getSysUsers();
+      const u = users.find(x=>x.username===existingUsername);
+      if(u) await window.DB.SysUsers.update(u.id, {name, role, active, ...(password?{password}:{})});
+    } else {
+      if(!password) return alert('أدخل كلمة المرور');
+      await window.DB.SysUsers.insert({ username, name, password, role, active });
+    }
+    closeModals(); renderSysUsers();
+  } catch(e) { alert('خطأ: ' + e.message); }
 }
 
 async function deleteSysUser(username) {
   if(!confirm('حذف هذا المستخدم؟')) return;
-  await saveSysUsersData((await getSysUsers()).filter(u=>u.username!==username)); renderSysUsers();
+  const users = await getSysUsers();
+  const u = users.find(x=>x.username===username);
+  if(u) await window.DB.SysUsers.delete(u.id);
+  renderSysUsers();
 }
 
 // ===== طلبات الحجاج =====
-async function getRequests() { try { const r = await window.storage.get(REQUESTS_KEY, true); return r ? JSON.parse(r.value) : []; } catch(e) { return []; } }
-async function saveRequestsData(d) { await window.storage.set(REQUESTS_KEY, JSON.stringify(d), true); }
+async function getRequests() { try { return window.DB ? await window.DB.Requests.getAll() : []; } catch(e) { return []; } }
+async function saveRequestsData(d) { }
 
 const statusLabelsMap = { new:'🔵 جديد', progress:'🟡 قيد المعالجة', done:'✅ منجز', closed:'⛔ مغلق' };
 const statusBadgeMap = { new:'badge-status-new', progress:'badge-status-progress', done:'badge-status-done', closed:'badge-status-closed' };
@@ -912,20 +923,21 @@ async function saveRequest(id) {
   if(!pilgrim) return alert('أدخل اسم الحاج');
   const reqs = await getRequests();
   const obj = { id: id||Date.now().toString(), pilgrim, idNum: document.getElementById('m-r-id').value.trim(), type: document.getElementById('m-r-type').value, details: document.getElementById('m-r-details').value.trim(), status: document.getElementById('m-r-status').value, date: id ? (reqs.find(x=>x.id===id)||{}).date||new Date().toLocaleDateString('ar') : new Date().toLocaleDateString('ar') };
-  if(id) { const i = reqs.findIndex(x=>x.id===id); if(i>=0) reqs[i]=obj; else reqs.push(obj); }
-  else reqs.unshift(obj);
-  await saveRequestsData(reqs);
-  closeModals(); renderRequests();
+  try {
+    if(id) { await window.DB.Requests.update(parseInt(id), obj); }
+    else { await window.DB.Requests.insert(obj); }
+    closeModals(); renderRequests();
+  } catch(e) { alert('خطأ: ' + e.message); }
 }
 
 async function deleteRequest(id) {
   if(!confirm('حذف هذا الطلب؟')) return;
-  await saveRequestsData((await getRequests()).filter(x=>x.id!==id)); renderRequests();
+  await window.DB.Requests.delete(parseInt(id)); renderRequests();
 }
 
 // ===== الموظفون =====
-async function getStaff() { try { const r = await window.storage.get(STAFF_KEY, true); return r ? JSON.parse(r.value) : []; } catch(e) { return []; } }
-async function saveStaffData(d) { await window.storage.set(STAFF_KEY, JSON.stringify(d), true); }
+async function getStaff() { try { return window.DB ? await window.DB.Staff.getAll() : []; } catch(e) { return []; } }
+async function saveStaffData(d) { }
 
 async function renderStaff() {
   const staff = await getStaff();
@@ -968,15 +980,16 @@ async function saveStaffMember(id) {
   if(!name) return alert('أدخل اسم الموظف');
   const staff = await getStaff();
   const obj = { id: id||Date.now().toString(), name, title: document.getElementById('m-s-title').value.trim(), dept: document.getElementById('m-s-dept').value.trim(), phone: document.getElementById('m-s-phone').value.trim(), tasks: document.getElementById('m-s-tasks').value.trim(), pilgrims: document.getElementById('m-s-pilgrims').value.trim() };
-  if(id) { const i = staff.findIndex(x=>x.id===id); if(i>=0) staff[i]=obj; else staff.push(obj); }
-  else staff.push(obj);
-  await saveStaffData(staff);
-  closeModals(); renderStaff();
+  try {
+    if(id) { await window.DB.Staff.update(parseInt(id), obj); }
+    else { await window.DB.Staff.insert(obj); }
+    closeModals(); renderStaff();
+  } catch(e) { alert('خطأ: ' + e.message); }
 }
 
 async function deleteStaff(id) {
   if(!confirm('حذف هذا الموظف؟')) return;
-  await saveStaffData((await getStaff()).filter(x=>x.id!==id)); renderStaff();
+  await window.DB.Staff.delete(parseInt(id)); renderStaff();
 }
 
 const SECTIONS_KEY = 'haj_sections_visibility';
