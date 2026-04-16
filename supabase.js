@@ -211,7 +211,7 @@ const Settings = {
       .from('settings')
       .select('value')
       .eq('key', key)
-      .single();
+      .maybeSingle();
     if (error) return null;
     return data ? JSON.parse(data.value) : null;
   },
