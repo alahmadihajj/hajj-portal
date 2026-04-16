@@ -97,6 +97,9 @@ tr:hover td{background:#fffbf0}
 .toast-info { background:#1a5fa8; color:#fff; }
 @keyframes toastIn { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
 @keyframes toastOut { from{opacity:1} to{opacity:0;transform:translateY(-10px)} }
+
+/* Unsaved Changes Indicator */
+.row-modified { background: #fffbf0 !important; border-right: 3px solid #c8971a !important; }
 </style>
 
  <!-- Supabase -->
@@ -133,6 +136,110 @@ tr:hover td{background:#fffbf0}
 </div>
 
 <!-- لوحة الأدمن -->
+<!-- ===== واجهة مشرف المجموعة ===== -->
+<div id="supervisor-panel" style="display:none;min-height:100vh;background:#f5f5f5;direction:rtl;font-family:'Segoe UI',Arial,sans-serif">
+  <!-- رأس الصفحة -->
+  <div style="background:linear-gradient(135deg,#3d2000,#c8971a);color:#fff;padding:0;box-shadow:0 4px 12px rgba(0,0,0,.2)">
+    <!-- الشعار والعنوان -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.15)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <img id="sup-logo" src="" style="height:44px;width:44px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,.15);padding:4px;display:none">
+        <div>
+          <div style="font-size:11px;opacity:.75;font-weight:500">بوابة مشرف المجموعة</div>
+          <div style="font-size:14px;font-weight:700;margin-top:1px">شركة محسن بن سالم الاحمدي وشركاه</div>
+        </div>
+      </div>
+      <button onclick="supervisorLogout()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600">🚪 خروج</button>
+    </div>
+    <!-- بيانات المشرف -->
+    <div style="padding:12px 20px 14px;display:flex;align-items:center;gap:10px">
+      <div style="background:rgba(255,255,255,.2);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:18px">👤</div>
+      <div>
+        <div id="sup-name" style="font-size:15px;font-weight:700"></div>
+        <div id="sup-bus" style="font-size:12px;opacity:.8;margin-top:2px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- إحصائيات سريعة -->
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:16px 16px 0">
+    <div style="background:#fff;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+      <div id="sup-total" style="font-size:22px;font-weight:700;color:#3d2000">0</div>
+      <div style="font-size:11px;color:#888;margin-top:2px">الإجمالي</div>
+    </div>
+    <div style="background:#fff;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+      <div id="sup-boarded" style="font-size:22px;font-weight:700;color:#1a7a1a">0</div>
+      <div style="font-size:11px;color:#888;margin-top:2px">🚌 ركبوا</div>
+    </div>
+    <div style="background:#fff;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+      <div id="sup-arrived" style="font-size:22px;font-weight:700;color:#1a5fa8">0</div>
+      <div style="font-size:11px;color:#888;margin-top:2px">🏕️ وصلوا</div>
+    </div>
+    <div style="background:#fff;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+      <div id="sup-nusuk" style="font-size:22px;font-weight:700;color:#7a4500">0</div>
+      <div style="font-size:11px;color:#888;margin-top:2px">🪪 نسك</div>
+    </div>
+    <div style="background:#fff;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+      <div id="sup-bracelet" style="font-size:22px;font-weight:700;color:#555">0</div>
+      <div style="font-size:11px;color:#888;margin-top:2px">🚆 أسوارة</div>
+    </div>
+  </div>
+
+  <!-- أزرار العمليات -->
+  <div id="sup-action-btns" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px"></div>
+
+  <!-- بحث -->
+  <div style="padding:0 16px 12px">
+    <input id="sup-search" type="text" placeholder="🔍 ابحث بالاسم أو رقم الهوية..." oninput="renderSupTable()" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;direction:rtl">
+  </div>
+
+  <!-- جدول الحجاج -->
+  <div style="padding:0 16px 20px;overflow-x:auto">
+    <table id="sup-table" style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)">
+      <thead>
+        <tr style="background:linear-gradient(135deg,#3d2000,#7a4500);color:#fff">
+          <th style="padding:10px 8px;text-align:right;font-size:12px;font-weight:600">الاسم</th>
+          <th style="padding:10px 8px;text-align:center;font-size:11px;font-weight:600">🚌</th>
+          <th style="padding:10px 8px;text-align:center;font-size:11px;font-weight:600">🏕️</th>
+          <th id="sup-th-nusuk" style="padding:10px 8px;text-align:center;font-size:11px;font-weight:600;display:none">🪪</th>
+          <th id="sup-th-bracelet" style="padding:10px 8px;text-align:center;font-size:11px;font-weight:600;display:none">🚆</th>
+          <th style="padding:10px 8px;text-align:center;font-size:11px;font-weight:600">✏️</th>
+        </tr>
+      </thead>
+      <tbody id="sup-tbody"></tbody>
+    </table>
+    <div id="sup-empty" style="display:none;text-align:center;padding:40px;color:#888">لا يوجد حجاج في هذه الحافلة</div>
+  </div>
+
+  <!-- نافذة تسجيل سريع -->
+  <div id="sup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:20px">
+    <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto">
+      <h3 id="sup-modal-title" style="font-size:17px;font-weight:700;color:#3d2000;margin-bottom:16px;text-align:center"></h3>
+      <input id="sup-modal-search" type="text" placeholder="ابحث بالاسم أو رقم الهوية..." oninput="supModalSearch()" style="width:100%;padding:12px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;margin-bottom:12px;box-sizing:border-box;direction:rtl">
+      <div id="sup-modal-results" style="max-height:250px;overflow-y:auto"></div>
+      <button onclick="closeSupModal()" style="margin-top:16px;width:100%;padding:12px;background:#f5f5f5;border:none;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit">إغلاق</button>
+    </div>
+  </div>
+
+  <!-- نافذة التوقيع -->
+  <div id="sig-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:10000;align-items:center;justify-content:center;padding:16px">
+    <div style="background:#fff;border-radius:16px;padding:24px;width:100%;max-width:480px">
+      <h3 id="sig-modal-title" style="font-size:16px;font-weight:700;color:#3d2000;margin-bottom:4px;text-align:center"></h3>
+      <p id="sig-pilgrim-name" style="text-align:center;color:#666;font-size:13px;margin-bottom:16px"></p>
+      <div style="border:2px dashed #c8971a;border-radius:12px;overflow:hidden;margin-bottom:12px;background:#fafafa">
+        <canvas id="sig-canvas" width="430" height="180" style="width:100%;touch-action:none;display:block;cursor:crosshair"></canvas>
+      </div>
+      <p style="text-align:center;font-size:12px;color:#999;margin-bottom:12px">✍️ وقّع بإصبعك في المربع أعلاه</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="clearSigCanvas()" style="padding:12px;background:#f5f5f5;border:none;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit">🗑️ مسح</button>
+        <button onclick="confirmSignature()" style="padding:12px;background:#1a7a1a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ تأكيد الاستلام</button>
+      </div>
+      <button onclick="closeSigModal()" style="margin-top:10px;width:100%;padding:10px;background:#fff;border:1px solid #ddd;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;color:#888">إلغاء</button>
+    </div>
+  </div>
+  </div>
+</div>
+
 <div id="admin-panel">
   <!-- شاشة الموافقة على البيانات المشتركة -->
   <div id="consent-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;padding:20px">
@@ -173,19 +280,64 @@ tr:hover td{background:#fffbf0}
   <!-- تبويبات -->
   <div style="display:flex;background:#fff;border-bottom:2px solid #e0d5c5;padding:0 20px;overflow-x:auto;flex-wrap:nowrap">
     <button id="tab-data-btn" onclick="switchTab('data')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:#b8860b;border-bottom:3px solid #b8860b;margin-bottom:-2px;white-space:nowrap">📊 بيانات الحجاج</button>
-    <button id="tab-settings-btn" onclick="switchTab('settings')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">⚙️ إعدادات الصفحة</button>
+    <button id="tab-settings-btn" onclick="switchTab('settings')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">⚙️ إعدادات النظام</button>
     <button id="tab-housing-btn" onclick="switchTab('housing')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">🏕️ التسكين</button>
     <button id="tab-staff-btn" onclick="switchTab('staff')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">👨‍💼 إدارة الموظفين</button>
     <button id="tab-ann-btn" onclick="switchTab('ann')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">📢 التعاميم</button>
+    <button id="tab-users-btn" onclick="switchTab('users')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">👤 إدارة المستخدمين</button>
   </div>
 
   <!-- لوحة الإعدادات -->
-  <div id="tab-settings" style="display:none;padding:24px 20px;max-width:700px;margin:0 auto">
-    <h2 style="font-size:18px;font-weight:700;color:#3d2000;margin-bottom:6px">⚙️ إعدادات صفحة الحاج</h2>
-    <p style="font-size:13px;color:#888;margin-bottom:24px">تحكم في إظهار وإخفاء الأقسام في صفحة الحاج</p>
-    <div id="sections-toggles" style="display:flex;flex-direction:column;gap:12px"></div>
-    <button onclick="saveVisibilitySettings()" style="margin-top:24px;width:100%;padding:14px;background:linear-gradient(135deg,#3d2000,#c8971a);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit">💾 حفظ الإعدادات</button>
-    <div id="settings-msg" style="display:none;margin-top:12px;text-align:center;color:#1a7a1a;font-weight:600;font-size:14px">✅ تم حفظ الإعدادات بنجاح</div>
+  <div id="tab-settings" style="display:none;padding:24px 20px;max-width:860px;margin:0 auto">
+    <h2 style="font-size:20px;font-weight:700;color:#3d2000;margin-bottom:20px">⚙️ إعدادات النظام</h2>
+
+    <!-- أزرار الأقسام -->
+    <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
+      <button id="cfg-pilgrim-btn" onclick="switchCfg('pilgrim')" style="padding:10px 20px;border:2px solid #b8860b;border-radius:10px;background:#b8860b;color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">🕋 بوابة الحاج</button>
+      <button id="cfg-groups-btn" onclick="switchCfg('groups')" style="padding:10px 20px;border:2px solid #ddd;border-radius:10px;background:#fff;color:#555;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">👥 إدارة المجموعات</button>
+      <button id="cfg-general-btn" onclick="switchCfg('general')" style="padding:10px 20px;border:2px solid #ddd;border-radius:10px;background:#fff;color:#555;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">🏢 إعدادات عامة</button>
+      <button id="cfg-dev-btn" onclick="switchCfg('dev')" style="display:none;padding:10px 20px;border:2px solid #c00;border-radius:10px;background:#fff;color:#c00;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">🔐 إعدادات النظام</button>
+    </div>
+
+    <!-- قسم بوابة الحاج -->
+    <div id="cfg-pilgrim" style="display:block">
+      <h3 style="font-size:15px;font-weight:700;color:#3d2000;margin-bottom:6px">🕋 لوحة تحكم بوابة الحاج</h3>
+      <p style="font-size:13px;color:#888;margin-bottom:16px">تحكم في إظهار وإخفاء الأقسام في صفحة الحاج</p>
+      <div id="sections-toggles" style="display:flex;flex-direction:column;gap:12px"></div>
+      <button onclick="saveVisibilitySettings()" style="margin-top:20px;width:100%;padding:14px;background:linear-gradient(135deg,#3d2000,#c8971a);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">💾 حفظ إعدادات البوابة</button>
+      <div id="settings-msg" style="display:none;margin-top:12px;text-align:center;color:#1a7a1a;font-weight:600;font-size:14px">✅ تم الحفظ بنجاح</div>
+    </div>
+
+    <!-- قسم إدارة المجموعات -->
+    <div id="cfg-groups" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <h3 style="font-size:15px;font-weight:700;color:#3d2000;margin:0">👥 المجموعات — لوحة تحكم إدارة الحجاج</h3>
+        <button onclick="openGroupCfgModal()" class="btn-add-item">+ إضافة مجموعة</button>
+      </div>
+      <div id="groups-cfg-list"></div>
+    </div>
+
+    <!-- قسم إعدادات عامة -->
+    <div id="cfg-general" style="display:none">
+      <h3 style="font-size:15px;font-weight:700;color:#3d2000;margin-bottom:16px">🏢 إعدادات عامة</h3>
+      <div class="form-row"><label>اسم الشركة</label><input type="text" id="cfg-company" placeholder="شركة محسن بن سالم الاحمدي وشركاه"></div>
+      <div class="form-row"><label>موسم الحج</label><input type="text" id="cfg-season" placeholder="1446هـ"></div>
+      <div class="form-row"><label>رقم التواصل الرئيسي</label><input type="text" id="cfg-phone" placeholder="05xxxxxxxx"></div>
+      <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
+      <h4 style="font-size:14px;font-weight:700;color:#3d2000;margin-bottom:14px">⚙️ إعدادات التوزيع</h4>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #e0e0e0;border-radius:12px;padding:14px 18px;margin-bottom:10px">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#333">🚆 أسوارة القطار</div>
+          <div style="font-size:12px;color:#888;margin-top:2px">تفعيل يجعل زر التسليم ظاهراً لجميع المشرفين</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:52px;height:28px;cursor:pointer">
+          <input type="checkbox" id="cfg-bracelet" onchange="saveBraceletSetting(this.checked)" style="opacity:0;width:0;height:0;position:absolute">
+          <span id="cfg-bracelet-track" style="position:absolute;inset:0;background:#ccc;border-radius:28px;transition:background .3s"></span>
+          <span id="cfg-bracelet-knob" style="position:absolute;top:3px;left:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:all .3s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></span>
+        </label>
+      </div>
+      <button onclick="saveGeneralSettings()" style="margin-top:16px;width:100%;padding:14px;background:linear-gradient(135deg,#3d2000,#c8971a);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">💾 حفظ الإعدادات العامة</button>
+    </div>
   </div>
   <!-- ===== تبويب التسكين ===== -->
   <div id="tab-housing" style="display:none">
@@ -246,6 +398,15 @@ tr:hover td{background:#fffbf0}
   </div>
 
   <!-- ===== تبويب التعاميم ===== -->
+  <!-- تبويب إدارة المستخدمين -->
+  <div id="tab-users" style="display:none;padding:20px;max-width:900px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <h2 style="font-size:18px;font-weight:700;color:#3d2000;margin:0">👤 إدارة المستخدمين</h2>
+      <button onclick="openUserModal()" class="btn-add-item">+ إضافة مستخدم</button>
+    </div>
+    <div id="users-list"></div>
+  </div>
+
   <div id="tab-ann" style="display:none;padding:20px;max-width:800px;margin:0 auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
       <div>
@@ -264,7 +425,7 @@ tr:hover td{background:#fffbf0}
   </div>
 
   <!-- ===== النوافذ المنبثقة ===== -->
-  <div id="modal-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeModals()">
+  <div id="modal-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this){if(window._uaModifiedRows&&window._uaModifiedRows.size>0)closeUAModal();else closeModals()}">
     <div class="modal-box" id="modal-content"></div>
   </div>
 
@@ -296,6 +457,7 @@ tr:hover td{background:#fffbf0}
     <label>الجنسية:</label>
     <select id="f-nat" onchange="applyFilters()"></select>
     <button class="reset" onclick="resetFilters()">إعادة تعيين</button>
+    <button onclick="printPilgrimsReport()" class="reset" style="background:#1a5fa8;color:#fff;border-color:#1a5fa8">🖨️ طباعة</button>
   </div>
 
   <div class="count-bar" id="count-bar">جاري التحميل...</div>
@@ -308,6 +470,7 @@ tr:hover td{background:#fffbf0}
           <th>رقم الجوال</th><th>الجنسية</th><th>نوع الحاج</th><th>الجنس</th>
           <th>نوع الباقة</th><th>نوع المواصلات</th><th>تاريخ الحجز</th>
           <th>حالة الحجز</th><th>حالة الدفع</th><th>حالة التصريح</th>
+          <th>مخيم منى</th><th>سرير منى</th><th>مخيم عرفات</th><th>سرير عرفات</th>
           <th>حالة الإركاب</th><th>حالة الحضور في المخيم</th>
           <th>التسكين</th>
         </tr>
@@ -350,7 +513,14 @@ async function doAdminLogin(){
     enterAdminPanel(SUPER_ADMIN); return;
   }
 
-  // العاملين من storage
+  // التحقق من Supabase
+  try {
+    const users = await window.DB.SysUsers.getAll();
+    const found = users.find(u => u.username === user && u.password === pass && u.active !== false && u.active !== 'false');
+    if(found){ enterAdminPanel(found); return; }
+  } catch(e) {}
+
+  // التحقق من storage احتياطياً
   try {
     const res = await window.storage.get('haj_users', true);
     if(res && res.value){
@@ -364,6 +534,7 @@ async function doAdminLogin(){
 }
 
 function enterAdminPanel(user){
+  window._currentUser = user;
   const remember = document.getElementById('admin-remember');
   if(remember && remember.checked){
     localStorage.setItem('admin_user_saved', document.getElementById('login-user').value.trim());
@@ -373,11 +544,19 @@ function enterAdminPanel(user){
     localStorage.removeItem('admin_pass_saved');
   }
   document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('admin-panel').style.display = 'block';
-  const headerEl = document.getElementById('admin-info');
-  if(headerEl) headerEl.textContent = '👤 ' + (user.name||user.username) + ' — ' + (user.role==='superadmin'?'👑 سوبر أدمن':user.role==='admin'?'👨‍💼 مشرف':'👁️ مشاهد');
 
-  // إظهار شاشة الموافقة إذا لم توافق من قبل
+  // مشرف المجموعة → واجهة خاصة
+  if(user.role === 'supervisor') {
+    document.getElementById('supervisor-panel').style.display = 'block';
+    loadSupervisorPanel(user);
+    return;
+  }
+
+  document.getElementById('admin-panel').style.display = 'block';
+  const roleLabel = user.role==='superadmin'?'👑 سوبر أدمن':user.role==='admin'?'👨‍💼 مشرف':'👁️ مشاهد';
+  const headerEl = document.getElementById('admin-info');
+  if(headerEl) headerEl.textContent = '👤 ' + (user.name||user.username) + ' — ' + roleLabel;
+
   const consentGiven = sessionStorage.getItem('admin_consent');
   if(!consentGiven) {
     window._pendingUser = user;
@@ -386,6 +565,8 @@ function enterAdminPanel(user){
   } else {
     loadData();
   }
+  // إظهار زر المبرمج فوراً إذا سوبر أدمن
+  setTimeout(() => showDevBtnIfSuperAdmin(), 300);
 }
 
 function acceptConsent() {
@@ -463,9 +644,16 @@ async function loadData() {
         'حالة الدفع': p.payment_status,
         'حالة التصريح': p.permit_status,
         'حالة تسليم بطاقة نسك': p.card_status,
+        'حالة بطاقة نسك': p.nusuk_card_status||'لم تطبع',
+        'نسك_sig': p.nusuk_card_sig||'',
+        'نسك_time': p.nusuk_card_time||'',
         'حالة الإركاب': p.bus_status,
         'موقع الجلوس في منى': p.mina_seat,
         'موقع الجلوس في عرفات': p.arafat_seat,
+        'mina_camp': p.mina_camp,
+        'mina_bed': p.mina_bed,
+        'arafat_camp': p.arafat_camp,
+        'arafat_bed': p.arafat_bed,
         'اسم المشرف الخاص بالحاج': p.supervisor_name,
         'رقم جوال المشرف': p.supervisor_phone,
         'رقم فوج التفويج الخاص بك': p.group_num,
@@ -510,6 +698,96 @@ function resetFilters() {
   render();
 }
 
+function _buildPilgrimsReportHTML(title) {
+  const now = new Date();
+  const today = now.toLocaleDateString('ar-SA');
+  const timeStr = now.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit'});
+  const logo = _getLogo();
+  const cols = ['#','اسم الحاج','رقم الهوية','رقم الحجز','رقم الجوال','الجنسية','الجنس','المدينة','مخيم منى','سرير منى','مخيم عرفات','سرير عرفات'];
+  const rows = filtered.map((r,i) => `<tr>
+    <td>${i+1}</td>
+    <td><strong>${r['اسم الحاج']||'—'}</strong></td>
+    <td>${r['رقم الهوية']||'—'}</td>
+    <td>${r['رقم الحجز']||'—'}</td>
+    <td>${r['رقم الجوال']||'—'}</td>
+    <td>${r['الجنسية']||'—'}</td>
+    <td>${r['الجنس']||'—'}</td>
+    <td>${r['المدينة']||'—'}</td>
+    <td>${r['mina_camp']||'—'}</td>
+    <td>${r['mina_bed']||'—'}</td>
+    <td>${r['arafat_camp']||'—'}</td>
+    <td>${r['arafat_bed']||'—'}</td>
+  </tr>`).join('');
+  const hdrHTML = `<div class="hdr">
+  <div class="hr">
+    <div class="co-name">شركة محسن بن سالم الاحمدي وشركاه</div>
+    <div class="co-sub">لخدمات حجاج الداخل</div>
+  </div>
+  <div class="hc">
+    ${logo ? `<img src="${logo}" style="height:60px;width:auto;object-fit:contain;display:block;margin:0 auto">` : ''}
+    <div style="font-size:14px;font-weight:bold;color:#3d2000;margin-top:3px">${title}</div>
+  </div>
+  <div class="hl">
+    <div class="dt-sub">التاريخ: ${today}</div>
+    <div class="dt-sub">وقت الطباعة: ${timeStr}</div>
+    <div class="dt-sub">عدد الحجاج: <strong>${filtered.length}</strong></div>
+  </div>
+</div>`;
+  return `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head><meta charset="UTF-8"><title>&#x200B;</title>
+<style>
+  @page{size:A4 landscape;margin:8mm 10mm;counter-increment:page;@bottom-left{content:counter(page) ' / ' counter(pages);font-size:10px;color:#666}}
+  *{box-sizing:border-box}
+  body{font-family:Arial,sans-serif;font-size:11px;margin:0;direction:rtl;color:#222;counter-reset:page}
+  .hdr{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding-bottom:0mm;margin-bottom:3mm}
+  .hr{text-align:right} .hc{text-align:center} .hl{text-align:right;margin:0 auto;width:fit-content}
+  .co-name{font-size:15px;font-weight:bold;color:#3d2000}
+  .co-sub{font-size:12px;color:#555;margin-top:2px}
+  .dt-sub{font-size:12px;color:#3d2000;margin-top:2px}
+  table{width:100%;border-collapse:collapse}
+  thead{display:table-header-group}
+  th{background:#d0d0d0;color:#333;padding:3px 6px;text-align:center;font-size:11px;border:1px solid #ccc;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  td{padding:3px 6px;border:1px solid #e0d0b0;font-size:10px;text-align:center}
+  tr:nth-child(even){background:#fffbf0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .page-num{text-align:center;font-size:10px;color:#888;margin-top:6px}
+</style></head>
+<body>
+<table style="width:100%;border-collapse:collapse">
+  <thead style="display:table-header-group">
+    <tr><td colspan="${cols.length}" style="padding-bottom:0mm;border-bottom:3px solid #b8860b;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+      ${hdrHTML}
+    </td></tr>
+    <tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr>
+  </thead>
+  <tbody>${rows}</tbody>
+</table>
+<script>
+  window.onload = function() {
+    const pages = Math.ceil(document.body.scrollHeight / (window.innerHeight || 1100));
+    document.querySelectorAll('.page-num').forEach((el,i) => el.textContent = (i+1) + ' / ' + pages);
+  };
+<\/script>
+</table>
+</body></html>`;
+}
+
+function printPilgrimsReport() {
+  const w = window.open('', '_blank');
+  w.document.write(_buildPilgrimsReportHTML('بيان بأسماء الحجاج'));
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+}
+
+function exportPilgrimsPDF() {
+  const w = window.open('', '_blank');
+  w.document.write(_buildPilgrimsReportHTML('بيان بأسماء الحجاج'));
+  w.document.close();
+  showToast('افتح قائمة الطباعة واختر "حفظ كـ PDF"', 'info', 4000);
+  setTimeout(() => w.print(), 500);
+}
+
+
 function badge(val, map) {
   const cls = map[val] || '';
   return `<span class="badge ${cls}">${val}</span>`;
@@ -543,6 +821,10 @@ function render() {
       <td>${badge(r['حالة الحجز'], {'مؤكد':'b-confirmed','ملغي':'b-cancelled'})}</td>
       <td>${badge(r['حالة الدفع'], {'مدفوع':'b-paid','غير مدفوع':'b-unpaid'})}</td>
       <td>${r['حالة التصريح']}</td>
+      <td>${r['mina_camp']||'—'}</td>
+      <td>${r['mina_bed']||'—'}</td>
+      <td>${r['arafat_camp']||'—'}</td>
+      <td>${r['arafat_bed']||'—'}</td>
       <td>${r['حالة الإركاب']}</td>
       <td>${r['حالة الحضور في المخيم']}</td>
       <td><button onclick="openPilgrimAssign('${r['_supabase_id']}')" style="padding:5px 10px;background:#c8971a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">✏️ تسكين</button></td>
@@ -732,10 +1014,13 @@ async function showCampPilgrims(campNum, location) {
     const cNum = c.camp_num||c.name;
     const cap = parseInt(c.capacity)||0;
     const booked = ALL_DATA.filter(p => p[fieldKey]===cNum && p['_supabase_id']!=currentPilgrimId && p[bedKey]).map(p=>p[bedKey]);
-    let opts = '';
+    let opts = '<option value="">اختر السرير</option>';
     for(let i=1;i<=cap;i++){
       const v=cNum+'-'+i;
-      if(!booked.includes(v)||v===currentBed) opts+=`<option value="${v}" ${v===currentBed?'selected':''}>${v}</option>`;
+      const isBooked = booked.includes(v);
+      const isSelected = v===currentBed;
+      if(isBooked && !isSelected) continue;
+      opts+=`<option value="${v}" ${isSelected?'selected':''}>${v}</option>`;
     }
     return opts;
   }
@@ -747,7 +1032,8 @@ async function showCampPilgrims(campNum, location) {
       <h3 style="font-size:18px;font-weight:700;color:#3d2000;margin:0">🏕️ مخيم ${campNum} — ${location} (${pilgrims.length} حاج)</h3>
       <div style="display:flex;gap:8px">
         <button onclick="printCampReport('${campNum}','${location}')" style="padding:8px 16px;background:#1a5fa8;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600">🖨️ طباعة تقرير</button>
-        <button onclick="closeModals()" style="padding:8px 16px;background:#f5f5f5;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600">✕ إغلاق</button>
+        <button onclick="showUnassignedPilgrims('${location}')" style="padding:8px 16px;background:#c8971a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600">👥 الغير مُسكَّنين</button>
+        <button onclick="closeCampModal()" style="padding:8px 16px;background:#f5f5f5;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600">✕ إغلاق</button>
       </div>
     </div>
     ${!pilgrims.length ? '<div style="text-align:center;padding:40px;color:#aaa;font-size:15px">لا يوجد حجاج مُسكَّنون في هذا المخيم بعد</div>' : `
@@ -769,7 +1055,7 @@ async function showCampPilgrims(campNum, location) {
           </tr>
         </thead>
         <tbody>
-          ${pilgrims.map((p,i) => `
+          ${[...pilgrims].sort((a,b)=>{const an=parseInt((a[bedKey]||'').split('-')[1])||0;const bn=parseInt((b[bedKey]||'').split('-')[1])||0;return an-bn;}).map((p,i) => `
           <tr style="background:${i%2===0?'#fff':'#f9f9f9'};border-bottom:1px solid #eee" id="camp-row-${p['_supabase_id']}">
             <td style="padding:8px 10px;color:#888">${i+1}</td>
             <td style="padding:8px 10px;font-weight:600;min-width:140px">${p['اسم الحاج']||'—'}</td>
@@ -780,12 +1066,12 @@ async function showCampPilgrims(campNum, location) {
             <td style="padding:8px 10px">${p['رقم الحجز']||'—'}</td>
             <td style="padding:8px 10px">${p['المدينة']||'—'}</td>
             <td style="padding:8px 10px">
-              <select id="camp-sel-${p['_supabase_id']}" onchange="updateBedOptions(${p['_supabase_id']},'${location}')" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">
+              <select id="camp-sel-${p['_supabase_id']}" onchange="updateBedOptions(${p['_supabase_id']},'${location}');markRowModified(${p['_supabase_id']})" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">
                 ${locCamps.map(c=>`<option value="${c.camp_num||c.name}" ${p[fieldKey]===(c.camp_num||c.name)?'selected':''}>${c.camp_num||c.name}</option>`).join('')}
               </select>
             </td>
             <td style="padding:8px 10px">
-              <select id="bed-sel-${p['_supabase_id']}" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">
+              <select id="bed-sel-${p['_supabase_id']}" onchange="markRowModified(${p['_supabase_id']})" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">
                 ${campBedOptions(locCamps.find(c=>(c.camp_num||c.name)===p[fieldKey])||locCamps[0], p['_supabase_id'], p[bedKey])}
               </select>
             </td>
@@ -816,6 +1102,9 @@ async function showCampPilgrims(campNum, location) {
     if(box) { box.style.maxWidth='95vw'; box.style.width='95vw'; box.style.maxHeight='90vh'; }
   }, 50);
   
+  // إعادة تهيئة التعديلات غير المحفوظة
+  window._modifiedRows = new Set();
+  
   // حفظ البيانات للتحديث
   window._campViewData = { camps, locCamps, location, campNum, fieldKey, bedKey };
 }
@@ -843,6 +1132,14 @@ async function saveCampAssign(pilgrimId, location) {
   const campVal = document.getElementById('camp-sel-'+pilgrimId).value;
   const bedVal = document.getElementById('bed-sel-'+pilgrimId).value;
   if(!bedVal) return showToast('اختر رقم السرير أولاً', 'warning');
+  
+  // التحقق من تكرار السرير
+  const duplicate = ALL_DATA.find(p => 
+    String(p['_supabase_id']) !== String(pilgrimId) && 
+    p[fieldKey] === campVal && 
+    p[bedKey] === bedVal
+  );
+  if(duplicate) return showToast('⚠️ هذا السرير محجوز مسبقاً للحاج: ' + (duplicate['اسم الحاج']||''), 'error', 6000);
   
   // التحقق من جنس الحاج ونوع المخيم
   const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
@@ -872,7 +1169,16 @@ async function saveCampAssign(pilgrimId, location) {
 }
 
 async function removeCampAssign(pilgrimId, location) {
-  if(!confirm('هل تريد إلغاء تسكين هذا الحاج؟')) return;
+  const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
+  const name = pilgrim ? pilgrim['اسم الحاج'] : '';
+  const confirmed = await showConfirm(
+    'هل أنت متأكد من إلغاء تسكين الحاج: ' + name + '؟ سيتم إزالة بيانات التسكين نهائياً.',
+    'إلغاء التسكين',
+    'نعم، إلغاء التسكين',
+    '#c00',
+    '🗑️'
+  );
+  if(!confirmed) return;
   const { fieldKey, bedKey } = window._campViewData;
   const updates = {};
   updates[fieldKey] = null;
@@ -888,58 +1194,70 @@ async function removeCampAssign(pilgrimId, location) {
   } catch(e) { alert('خطأ: '+e.message); }
 }
 
+function _getLogo(){const img=document.getElementById('logo');return img?img.src:'';}
+
 function printCampReport(campNum, location) {
   const fieldKey = location === 'منى' ? 'mina_camp' : 'arafat_camp';
   const bedKey = location === 'منى' ? 'mina_bed' : 'arafat_bed';
   const pilgrims = ALL_DATA.filter(p => p[fieldKey] === campNum);
-  const today = new Date().toLocaleDateString('ar-SA');
-  
-  // Get camp type
+  const now = new Date();
+  const today = now.toLocaleDateString('ar-SA');
+  const timeStr = now.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit'});
+
   window._campViewData = window._campViewData || {};
   const camps = window._campViewData.camps || [];
   const camp = camps.find(c=>(c.camp_num||c.name)===campNum);
   const campType = camp ? (camp.camp_type||'رجال') : 'رجال';
-  
+  const logoSrc = _getLogo();
+
   const printWin = window.open('', '_blank');
   printWin.document.write(`<!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>تقرير مخيم ${campNum} — ${location} — ${campType}</title>
+<title>​</title>
 <style>
-  body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; direction: rtl; color:#222; }
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 3px solid #b8860b; padding-bottom: 12px; }
-  .company-info .name { font-size: 16px; font-weight: bold; color: #3d2000; }
-  .company-info .sub { font-size: 12px; color: #666; margin-top: 2px; }
-  .report-meta { text-align: center; }
-  .report-meta .title { font-size: 15px; font-weight: bold; color: #3d2000; margin-bottom: 4px; }
-  .report-meta .sub { font-size: 12px; color: #555; }
-  .badge { display:inline-block; padding:3px 12px; border-radius:12px; font-size:12px; font-weight:bold; background:${campType==='نساء'?'#fde8f0':'#e8f0fd'}; color:${campType==='نساء'?'#c0006a':'#1a5fa8'}; }
-  table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-  th { background: #b8860b; color: #fff; padding: 8px 10px; text-align: right; font-size: 12px; }
-  td { padding: 7px 8px; border: 1px solid #ddd; font-size: 11px; }
-  tr:nth-child(even) { background: #fffbf0; }
-  .footer { display: flex; justify-content: space-between; margin-top: 16px; border-top: 2px solid #b8860b; padding-top: 10px; font-size: 12px; font-weight: bold; color: #3d2000; }
-  @media print { .no-print { display: none; } }
+  @page{margin:5mm 10mm 10mm 10mm;size:A4 landscape}
+  body{font-family:Arial,sans-serif;font-size:11px;margin:0;direction:rtl;color:#222}
+  .header{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;border-bottom:3px solid #b8860b;padding:4mm 8mm;background:#fff}
+  .header-right{text-align:right}
+  .header-center{text-align:center}
+  .header-left{text-align:right;margin:0 auto;width:fit-content}
+  .name{font-size:14px;font-weight:bold;color:#3d2000}
+  .sub{font-size:11px;color:#555;margin-top:1px}
+  .badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:bold;background:${campType==='نساء'?'#fde8f0':'#e8f0fd'};color:${campType==='نساء'?'#c0006a':'#1a5fa8'}}
+  .content{padding:3mm 8mm 8mm}
+  table{width:100%;border-collapse:collapse;margin-top:4px}
+  thead{display:table-header-group}
+  th{background:#d0d0d0;color:#333;padding:3px 6px;text-align:center;font-size:11px;border:1px solid #ccc;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  td{padding:3px 6px;border:1px solid #e0d0b0;font-size:10px;text-align:center}
+  tr:nth-child(even){background:#fffbf0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .footer{display:flex;justify-content:space-between;margin-top:8px;border-top:2px solid #b8860b;padding-top:6px;font-size:11px;font-weight:bold;color:#3d2000}
 </style>
 </head>
 <body>
-<div class="header">
-  <div class="company-info">
+<table style="width:100%;border-collapse:collapse">
+  <thead style="display:table-header-group">
+    <tr><td colspan="10" style="padding-bottom:4mm">
+    <div class="header">
+  <div class="header-right">
     <div class="name">شركة محسن بن سالم الاحمدي وشركاه</div>
     <div class="sub">لخدمات حجاج الداخل</div>
     <div class="sub">تسكين مشعر ${location}</div>
   </div>
-  <div class="report-meta">
-    <div class="title">بيان بأسماء الحجاج</div>
-    <div class="sub">مخيم رقم: <strong>${campNum}</strong> — ${location}</div>
+  <div class="header-center">
+    ${logoSrc ? `<img src="${logoSrc}" style="height:75px;width:auto;object-fit:contain"><br>` : ''}
+    <div style="font-size:15px;font-weight:bold;color:#3d2000;margin-top:4px">بيان بأسماء الحجاج — مشعر ${location}</div>
+  </div>
+  <div class="header-left">
+    <div class="sub">مخيم رقم: <strong>${campNum}</strong></div>
     <div class="sub">النوع: <span class="badge">${campType==='نساء'?'👩':'👨'} ${campType}</span></div>
     <div class="sub">التاريخ: ${today}</div>
+    <div class="sub">وقت الطباعة: ${timeStr}</div>
     <div class="sub">عدد الحجاج: <strong>${pilgrims.length}</strong></div>
   </div>
 </div>
-<table>
-  <thead>
+    </td></tr>
     <tr>
       <th>#</th>
       <th>اسم الحاج</th>
@@ -972,6 +1290,7 @@ function printCampReport(campNum, location) {
   <div>رقم المخيم: ${campNum} | ${campType}</div>
   <div>إجمالي الحجاج: ${pilgrims.length} حاج</div>
   <div>صفحة 1 من 1</div>
+</div>
 </div>
 <script>window.onload=()=>{window.print();}<\/script>
 </body></html>`);
@@ -1310,9 +1629,9 @@ async function renderStaff() {
     <div class="item-card">
       <div class="item-card-body">
         <div class="item-card-title">👨‍💼 ${s.name} <span style="font-size:13px;color:#888;font-weight:500">— ${s.title||''}</span></div>
-        <div class="item-card-sub">🏢 ${s.dept||'—'} &nbsp;|&nbsp; 📞 ${s.phone||'—'}</div>
+        <div class="item-card-sub">🏢 ${s.department||'—'} &nbsp;|&nbsp; 📞 ${s.phone||'—'}</div>
         ${s.tasks ? `<div class="item-card-sub" style="margin-top:4px">📋 <strong>المهام:</strong> ${s.tasks}</div>` : ''}
-        ${s.pilgrims ? `<div class="item-card-sub" style="margin-top:4px">🕋 <strong>الحجاج المرتبطون:</strong> ${s.pilgrims.split(',').length} حاج</div>` : ''}
+        ${s.pilgrims_ids ? `<div class="item-card-sub" style="margin-top:4px">🕋 <strong>الحجاج المرتبطون:</strong> ${(s.pilgrims_ids||'').split(',').length} حاج</div>` : ''}
       </div>
       <div class="item-card-actions">
         <button class="btn-edit" onclick="openStaffModal('${s.id}')">✏️ تعديل</button>
@@ -1328,10 +1647,10 @@ async function openStaffModal(id) {
     <h3 class="modal-title">👨‍💼 ${id?'تعديل':'إضافة'} موظف</h3>
     <div class="form-row"><label>الاسم الكامل</label><input type="text" id="m-s-name" value="${s.name||''}" placeholder="اسم الموظف"></div>
     <div class="form-row"><label>المسمى الوظيفي</label><input type="text" id="m-s-title" value="${s.title||''}" placeholder="مشرف / مرشد / سائق..."></div>
-    <div class="form-row"><label>القسم</label><input type="text" id="m-s-dept" value="${s.dept||''}" placeholder="التسكين / النقل / الإرشاد..."></div>
+    <div class="form-row"><label>القسم</label><input type="text" id="m-s-dept" value="${s.department||''}" placeholder="التسكين / النقل / الإرشاد..."></div>
     <div class="form-row"><label>رقم الجوال</label><input type="text" id="m-s-phone" value="${s.phone||''}" placeholder="05xxxxxxxx" inputmode="tel"></div>
     <div class="form-row"><label>المهام والمسؤوليات</label><textarea id="m-s-tasks" rows="2">${s.tasks||''}</textarea></div>
-    <div class="form-row"><label>أرقام هوية الحجاج المرتبطين (مفصولة بفاصلة)</label><textarea id="m-s-pilgrims" rows="2" placeholder="2530190376, 2234356935...">${s.pilgrims||''}</textarea></div>
+    <div class="form-row"><label>أرقام هوية الحجاج المرتبطين (مفصولة بفاصلة)</label><textarea id="m-s-pilgrims" rows="2" placeholder="2530190376, 2234356935...">${s.pilgrims_ids||''}</textarea></div>
     <div class="modal-btns">
       <button class="btn-save" onclick="saveStaffMember('${id||''}')">💾 حفظ</button>
       <button class="btn-cancel" onclick="closeModals()">إلغاء</button>
@@ -1342,7 +1661,7 @@ async function saveStaffMember(id) {
   const name = document.getElementById('m-s-name').value.trim();
   if(!name) return showToast('أدخل اسم الموظف', 'warning');
   const staff = await getStaff();
-  const obj = { id: id||Date.now().toString(), name, title: document.getElementById('m-s-title').value.trim(), dept: document.getElementById('m-s-dept').value.trim(), phone: document.getElementById('m-s-phone').value.trim(), tasks: document.getElementById('m-s-tasks').value.trim(), pilgrims: document.getElementById('m-s-pilgrims').value.trim() };
+  const obj = { name, title: document.getElementById('m-s-title').value.trim(), department: document.getElementById('m-s-dept').value.trim(), phone: document.getElementById('m-s-phone').value.trim(), tasks: document.getElementById('m-s-tasks').value.trim(), pilgrims_ids: document.getElementById('m-s-pilgrims').value.trim() };
   try {
     if(id) { await window.DB.Staff.update(parseInt(id), obj); }
     else { await window.DB.Staff.insert(obj); }
@@ -1422,7 +1741,7 @@ async function saveVisibilitySettings() {
 }
 
 function switchTab(tab) {
-  const tabs = ['data','settings','housing','staff','ann'];
+  const tabs = ['data','settings','housing','staff','ann','users'];
   tabs.forEach(t => {
     const panel = document.getElementById('tab-'+t);
     const btn = document.getElementById('tab-'+t+'-btn');
@@ -1434,10 +1753,646 @@ function switchTab(tab) {
     }
   });
   if(tab==='data') document.getElementById('tab-data').style.display='';
-  if(tab==='settings') loadVisibilitySettings();
+  if(tab==='settings') { loadVisibilitySettings(); showDevBtnIfSuperAdmin(); }
   if(tab==='housing') renderHousingSection();
   if(tab==='staff') renderStaff();
   if(tab==='ann') renderAnnouncements();
+  if(tab==='users') renderUsers();
+}
+
+// ===== واجهة مشرف المجموعة =====
+window._supPilgrims = [];
+window._supAction = '';
+window._supSettings = { nusukAvailable: false, braceletAvailable: false };
+window._sigPilgrimId = null;
+window._sigType = '';
+
+async function loadSupervisorPanel(user) {
+  document.getElementById('sup-name').textContent = user.name||user.username;
+  document.getElementById('sup-bus').textContent = '🚌 حافلة رقم: ' + (user.group_num||'—');
+
+  const logoImg = document.getElementById('sup-logo');
+  const logo = _getLogo();
+  if(logo && logoImg) { logoImg.src = logo; logoImg.style.display = 'block'; }
+
+  // جلب إعدادات الأسوارة من settings
+  try {
+    const settings = await window.DB.Settings.getAll();
+    const brSetting = settings.find(s=>s.key==='bracelet_available');
+    window._supSettings.braceletAvailable = brSetting?.value === 'true';
+  } catch(e) {}
+
+  // جلب حجاج الحافلة
+  try {
+    const all = await window.DB.Pilgrims.getAll();
+    window._supPilgrims = all.filter(p => p.bus_num === user.group_num);
+  } catch(e) { window._supPilgrims = []; }
+
+  // إعداد أزرار العمليات
+  renderSupActionBtns();
+  // إظهار/إخفاء أعمدة الجدول
+  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة');
+  if(document.getElementById('sup-th-nusuk')) document.getElementById('sup-th-nusuk').style.display = hasNusuk?'':'none';
+  if(document.getElementById('sup-th-bracelet')) document.getElementById('sup-th-bracelet').style.display = window._supSettings.braceletAvailable?'':'none';
+
+  updateSupStats();
+  renderSupTable();
+  initSigCanvas();
+}
+
+function renderSupActionBtns() {
+  const container = document.getElementById('sup-action-btns');
+  if(!container) return;
+  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة');
+  const hasBracelet = window._supSettings.braceletAvailable;
+  const cols = 2 + (hasNusuk?1:0) + (hasBracelet?1:0);
+  container.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+  container.innerHTML = `
+    <button onclick="openSupAction('bus')" style="background:#1a7a1a;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🚌 إركاب</button>
+    <button onclick="openSupAction('camp')" style="background:#1a5fa8;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🏕️ وصول المخيم</button>
+    ${hasNusuk?`<button onclick="openSupAction('nusuk')" style="background:#7a4500;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🪪 بطاقة نسك</button>`:''}
+    ${hasBracelet?`<button onclick="openSupAction('bracelet')" style="background:#444;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🚆 أسوارة</button>`:''}
+  `;
+}
+
+function updateSupStats() {
+  const p = window._supPilgrims;
+  if(document.getElementById('sup-total')) document.getElementById('sup-total').textContent = p.length;
+  if(document.getElementById('sup-boarded')) document.getElementById('sup-boarded').textContent = p.filter(x=>x.bus_status==='ركب').length;
+  if(document.getElementById('sup-arrived')) document.getElementById('sup-arrived').textContent = p.filter(x=>x.camp_status==='حضر').length;
+  if(document.getElementById('sup-nusuk')) document.getElementById('sup-nusuk').textContent = p.filter(x=>x.nusuk_card_status==='مسلمة').length;
+  if(document.getElementById('sup-bracelet')) document.getElementById('sup-bracelet').textContent = p.filter(x=>x.bracelet_time).length;
+}
+
+function renderSupTable() {
+  const q = (document.getElementById('sup-search')?.value||'').toLowerCase();
+  const list = window._supPilgrims.filter(p=>!q||(p.name||'').toLowerCase().includes(q)||(p.id_num||'').includes(q));
+  const tbody = document.getElementById('sup-tbody');
+  const empty = document.getElementById('sup-empty');
+  if(!list.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة'||p.nusuk_card_status==='مسلمة');
+  const hasBracelet = window._supSettings.braceletAvailable;
+  tbody.innerHTML = list.map(p => {
+    const boarded = p.bus_status==='ركب';
+    const arrived = p.camp_status==='حضر';
+    const nusukDelivered = p.nusuk_card_status==='مسلمة';
+    const nusukReady = p.nusuk_card_status==='موجودة';
+    const braceletDone = !!p.bracelet_time;
+    return `<tr style="border-bottom:1px solid #f0e8d0">
+      <td style="padding:8px;font-size:12px;font-weight:600">${p.name||'—'}<br><span style="font-size:10px;color:#999;font-weight:400">${p.id_num||''}</span></td>
+      <td style="padding:8px;text-align:center"><span style="background:${boarded?'#e8f8e8':'#fde8e8'};color:${boarded?'#1a7a1a':'#c00'};padding:3px 8px;border-radius:20px;font-size:11px">${boarded?'✅':'⏳'}</span></td>
+      <td style="padding:8px;text-align:center"><span style="background:${arrived?'#e8f0fd':'#fde8e8'};color:${arrived?'#1a5fa8':'#c00'};padding:3px 8px;border-radius:20px;font-size:11px">${arrived?'✅':'⏳'}</span></td>
+      ${hasNusuk?`<td style="padding:8px;text-align:center"><span style="background:${nusukDelivered?'#fff3e0':'#fde8e8'};color:${nusukDelivered?'#7a4500':'#c00'};padding:3px 8px;border-radius:20px;font-size:11px">${nusukDelivered?'✅':nusukReady?'⏳':'—'}</span></td>`:''}
+      ${hasBracelet?`<td style="padding:8px;text-align:center"><span style="background:${braceletDone?'#f0f0f0':'#fde8e8'};color:${braceletDone?'#333':'#c00'};padding:3px 8px;border-radius:20px;font-size:11px">${braceletDone?'✅':'⏳'}</span></td>`:''}
+      <td style="padding:8px;text-align:center">
+        <button onclick="openQuickAction('${p.id}')" style="background:#c8971a;color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit">✏️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openSupAction(action) {
+  window._supAction = action;
+  const titles = { bus:'🚌 تسجيل إركاب الحافلة', camp:'🏕️ تسجيل وصول المخيم', nusuk:'🪪 تسليم بطاقة نسك', bracelet:'🚆 تسليم أسوارة القطار' };
+  document.getElementById('sup-modal-title').textContent = titles[action]||'';
+  document.getElementById('sup-modal-search').value = '';
+  const modal = document.getElementById('sup-modal');
+  modal.style.display = 'flex';
+  supModalSearch();
+}
+
+function closeSupModal() { document.getElementById('sup-modal').style.display = 'none'; }
+
+function supModalSearch() {
+  const q = document.getElementById('sup-modal-search').value.toLowerCase();
+  const action = window._supAction;
+  let list = window._supPilgrims.filter(p=>!q||(p.name||'').toLowerCase().includes(q)||(p.id_num||'').includes(q));
+
+  // فلترة حسب النوع
+  if(action==='nusuk') list = list.filter(p=>p.nusuk_card_status==='موجودة'||p.nusuk_card_status==='مسلمة');
+  if(action==='bracelet') list = list;
+
+  const el = document.getElementById('sup-modal-results');
+  if(!list.length){ el.innerHTML='<p style="text-align:center;color:#888;padding:20px">لا يوجد نتائج</p>'; return; }
+
+  el.innerHTML = list.map(p => {
+    let done, label, color;
+    if(action==='bus'){ done=p.bus_status==='ركب'; label=done?'✅ ركب':'🚌 تسجيل إركاب'; color=done?'#888':'#1a7a1a'; }
+    else if(action==='camp'){ done=p.camp_status==='حضر'; label=done?'✅ حضر':'🏕️ تسجيل وصول'; color=done?'#888':'#1a5fa8'; }
+    else if(action==='nusuk'){ done=p.nusuk_card_status==='مسلمة'; label=done?'✅ مُسلَّمة':'🪪 تسليم + توقيع'; color=done?'#888':'#7a4500'; }
+    else if(action==='bracelet'){ done=!!p.bracelet_time; label=done?'✅ مُسلَّمة':'🚆 تسليم + توقيع'; color=done?'#888':'#444'; }
+    const needsSig = (action==='nusuk'||action==='bracelet') && !done;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #f0f0f0">
+      <div>
+        <div style="font-size:14px;font-weight:600">${p.name||'—'}</div>
+        <div style="font-size:12px;color:#888">${p.id_num||'—'}</div>
+      </div>
+      <button onclick="${needsSig?`openSigModal('${p.id}','${action}')`:`supRegister('${p.id}','${action}')`}"
+        style="background:${color};color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit" ${done?'disabled':''}>
+        ${label}
+      </button>
+    </div>`;
+  }).join('');
+}
+
+async function supRegister(id, action) {
+  const field = action==='bus'?'bus_status':action==='camp'?'camp_status':null;
+  const value = action==='bus'?'ركب':action==='camp'?'حضر':null;
+  if(!field) return;
+  try {
+    await window.DB.Pilgrims.update(parseInt(id), {[field]:value});
+    const p = window._supPilgrims.find(x=>String(x.id)===String(id));
+    if(p) p[field]=value;
+    showToast('تم التسجيل ✅', 'success');
+    updateSupStats(); renderSupTable(); supModalSearch();
+  } catch(e) { showToast('خطأ: '+e.message, 'error'); }
+}
+
+// ===== التوقيع =====
+function initSigCanvas() {
+  const canvas = document.getElementById('sig-canvas');
+  if(!canvas || canvas._sigInit) return;
+  canvas._sigInit = true;
+  let drawing = false, lastX=0, lastY=0;
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+
+  const getPos = e => {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    const src = e.touches ? e.touches[0] : e;
+    return [(src.clientX - r.left)*scaleX, (src.clientY - r.top)*scaleY];
+  };
+
+  canvas.addEventListener('mousedown', e=>{drawing=true;[lastX,lastY]=getPos(e);});
+  canvas.addEventListener('mousemove', e=>{if(!drawing)return;const[x,y]=getPos(e);ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();[lastX,lastY]=[x,y];});
+  canvas.addEventListener('mouseup', ()=>drawing=false);
+  canvas.addEventListener('touchstart', e=>{e.preventDefault();drawing=true;[lastX,lastY]=getPos(e);},{passive:false});
+  canvas.addEventListener('touchmove', e=>{e.preventDefault();if(!drawing)return;const[x,y]=getPos(e);ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();[lastX,lastY]=[x,y];},{passive:false});
+  canvas.addEventListener('touchend', ()=>drawing=false);
+}
+
+function openSigModal(pilgrimId, type) {
+  window._sigPilgrimId = pilgrimId;
+  window._sigType = type;
+  const p = window._supPilgrims.find(x=>String(x.id)===String(pilgrimId));
+  const titles = { nusuk:'🪪 تسليم بطاقة نسك', bracelet:'🚆 تسليم أسوارة القطار' };
+  document.getElementById('sig-modal-title').textContent = titles[type]||'';
+  document.getElementById('sig-pilgrim-name').textContent = (p?.name||'—') + ' — ' + (p?.id_num||'—');
+  clearSigCanvas();
+  document.getElementById('sig-modal').style.display = 'flex';
+  closeSupModal();
+}
+
+function closeSigModal() { document.getElementById('sig-modal').style.display = 'none'; }
+
+function clearSigCanvas() {
+  const canvas = document.getElementById('sig-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+async function confirmSignature() {
+  const canvas = document.getElementById('sig-canvas');
+  const ctx = canvas.getContext('2d');
+  const blank = document.createElement('canvas');
+  blank.width = canvas.width; blank.height = canvas.height;
+  if(canvas.toDataURL() === blank.toDataURL()) {
+    showToast('يرجى التوقيع أولاً', 'warning'); return;
+  }
+
+  const id = window._sigPilgrimId;
+  const type = window._sigType;
+  const p = window._supPilgrims.find(x=>String(x.id)===String(id));
+  const now = new Date();
+  const timeStr = now.toLocaleString('ar-SA');
+  const user = window._currentUser;
+
+  try {
+    // رفع التوقيع إلى Supabase Storage
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 0.7));
+    const fileName = `${type}_${id}_${Date.now()}.png`;
+    const { data, error } = await window.supabase.storage.from('signatures').upload(fileName, blob, { upsert: true });
+    if(error) throw error;
+    const { data: urlData } = window.supabase.storage.from('signatures').getPublicUrl(fileName);
+    const sigUrl = urlData.publicUrl;
+
+    // حفظ في Supabase
+    let updates = {};
+    if(type==='nusuk') { updates = { nusuk_card_status: 'مسلمة', nusuk_card_sig: sigUrl, nusuk_card_time: timeStr }; }
+    else if(type==='bracelet') { updates = { bracelet_sig: sigUrl, bracelet_time: timeStr }; }
+
+    await window.DB.Pilgrims.update(parseInt(id), updates);
+    if(p) Object.assign(p, updates);
+
+    closeSigModal();
+    showToast('✅ تم تسجيل الاستلام بالتوقيع', 'success');
+    updateSupStats(); renderSupTable();
+  } catch(e) { showToast('خطأ في الحفظ: '+e.message, 'error'); }
+}
+
+function openQuickAction(id) {
+  const p = window._supPilgrims.find(x=>String(x.id)===String(id));
+  if(!p) return;
+  document.getElementById('sup-modal-search').value = p.name||'';
+  openSupAction('bus');
+}
+
+function supervisorLogout() {
+  document.getElementById('supervisor-panel').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  window._supPilgrims = [];
+  window._currentUser = null;
+}
+
+
+
+function updateSupStats() {
+  const pilgrims = window._supPilgrims;
+  document.getElementById('sup-total').textContent = pilgrims.length;
+  document.getElementById('sup-boarded').textContent = pilgrims.filter(p=>p.bus_status==='ركب').length;
+  document.getElementById('sup-arrived').textContent = pilgrims.filter(p=>p.camp_status==='حضر').length;
+}
+
+function renderSupTable() {
+  const q = (document.getElementById('sup-search')?.value||'').toLowerCase();
+  const list = window._supPilgrims.filter(p =>
+    !q || (p.name||'').toLowerCase().includes(q) || (p.id_num||'').includes(q)
+  );
+  const tbody = document.getElementById('sup-tbody');
+  const empty = document.getElementById('sup-empty');
+  if(!list.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML = list.map(p => {
+    const boarded = p.bus_status==='ركب';
+    const arrived = p.camp_status==='حضر';
+    return `<tr style="border-bottom:1px solid #f0e8d0">
+      <td style="padding:10px 8px;font-size:13px;font-weight:600">${p.name||'—'}</td>
+      <td style="padding:10px 8px;text-align:center;font-size:12px;color:#666">${p.id_num||'—'}</td>
+      <td style="padding:10px 8px;text-align:center">
+        <span style="background:${boarded?'#e8f8e8':'#fde8e8'};color:${boarded?'#1a7a1a':'#c00'};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600">${boarded?'✅ ركب':'⏳ لم يركب'}</span>
+      </td>
+      <td style="padding:10px 8px;text-align:center">
+        <span style="background:${arrived?'#e8f0fd':'#fde8e8'};color:${arrived?'#1a5fa8':'#c00'};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600">${arrived?'✅ حضر':'⏳ لم يصل'}</span>
+      </td>
+      <td style="padding:10px 8px;text-align:center">
+        <button onclick="quickToggle('${p.id}','${p.bus_status||''}','${p.camp_status||''}')" style="background:#c8971a;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit">✏️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openSupAction(action) {
+  window._supAction = action;
+  const modal = document.getElementById('sup-modal');
+  document.getElementById('sup-modal-title').textContent = action==='bus' ? '🚌 تسجيل إركاب الحافلة' : '🏕️ تسجيل وصول المخيم';
+  document.getElementById('sup-modal-search').value = '';
+  document.getElementById('sup-modal-results').innerHTML = '';
+  modal.style.display = 'flex';
+  supModalSearch();
+}
+
+function closeSupModal() {
+  document.getElementById('sup-modal').style.display = 'none';
+}
+
+function supModalSearch() {
+  const q = document.getElementById('sup-modal-search').value.toLowerCase();
+  const action = window._supAction;
+  const list = window._supPilgrims.filter(p =>
+    !q || (p.name||'').toLowerCase().includes(q) || (p.id_num||'').includes(q)
+  );
+  const el = document.getElementById('sup-modal-results');
+  el.innerHTML = list.map(p => {
+    const done = action==='bus' ? p.bus_status==='ركب' : p.camp_status==='حضر';
+    const label = action==='bus' ? (done?'✅ ركب':'🚌 تسجيل إركاب') : (done?'✅ حضر':'🏕️ تسجيل وصول');
+    const color = done ? '#888' : (action==='bus'?'#1a7a1a':'#1a5fa8');
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #f0f0f0">
+      <div>
+        <div style="font-size:14px;font-weight:600">${p.name||'—'}</div>
+        <div style="font-size:12px;color:#888">${p.id_num||'—'}</div>
+      </div>
+      <button onclick="supRegister('${p.id}','${action}')" style="background:${color};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap" ${done?'disabled':''}>
+        ${label}
+      </button>
+    </div>`;
+  }).join('') || '<p style="text-align:center;color:#888;padding:20px">لا يوجد نتائج</p>';
+}
+
+async function supRegister(id, action) {
+  const field = action==='bus' ? 'bus_status' : 'camp_status';
+  const value = action==='bus' ? 'ركب' : 'حضر';
+  try {
+    await window.DB.Pilgrims.update(parseInt(id), { [field]: value });
+    const p = window._supPilgrims.find(x=>String(x.id)===String(id));
+    if(p) p[field] = value;
+    showToast('تم التسجيل بنجاح ✅', 'success');
+    updateSupStats();
+    renderSupTable();
+    supModalSearch();
+  } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
+}
+
+async function quickToggle(id, busStatus, campStatus) {
+  const p = window._supPilgrims.find(x=>String(x.id)===String(id));
+  if(!p) return;
+  const newBus = busStatus==='ركب' ? '' : 'ركب';
+  const newCamp = campStatus==='حضر' ? '' : 'حضر';
+
+  const ok = await showConfirm(
+    `الاسم: ${p.name||'—'}\nالإركاب: ${busStatus||'لم يركب'} | المخيم: ${campStatus||'لم يصل'}`,
+    'تعديل الحالة', 'تعديل', '#c8971a', '✏️'
+  );
+  if(!ok) return;
+  openSupAction('bus');
+}
+
+function supervisorLogout() {
+  document.getElementById('supervisor-panel').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  window._supPilgrims = [];
+  window._currentUser = null;
+}
+
+// ===== إعدادات النظام =====
+function switchCfg(section) {
+  ['pilgrim','groups','general','dev'].forEach(s => {
+    const panel = document.getElementById('cfg-'+s);
+    const btn = document.getElementById('cfg-'+s+'-btn');
+    if(panel) panel.style.display = s===section ? 'block' : 'none';
+    if(btn && btn.style.display!=='none') {
+      const active = s===section, isRed = s==='dev';
+      btn.style.background = active ? (isRed?'#c00':'#b8860b') : '#fff';
+      btn.style.color = active ? '#fff' : (isRed?'#c00':'#555');
+      btn.style.borderColor = active ? (isRed?'#c00':'#b8860b') : '#ddd';
+      btn.style.fontWeight = active ? '700' : '600';
+    }
+  });
+  if(section==='groups') renderGroupsCfg();
+  if(section==='general') loadGeneralSettings();
+  if(section==='dev') loadDevSettings();
+}
+
+// ===== إعدادات المبرمج =====
+window._devSettings = {};
+
+function showDevBtnIfSuperAdmin() {
+  const user = window._currentUser;
+  if(user && user.role==='superadmin') {
+    const btn = document.getElementById('cfg-dev-btn');
+    if(btn) btn.style.display = 'inline-block';
+  }
+}
+
+async function loadDevSettings() {
+  try {
+    const settings = await window.DB.Settings.getAll();
+    const s = settings.find(x=>x.key==='dev_settings');
+    if(s && s.value) {
+      const d = JSON.parse(s.value);
+      window._devSettings = d;
+      if(document.getElementById('dev-company-name')) document.getElementById('dev-company-name').value = d.companyName||'';
+      if(document.getElementById('dev-license')) document.getElementById('dev-license').value = d.license||'';
+      if(document.getElementById('dev-season')) document.getElementById('dev-season').value = d.season||'';
+      if(d.stamp) {
+        const p = document.getElementById('dev-stamp-preview');
+        const c = document.getElementById('dev-stamp-current');
+        if(p) { p.src=d.stamp; p.style.display='block'; }
+        if(c) c.textContent = '✅ يوجد ختم محفوظ';
+      }
+    }
+  } catch(e) { console.error(e); }
+}
+
+function previewStamp(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const p = document.getElementById('dev-stamp-preview');
+    if(p) { p.src=e.target.result; p.style.display='block'; }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveDevSettings() {
+  const companyName = document.getElementById('dev-company-name').value.trim();
+  const license = document.getElementById('dev-license').value.trim();
+  const season = document.getElementById('dev-season').value.trim();
+  const stampFile = document.getElementById('dev-stamp-file').files[0];
+  let stamp = window._devSettings.stamp||'';
+  if(stampFile) {
+    stamp = await new Promise(res => { const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(stampFile); });
+  }
+  const settings = { companyName, license, season, stamp };
+  try {
+    await window.DB.Settings.set('dev_settings', JSON.stringify(settings));
+    window._devSettings = settings;
+    showToast('✅ تم حفظ إعدادات النظام', 'success');
+  } catch(e) { showToast('خطأ: '+e.message, 'error'); }
+}
+
+
+async function renderGroupsCfg() {
+  const groups = await getGroups();
+  const el = document.getElementById('groups-cfg-list');
+  if(!el) return;
+  if(!groups.length){ el.innerHTML = '<p style="color:#888;text-align:center;padding:30px">لا توجد مجموعات بعد.</p>'; return; }
+  el.innerHTML = groups.map(g => `
+    <div class="item-card">
+      <div class="item-card-body">
+        <div class="item-card-title">👥 مجموعة رقم ${g.num} — ${g.name||''}</div>
+        <div class="item-card-sub">👤 المشرف: ${g.supervisor||'—'} &nbsp;|&nbsp; 🚌 الحافلة: ${g.camp||'—'}</div>
+        ${g.notes?`<div class="item-card-sub" style="color:#999">📝 ${g.notes}</div>`:''}
+      </div>
+      <div class="item-card-actions">
+        <button class="btn-edit" onclick="openGroupCfgModal('${g.id}')">✏️ تعديل</button>
+        <button class="btn-delete" onclick="deleteGroupCfg('${g.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+async function openGroupCfgModal(id) {
+  let g = {};
+  if(id) { const groups = await getGroups(); g = groups.find(x=>x.id===id)||{}; }
+  const _mt = id ? 'تعديل' : 'إضافة';
+  const buses = await getBuses();
+  const busOptions = buses.map(b=>`<option value="${b.num||''}" ${g.camp===b.num?'selected':''}>${b.num||''} — ${b.plate||''}</option>`).join('');
+  openModal(`
+    <h3 class="modal-title">👥 ${_mt} مجموعة</h3>
+    <div class="form-row"><label>رقم المجموعة</label><input type="text" id="gcfg-num" value="${g.num||''}" placeholder="1"></div>
+    <div class="form-row"><label>اسم المجموعة</label><input type="text" id="gcfg-name" value="${g.name||''}" placeholder="مجموعة الرحمة"></div>
+    <div class="form-row"><label>المشرف المسؤول</label><input type="text" id="gcfg-supervisor" value="${g.supervisor||''}" placeholder="اسم المشرف"></div>
+    <div class="form-row"><label>رقم الحافلة</label>
+      <select id="gcfg-bus">
+        <option value="">اختر الحافلة</option>
+        ${busOptions}
+      </select>
+    </div>
+    <div class="form-row"><label>ملاحظات</label><textarea id="gcfg-notes" rows="2">${g.notes||''}</textarea></div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="saveGroupCfg('${id||''}')">💾 حفظ</button>
+      <button class="btn-cancel" onclick="closeModals()">إلغاء</button>
+    </div>`);
+}
+
+async function saveGroupCfg(id) {
+  const num = document.getElementById('gcfg-num').value.trim();
+  if(!num) return showToast('أدخل رقم المجموعة', 'warning');
+  const obj = { num, name: document.getElementById('gcfg-name').value.trim(), supervisor: document.getElementById('gcfg-supervisor').value.trim(), camp: document.getElementById('gcfg-bus').value, notes: document.getElementById('gcfg-notes').value.trim() };
+  try {
+    if(id) { await window.DB.Groups.update(parseInt(id), obj); }
+    else { await window.DB.Groups.insert(obj); }
+    closeModals(); renderGroupsCfg(); showToast('تم الحفظ', 'success');
+  } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
+}
+
+async function deleteGroupCfg(id) {
+  const ok = await showConfirm('حذف هذه المجموعة؟', 'تأكيد', 'حذف', '#c00', '🗑️');
+  if(!ok) return;
+  await window.DB.Groups.delete(parseInt(id)); renderGroupsCfg(); showToast('تم الحذف', 'success');
+}
+
+async function loadGeneralSettings() {
+  try {
+    if(!window.DB) return;
+    const val = await window.DB.Settings.get('general_settings');
+    if(val) {
+      const s = JSON.parse(val);
+      if(document.getElementById('cfg-company')) document.getElementById('cfg-company').value = s.company||'';
+      if(document.getElementById('cfg-season')) document.getElementById('cfg-season').value = s.season||'';
+      if(document.getElementById('cfg-phone')) document.getElementById('cfg-phone').value = s.phone||'';
+    }
+    // تحميل إعداد الأسوارة
+    const brVal = await window.DB.Settings.get('bracelet_available');
+    const brOn = brVal === 'true';
+    const cb = document.getElementById('cfg-bracelet');
+    if(cb) cb.checked = brOn;
+    updateBraceletToggle(brOn);
+  } catch(e) {}
+}
+
+function updateBraceletToggle(on) {
+  const track = document.getElementById('cfg-bracelet-track');
+  const knob = document.getElementById('cfg-bracelet-knob');
+  if(track) track.style.background = on ? '#c8971a' : '#ccc';
+  if(knob) knob.style.left = on ? '27px' : '3px';
+}
+
+async function saveBraceletSetting(val) {
+  updateBraceletToggle(val);
+  try {
+    await window.DB.Settings.set('bracelet_available', val.toString());
+    showToast(val ? '✅ أسوارة القطار مفعّلة' : '❌ أسوارة القطار موقوفة', 'success');
+  } catch(e) { showToast('خطأ: '+e.message, 'error'); }
+}
+
+async function saveGeneralSettings() {
+  const s = { company: document.getElementById('cfg-company').value.trim(), season: document.getElementById('cfg-season').value.trim(), phone: document.getElementById('cfg-phone').value.trim() };
+  try {
+    await window.DB.Settings.set('general_settings', JSON.stringify(s));
+    showToast('تم حفظ الإعدادات العامة', 'success');
+  } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
+}
+
+// ===== إدارة المستخدمين =====
+async function renderUsers() {
+  const users = await getSysUsers();
+  const el = document.getElementById('users-list');
+  if(!users.length){ el.innerHTML = '<p style="color:#888;text-align:center;padding:30px">لا يوجد مستخدمون بعد.</p>'; return; }
+  const roleLabel = { superadmin:'👑 سوبر أدمن', admin:'👨‍💼 مشرف', supervisor:'🎯 مشرف مجموعة', viewer:'👁️ مشاهد' };
+  const roleColor = { superadmin:'#7a4500', admin:'#1a5fa8', supervisor:'#1a7a1a', viewer:'#666' };
+  el.innerHTML = users.map(u => `
+    <div class="item-card">
+      <div class="item-card-body">
+        <div class="item-card-title">
+          ${u.name||u.username}
+          <span style="margin-right:8px;font-size:12px;font-weight:600;color:${roleColor[u.role]||'#666'}">${roleLabel[u.role]||u.role}</span>
+          <span style="font-size:11px;color:${u.active===false||u.active==='false'?'#c00':'#1a7a1a'}">${u.active===false||u.active==='false'?'🔴 موقوف':'✅ نشط'}</span>
+        </div>
+        <div class="item-card-sub">🔑 ${u.username}${u.group_num?` &nbsp;|&nbsp; 👥 مجموعة: ${u.group_num}`:''}</div>
+      </div>
+      <div class="item-card-actions">
+        <button class="btn-edit" onclick="openUserModal('${u.username}')">✏️ تعديل</button>
+        <button class="btn-delete" onclick="deleteUser('${u.username}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+
+async function openUserModal(username) {
+  let u = {};
+  if(username) { const users = await getSysUsers(); u = users.find(x=>x.username===username)||{}; }
+  const _mt = username ? 'تعديل' : 'إضافة';
+  const _ro = username ? 'readonly' : '';
+  const _pw = username ? '(اتركها فارغة للإبقاء على الحالية)' : '';
+  const groups = await getGroups();
+  const groupOptions = groups.map(g=>`<option value="${g.num}" ${u.group_num===g.num?'selected':''}>${g.num} — ${g.name||g.supervisor||''}</option>`).join('');
+  openModal(`
+    <h3 class="modal-title">👤 ${_mt} مستخدم</h3>
+    <div class="form-row"><label>اسم المستخدم</label><input type="text" id="mu-username" value="${u.username||''}" placeholder="username" ${_ro}></div>
+    <div class="form-row"><label>الاسم الكامل</label><input type="text" id="mu-name" value="${u.name||''}" placeholder="الاسم الكامل"></div>
+    <div class="form-row"><label>كلمة المرور ${_pw}</label><input type="password" id="mu-password" placeholder="••••••••"></div>
+    <div class="form-row"><label>الصلاحية</label>
+      <select id="mu-role" onchange="toggleGroupField()">
+        <option value="admin" ${u.role==='admin'?'selected':''}>👨‍💼 مشرف</option>
+        <option value="supervisor" ${u.role==='supervisor'?'selected':''}>🎯 مشرف مجموعة</option>
+        <option value="viewer" ${u.role==='viewer'?'selected':''}>👁️ مشاهد</option>
+      </select>
+    </div>
+    <div class="form-row" id="mu-group-row" style="${u.role==='supervisor'?'':'display:none'}">
+      <label>المجموعة</label>
+      <select id="mu-group">
+        <option value="">اختر المجموعة</option>
+        ${groupOptions}
+      </select>
+    </div>
+    <div class="form-row"><label>الحالة</label>
+      <select id="mu-active">
+        <option value="true" ${u.active!==false&&u.active!=='false'?'selected':''}>✅ نشط</option>
+        <option value="false" ${u.active===false||u.active==='false'?'selected':''}>🔴 موقوف</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="saveUser('${username||''}')">💾 حفظ</button>
+      <button class="btn-cancel" onclick="closeModals()">إلغاء</button>
+    </div>`);
+}
+
+function toggleGroupField() {
+  const role = document.getElementById('mu-role').value;
+  const row = document.getElementById('mu-group-row');
+  if(row) row.style.display = role==='supervisor' ? '' : 'none';
+}
+
+async function saveUser(existingUsername) {
+  const username = document.getElementById('mu-username').value.trim();
+  const name = document.getElementById('mu-name').value.trim();
+  const password = document.getElementById('mu-password').value.trim();
+  const role = document.getElementById('mu-role').value;
+  const group_num = document.getElementById('mu-group')?.value.trim()||'';
+  const active = document.getElementById('mu-active').value === 'true';
+  if(!username) return showToast('أدخل اسم المستخدم', 'warning');
+  try {
+    if(existingUsername) {
+      const users = await getSysUsers();
+      const u = users.find(x=>x.username===existingUsername);
+      if(u) await window.DB.SysUsers.update(u.id, {name, role, group_num, active, ...(password?{password}:{})});
+    } else {
+      if(!password) return showToast('أدخل كلمة المرور', 'warning');
+      await window.DB.SysUsers.insert({ username, name, password, role, group_num, active });
+    }
+    closeModals(); renderUsers(); showToast('تم الحفظ بنجاح', 'success');
+  } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
+}
+
+async function deleteUser(username) {
+  const ok = await showConfirm('حذف هذا المستخدم؟', 'تأكيد الحذف', 'حذف', '#c00', '🗑️');
+  if(!ok) return;
+  const users = await getSysUsers();
+  const u = users.find(x=>x.username===username);
+  if(u) { await window.DB.SysUsers.delete(u.id); renderUsers(); showToast('تم الحذف', 'success'); }
 }
 
 // ===== التعاميم =====
@@ -1588,6 +2543,27 @@ function showToast(msg, type='success', duration=5000) {
 }
 
 
+// ===== نافذة التأكيد =====
+function showConfirm(msg, title='تأكيد', okText='نعم', okColor='#c00', icon='⚠️') {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999999;display:flex;align-items:center;justify-content:center';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="font-size:40px;margin-bottom:12px">${icon}</div>
+        <div style="font-size:17px;font-weight:700;color:#3d2000;margin-bottom:10px">${title}</div>
+        <div style="font-size:14px;color:#666;margin-bottom:24px;line-height:1.6">${msg}</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button id="sc-ok" style="padding:11px 24px;background:${okColor};color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">${okText}</button>
+          <button id="sc-cancel" style="padding:11px 24px;background:#f0f0f0;color:#555;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">إلغاء</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    document.getElementById('sc-ok').onclick = () => { overlay.remove(); resolve(true); };
+    document.getElementById('sc-cancel').onclick = () => { overlay.remove(); resolve(false); };
+  });
+}
+
 // ===== تسكين الحجاج =====
 async function openPilgrimAssign(pilgrimId) {
   // تحميل الأفواج والحافلات والمخيمات
@@ -1691,11 +2667,34 @@ async function openPilgrimAssign(pilgrimId) {
 
 function updateMinaBeds() {
   const campNum = document.getElementById('pa-mina-camp').value;
-  const { camps, bookedMinaBeds } = window._assignData;
+  const { camps, bookedMinaBeds, pilgrimId } = window._assignData;
   const camp = camps.find(c => (c.camp_num||c.name) === campNum);
   const bedSel = document.getElementById('pa-mina-bed');
+  const campSel = document.getElementById('pa-mina-camp');
   if(!camp) { bedSel.innerHTML = '<option value="">اختر المخيم أولاً</option>'; return; }
+
+  // التحقق من الجنس
+  const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
+  if(pilgrim && camp.camp_type) {
+    const g = pilgrim['الجنس']||'';
+    const isFemale = g==='أنثى'||g==='أنثي'||g==='female'||g==='انثى';
+    if(camp.camp_type==='نساء' && !isFemale) {
+      campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
+      return showToast('⚠️ مخيم ' + campNum + ' مخصص للنساء — الحاج من الذكور', 'error');
+    }
+    if(camp.camp_type==='رجال' && isFemale) {
+      campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
+      return showToast('⚠️ مخيم ' + campNum + ' مخصص للرجال — الحاجة من الإناث', 'error');
+    }
+  }
+
+  // التحقق من السعة
   const cap = parseInt(camp.capacity)||0;
+  if(cap > 0 && bookedMinaBeds.filter(b=>b.startsWith(campNum+'-')).length >= cap) {
+    campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
+    return showToast('⚠️ مخيم منى ' + campNum + ' ممتلئ', 'error');
+  }
+
   const campId = camp.camp_num||camp.name;
   let opts = '<option value="">اختر السرير</option>';
   for(let i=1; i<=cap; i++) {
@@ -1707,11 +2706,34 @@ function updateMinaBeds() {
 
 function updateArafatBeds() {
   const campNum = document.getElementById('pa-arafat-camp').value;
-  const { camps, bookedArafatBeds } = window._assignData;
+  const { camps, bookedArafatBeds, pilgrimId } = window._assignData;
   const camp = camps.find(c => (c.camp_num||c.name) === campNum);
   const bedSel = document.getElementById('pa-arafat-bed');
+  const campSel = document.getElementById('pa-arafat-camp');
   if(!camp) { bedSel.innerHTML = '<option value="">اختر المخيم أولاً</option>'; return; }
+
+  // التحقق من الجنس
+  const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
+  if(pilgrim && camp.camp_type) {
+    const g = pilgrim['الجنس']||'';
+    const isFemale = g==='أنثى'||g==='أنثي'||g==='female'||g==='انثى';
+    if(camp.camp_type==='نساء' && !isFemale) {
+      campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
+      return showToast('⚠️ مخيم ' + campNum + ' مخصص للنساء — الحاج من الذكور', 'error');
+    }
+    if(camp.camp_type==='رجال' && isFemale) {
+      campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
+      return showToast('⚠️ مخيم ' + campNum + ' مخصص للرجال — الحاجة من الإناث', 'error');
+    }
+  }
+
+  // التحقق من السعة
   const cap = parseInt(camp.capacity)||0;
+  if(cap > 0 && bookedArafatBeds.filter(b=>b.startsWith(campNum+'-')).length >= cap) {
+    campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
+    return showToast('⚠️ مخيم عرفات ' + campNum + ' ممتلئ', 'error');
+  }
+
   const campId = camp.camp_num||camp.name;
   let opts = '<option value="">اختر السرير</option>';
   for(let i=1; i<=cap; i++) {
@@ -1736,11 +2758,14 @@ async function savePilgrimAssign(pilgrimId) {
   if(minaCampVal) {
     const minaCamp = camps.find(c=>(c.camp_num||c.name)===minaCampVal);
     if(minaCamp && minaCamp.camp_type) {
-      const expectedGender = minaCamp.camp_type === 'نساء' ? 'أنثى' : 'ذكر';
       const isMatch = (minaCamp.camp_type==='نساء' && (pilgrimGender==='أنثى'||pilgrimGender==='أنثي'||pilgrimGender==='female')) ||
                       (minaCamp.camp_type==='رجال' && (pilgrimGender==='ذكر'||pilgrimGender==='male'));
       if(!isMatch) return alert('⚠️ لا يمكن تسكين ' + (pilgrimGender) + ' في مخيم ' + minaCamp.camp_type + ' بمنى');
     }
+    // التحقق من السعة
+    const cap = parseInt(minaCamp?.capacity)||0;
+    const occupied = ALL_DATA.filter(p=>p['mina_camp']===minaCampVal && String(p['_supabase_id'])!==String(pilgrimId) && p['mina_bed']).length;
+    if(cap > 0 && occupied >= cap) return showToast('مخيم منى ' + minaCampVal + ' ممتلئ — السعة: ' + cap + ' | المُسكَّنون: ' + occupied, 'error');
   }
   if(arafatCampVal) {
     const arafatCamp = camps.find(c=>(c.camp_num||c.name)===arafatCampVal);
@@ -1749,6 +2774,10 @@ async function savePilgrimAssign(pilgrimId) {
                       (arafatCamp.camp_type==='رجال' && (pilgrimGender==='ذكر'||pilgrimGender==='male'));
       if(!isMatch) return alert('⚠️ لا يمكن تسكين ' + (pilgrimGender) + ' في مخيم ' + arafatCamp.camp_type + ' بعرفات');
     }
+    // التحقق من السعة
+    const cap = parseInt(arafatCamp?.capacity)||0;
+    const occupied = ALL_DATA.filter(p=>p['arafat_camp']===arafatCampVal && String(p['_supabase_id'])!==String(pilgrimId) && p['arafat_bed']).length;
+    if(cap > 0 && occupied >= cap) return showToast('مخيم عرفات ' + arafatCampVal + ' ممتلئ — السعة: ' + cap + ' | المُسكَّنون: ' + occupied, 'error');
   }
 
   const updates = {
@@ -1775,9 +2804,602 @@ async function savePilgrimAssign(pilgrimId) {
     }
     closeModals();
     showToast('تم حفظ التسكين بنجاح', 'success');
+    // تحديث عرض المخيمات تلقائياً
+    renderCamps();
   } catch(e) {
     showToast('خطأ في الحفظ: ' + e.message, 'error');
   }
+}
+
+
+// ===== نظام تتبع التعديلات غير المحفوظة =====
+window._modifiedRows = new Set();
+
+function markRowModified(pilgrimId) {
+  if(!window._modifiedRows) window._modifiedRows = new Set();
+  window._modifiedRows.add(String(pilgrimId));
+  const row = document.getElementById('camp-row-'+pilgrimId);
+  if(row) row.classList.add('row-modified');
+}
+
+async function closeCampModal() {
+  const canClose = await checkUnsavedChanges();
+  if(canClose !== null) {
+    window._modifiedRows.clear();
+    closeModals();
+  }
+}
+
+
+async function checkUnsavedChanges() {
+  if(!window._modifiedRows || window._modifiedRows.size === 0) return true;
+  
+  return new Promise(resolve => {
+    const count = window._modifiedRows.size;
+    // نافذة تنبيه مخصصة
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:32px;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="font-size:44px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:17px;font-weight:700;color:#3d2000;margin-bottom:8px">تعديلات غير محفوظة</div>
+        <div style="font-size:14px;color:#666;margin-bottom:24px;line-height:1.6">
+          هناك <strong>${count}</strong> تعديلات تم إدخالها. هل تريد حفظ الكل؟
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button id="unsaved-yes" style="padding:12px 24px;background:#1a7a1a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ نعم — حفظ الكل</button>
+          <button id="unsaved-no" style="padding:12px 24px;background:#c00;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">❌ لا — تجاهل</button>
+          <button id="unsaved-cancel" style="padding:12px 24px;background:#f5f5f5;color:#555;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">↩️ رجوع</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    
+    document.getElementById('unsaved-cancel').onclick = () => { overlay.remove(); resolve(null); };
+    
+    document.getElementById('unsaved-no').onclick = () => {
+      overlay.remove();
+      // تأكيد ثانٍ
+      showConfirm('هل أنت متأكد من تجاهل جميع التعديلات؟ لن يتم حفظ أي تغيير.', 'تأكيد التجاهل', 'نعم، تجاهل', '#c00', '⚠️').then(confirmed => {
+        if(confirmed) { window._modifiedRows.clear(); resolve(true); }
+        else resolve(null);
+      });
+    };
+    
+    document.getElementById('unsaved-yes').onclick = () => {
+      overlay.remove();
+      showConfirm('هل أنت متأكد من حفظ جميع التعديلات؟', 'تأكيد الحفظ', 'نعم، حفظ الكل', '#1a7a1a', '💾').then(async confirmed => {
+        if(confirmed) {
+          await saveAllModifiedRows();
+          resolve(true);
+        } else resolve(null);
+      });
+    };
+  });
+}
+
+async function saveAllModifiedRows() {
+  const ids = [...window._modifiedRows];
+  const { fieldKey, bedKey, location } = window._campViewData || {};
+  let saved = 0;
+  for(const pilgrimId of ids) {
+    const campSel = document.getElementById('camp-sel-'+pilgrimId);
+    const bedSel = document.getElementById('bed-sel-'+pilgrimId);
+    if(!campSel || !bedSel) continue;
+    const campVal = campSel.value;
+    const bedVal = bedSel.value;
+    if(!bedVal) continue;
+    const updates = {};
+    if(fieldKey) updates[fieldKey] = campVal;
+    if(bedKey) updates[bedKey] = bedVal;
+    if(location==='منى') updates.mina_seat = bedVal;
+    else if(location==='عرفات') updates.arafat_seat = bedVal;
+    try {
+      await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+      const idx = ALL_DATA.findIndex(p=>String(p['_supabase_id'])===String(pilgrimId));
+      if(idx>=0 && fieldKey) { ALL_DATA[idx][fieldKey]=campVal; ALL_DATA[idx][bedKey]=bedVal; }
+      saved++;
+    } catch(e) { console.error('Save error:', e); }
+  }
+  window._modifiedRows.clear();
+  showToast('تم حفظ ' + saved + ' تعديل بنجاح', 'success');
+  renderCamps();
+}
+
+
+// ===== تسكين من نافذة الغير مسكنين =====
+async function openPilgrimAssignFromUnassigned(pilgrimId, location) {
+  window._afterAssignLocation = location;
+  await openPilgrimAssign(pilgrimId);
+  // Override save button behavior
+  const origSave = window.savePilgrimAssign;
+  window._origSavePilgrimAssign = origSave;
+}
+
+// ===== الحجاج الغير مُسكَّنين =====
+window._uaSortCol = null;
+window._uaSortDir = 'asc';
+window._uaSearch  = '';
+
+function showUnassignedPilgrims(location) {
+  const fieldKey = location === 'منى' ? 'mina_camp' : location === 'عرفات' ? 'arafat_camp' : null;
+  const bedKey   = location === 'منى' ? 'mina_bed'  : location === 'عرفات' ? 'arafat_bed'  : null;
+
+  let unassigned;
+  if(location === 'مزدلفة') {
+    unassigned = ALL_DATA.filter(p => !p['رقم فوج التفويج الخاص بك']);
+  } else {
+    unassigned = ALL_DATA.filter(p => !p[fieldKey] || p[fieldKey] === '');
+  }
+
+  const locLabel = location === 'منى' ? '🏕️ منى' : location === 'عرفات' ? '🌄 عرفات' : '🌙 مزدلفة';
+
+  getCamps().then(camps => {
+    const locCamps = camps.filter(c => c.location === location);
+    window._unassignedData = { fieldKey, bedKey, camps, locCamps, location, pilgrims: unassigned };
+    window._uaModifiedRows = new Set();
+    window._uaSortCol = null;
+    window._uaSortDir = 'asc';
+    window._uaSearch  = '';
+
+    openModal(`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <h3 style="font-size:18px;font-weight:700;color:#3d2000;margin:0">${locLabel} — الغير مُسكَّنين (<span id="ua-count">${unassigned.length}</span>)</h3>
+        <div style="display:flex;gap:8px">
+          <button onclick="printUnassignedReport('${location}')" style="padding:8px 14px;background:#1a5fa8;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600">🖨️ طباعة</button>
+          <button onclick="closeUAModal()" style="padding:8px 14px;background:#f5f5f5;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600">✕ إغلاق</button>
+        </div>
+      </div>
+      ${!unassigned.length
+        ? '<div style="text-align:center;padding:40px;color:#1a7a1a;font-size:16px;font-weight:600">✅ جميع الحجاج مُسكَّنون في ' + location + '</div>'
+        : `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+            <input id="ua-search-input" type="text" placeholder="🔍 بحث في الاسم أو الهوية أو المدينة أو الجنسية..." oninput="filterUATable()" style="flex:1;min-width:220px;padding:8px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;outline:none">
+            <button onclick="resetUATable()" style="padding:8px 14px;background:#eee;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;white-space:nowrap">↺ إعادة تعيين</button>
+          </div>
+          <div style="background:#fff8e1;border:1.5px solid #f0e0b0;border-radius:10px;padding:8px 14px;margin-bottom:12px;font-size:13px;color:#7a4500">
+            ⚠️ يوجد <strong>${unassigned.length}</strong> حاج لم يتم تسكينهم في ${location} بعد
+          </div>
+          <div style="overflow-x:auto;max-height:55vh">
+            <table id="ua-table" style="width:100%;border-collapse:collapse;font-size:13px;min-width:750px">
+              <thead style="position:sticky;top:0;z-index:1">
+                <tr style="background:linear-gradient(135deg,#b8860b,#c8971a);color:#fff">
+                  <th style="padding:10px;text-align:right;cursor:default">#</th>
+                  ${[['اسم الحاج','اسم الحاج'],['رقم الهوية','رقم الهوية'],['الجنسية','الجنسية'],['الجنس','الجنس'],['رقم الجوال','رقم الجوال'],['رقم الحجز','رقم الحجز'],['المدينة','المدينة']].map(([label,col])=>
+                    '<th id="ua-th-'+col+'" onclick="sortUATable(\''+col+'\')" style="padding:10px;text-align:right;cursor:pointer;user-select:none;white-space:nowrap">'+label+' <span style="font-size:11px;opacity:0.7">⇅</span></th>'
+                  ).join('')}
+                  <th style="padding:10px;text-align:right;cursor:default">المخيم</th>
+                  <th style="padding:10px;text-align:right;cursor:default">السرير</th>
+                  <th style="padding:10px;text-align:right;cursor:default">حفظ</th>
+                </tr>
+              </thead>
+              <tbody id="ua-tbody"></tbody>
+            </table>
+          </div>`}
+    `);
+
+    setTimeout(() => {
+      const box = document.querySelector('.modal-box');
+      if(box) { box.style.maxWidth='95vw'; box.style.width='95vw'; box.style.maxHeight='90vh'; }
+      if(unassigned.length) renderUATable();
+    }, 50);
+  });
+}
+
+function buildUACampOptions(locCamps, selectedCamp) {
+  return locCamps.map(c => {
+    const cNum = c.camp_num||c.name;
+    return '<option value="'+cNum+'" '+(selectedCamp===cNum?'selected':'')+'>'+cNum+'</option>';
+  }).join('');
+}
+
+function buildUABedOptions(campNum, currentBed, pilgrimId) {
+  const { fieldKey, bedKey, locCamps } = window._unassignedData;
+  const camp = locCamps.find(c=>(c.camp_num||c.name)===campNum);
+  if(!camp) return '<option value="">اختر المخيم أولاً</option>';
+  const cap = parseInt(camp.capacity)||0;
+  const booked = ALL_DATA.filter(p=>p[fieldKey]===campNum && p['_supabase_id']!=pilgrimId && p[bedKey]).map(p=>p[bedKey]);
+  let opts = '<option value="">اختر السرير</option>';
+  for(let i=1;i<=cap;i++){
+    const v=campNum+'-'+i;
+    if(!booked.includes(v)||v===currentBed) opts+='<option value="'+v+'" '+(v===currentBed?'selected':'')+'>'+v+'</option>';
+  }
+  return opts;
+}
+
+function renderUATable() {
+  const { fieldKey, bedKey, locCamps, pilgrims } = window._unassignedData;
+  const search = (window._uaSearch||'').trim().toLowerCase();
+  const sortCol = window._uaSortCol;
+  const sortDir = window._uaSortDir;
+
+  let list = pilgrims.filter(p => {
+    if(p['__saved']) return false; // محفوظ مسبقاً — أخفِه
+    if(!search) return true;
+    return [p['اسم الحاج'],p['رقم الهوية'],p['الجنسية'],p['الجنس'],p['رقم الجوال'],p['رقم الحجز'],p['المدينة']]
+      .some(v => (v||'').toLowerCase().includes(search));
+  });
+
+  if(sortCol) {
+    list = [...list].sort((a,b) => {
+      const av = (a[sortCol]||'').toString().toLowerCase();
+      const bv = (b[sortCol]||'').toString().toLowerCase();
+      return sortDir==='asc' ? av.localeCompare(bv,'ar') : bv.localeCompare(av,'ar');
+    });
+  }
+
+  const tbody = document.getElementById('ua-tbody');
+  const countEl = document.getElementById('ua-count');
+  if(!tbody) return;
+
+  if(countEl) countEl.textContent = list.length;
+
+  tbody.innerHTML = list.map((p, i) => {
+    const currentCamp = p[fieldKey]||'';
+    const currentBed  = p[bedKey]||'';
+    const savedRow = document.getElementById('unassigned-row-'+p['_supabase_id']);
+    const isSaved = savedRow && savedRow.style.opacity === '0.3';
+    const modified = window._uaModifiedRows && window._uaModifiedRows.has(String(p['_supabase_id']));
+    return '<tr style="background:'+(isSaved?'#e8f8e8':modified?'#fffbe6':i%2===0?'#fff':'#f9f9f9')+';border-bottom:1px solid #eee;'+(isSaved?'opacity:0.4;pointer-events:none;':'')+'" id="unassigned-row-'+p['_supabase_id']+'">'
+      +'<td style="padding:8px 10px;color:#888">'+(i+1)+'</td>'
+      +'<td style="padding:8px 10px;font-weight:600;min-width:130px">'+(p['اسم الحاج']||'—')+'</td>'
+      +'<td style="padding:8px 10px">'+(p['رقم الهوية']||'—')+'</td>'
+      +'<td style="padding:8px 10px">'+(p['الجنسية']||'—')+'</td>'
+      +'<td style="padding:8px 10px">'+(p['الجنس']||'—')+'</td>'
+      +'<td style="padding:8px 10px">'+(p['رقم الجوال']||'—')+'</td>'
+      +'<td style="padding:8px 10px">'+(p['رقم الحجز']||'—')+'</td>'
+      +'<td style="padding:8px 10px">'+(p['المدينة']||'—')+'</td>'
+      +'<td style="padding:8px 6px"><select id="ua-camp-'+p['_supabase_id']+'" onchange="updateUABeds('+p['_supabase_id']+');markUARowModified('+p['_supabase_id']+')" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit;min-width:70px"><option value="">اختر</option>'+buildUACampOptions(locCamps,currentCamp)+'</select></td>'
+      +'<td style="padding:8px 6px"><select id="ua-bed-'+p['_supabase_id']+'" onchange="markUARowModified('+p['_supabase_id']+')" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit;min-width:80px">'+buildUABedOptions(currentCamp,currentBed,p['_supabase_id'])+'</select></td>'
+      +'<td style="padding:8px 6px;white-space:nowrap"><button onclick="saveUnassignedPilgrim('+p['_supabase_id']+')" style="padding:5px 10px;background:#1a7a1a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit">💾 حفظ</button></td>'
+      +'</tr>';
+  }).join('');
+}
+
+function sortUATable(col) {
+  if(window._uaSortCol === col) {
+    window._uaSortDir = window._uaSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    window._uaSortCol = col;
+    window._uaSortDir = 'asc';
+  }
+  // تحديث أيقونات الترتيب
+  document.querySelectorAll('[id^="ua-th-"]').forEach(th => {
+    const span = th.querySelector('span');
+    if(span) span.textContent = ' ⇅';
+  });
+  const activeTh = document.getElementById('ua-th-'+col);
+  if(activeTh) {
+    const span = activeTh.querySelector('span');
+    if(span) span.textContent = window._uaSortDir === 'asc' ? ' ▲' : ' ▼';
+  }
+  renderUATable();
+}
+
+function filterUATable() {
+  const input = document.getElementById('ua-search-input');
+  window._uaSearch = input ? input.value : '';
+  renderUATable();
+}
+
+function resetUATable() {
+  window._uaSortCol = null;
+  window._uaSortDir = 'asc';
+  window._uaSearch  = '';
+  const input = document.getElementById('ua-search-input');
+  if(input) input.value = '';
+  document.querySelectorAll('[id^="ua-th-"]').forEach(th => {
+    const span = th.querySelector('span');
+    if(span) span.textContent = ' ⇅';
+  });
+  renderUATable();
+}
+
+function updateUABeds(pilgrimId) {
+  const { fieldKey, bedKey, locCamps } = window._unassignedData;
+  const campSel = document.getElementById('ua-camp-'+pilgrimId);
+  const bedSel = document.getElementById('ua-bed-'+pilgrimId);
+  if(!campSel||!bedSel) return;
+  const campNum = campSel.value;
+  const camp = locCamps.find(c=>(c.camp_num||c.name)===campNum);
+  if(!camp) { bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>'; return; }
+
+  // التحقق من الجنس
+  const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
+  if(pilgrim && camp.camp_type) {
+    const g = pilgrim['الجنس']||'';
+    const isFemale = g==='أنثى'||g==='أنثي'||g==='female'||g==='انثى';
+    if(camp.camp_type==='نساء' && !isFemale) {
+      campSel.value='';
+      bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
+      return showToast('⚠️ مخيم ' + campNum + ' مخصص للنساء — الحاج من الذكور', 'error');
+    }
+    if(camp.camp_type==='رجال' && isFemale) {
+      campSel.value='';
+      bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
+      return showToast('⚠️ مخيم ' + campNum + ' مخصص للرجال — الحاجة من الإناث', 'error');
+    }
+  }
+
+  // التحقق من السعة
+  const cap = parseInt(camp.capacity)||0;
+  const bookedInDB = ALL_DATA.filter(p=>p[fieldKey]===campNum && String(p['_supabase_id'])!=String(pilgrimId) && p[bedKey]).map(p=>p[bedKey]);
+  const selectedInModal = [];
+  document.querySelectorAll('[id^="ua-bed-"]').forEach(sel => {
+    const pid = sel.id.replace('ua-bed-','');
+    if(pid !== String(pilgrimId) && sel.value) {
+      const campOfOther = document.getElementById('ua-camp-'+pid);
+      if(campOfOther && campOfOther.value === campNum) selectedInModal.push(sel.value);
+    }
+  });
+  const allBooked = [...new Set([...bookedInDB, ...selectedInModal])];
+
+  if(cap > 0 && allBooked.length >= cap) {
+    campSel.value='';
+    bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
+    return showToast('⚠️ مخيم ' + campNum + ' ممتلئ — السعة: ' + cap + ' | المُسكَّنون: ' + allBooked.length, 'error');
+  }
+
+  // بناء قائمة الأسرة المتاحة
+  let opts = '<option value="">اختر السرير</option>';
+  for(let i=1;i<=cap;i++){
+    const v=campNum+'-'+i;
+    if(!allBooked.includes(v)) opts+=`<option value="${v}">${v}</option>`;
+  }
+  bedSel.innerHTML = opts;
+}
+
+async function saveUnassignedPilgrim(pilgrimId) {
+  const { fieldKey, bedKey, camps, location } = window._unassignedData;
+  const campVal = document.getElementById('ua-camp-'+pilgrimId).value;
+  const bedVal = document.getElementById('ua-bed-'+pilgrimId).value;
+  if(!campVal) return showToast('اختر رقم المخيم', 'warning');
+  if(!bedVal) return showToast('اختر رقم السرير', 'warning');
+
+  // التحقق من السعة
+  const campObj = camps.find(c=>(c.camp_num||c.name)===campVal);
+  if(campObj) {
+    const cap = parseInt(campObj.capacity)||0;
+    const occupied = ALL_DATA.filter(p => p[fieldKey]===campVal && String(p['_supabase_id'])!==String(pilgrimId) && p[bedKey]).length;
+    if(occupied >= cap) return showToast('المخيم ' + campVal + ' ممتلئ — السعة: ' + cap + ' | المُسكَّنون: ' + occupied, 'error');
+  }
+
+  // التحقق من الجنس
+  const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
+  if(pilgrim) {
+    const camp = camps.find(c=>(c.camp_num||c.name)===campVal);
+    if(camp && camp.camp_type) {
+      const g = pilgrim['الجنس']||'';
+      const isFemale = g==='أنثى'||g==='أنثي'||g==='female'||g==='انثى';
+      if(camp.camp_type==='نساء' && !isFemale) return showToast('لا يمكن تسكين ' + g + ' في مخيم نساء', 'error');
+      if(camp.camp_type==='رجال' && isFemale) return showToast('لا يمكن تسكين ' + g + ' في مخيم رجال', 'error');
+    }
+  }
+
+  const updates = {};
+  updates[fieldKey] = campVal;
+  updates[bedKey] = bedVal;
+  if(location==='منى') { updates.mina_seat=bedVal; }
+  else { updates.arafat_seat=bedVal; }
+
+  try {
+    await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+    // تحديث البيانات المحلية
+    const idx = ALL_DATA.findIndex(p=>String(p['_supabase_id'])===String(pilgrimId));
+    if(idx>=0) { ALL_DATA[idx][fieldKey]=campVal; ALL_DATA[idx][bedKey]=bedVal; }
+    // إزالة الصف من قائمة التعديلات غير المحفوظة
+    if(window._uaModifiedRows) window._uaModifiedRows.delete(String(pilgrimId));
+    // تمييز الحاج المحفوظ في البيانات المحلية
+    const saved = window._unassignedData.pilgrims.find(p=>String(p['_supabase_id'])===String(pilgrimId));
+    if(saved) { saved[fieldKey]=campVal; saved[bedKey]=bedVal; saved['__saved']=true; }
+    showToast('تم تسكين الحاج بنجاح ✅', 'success');
+    renderUATable();
+    // تحديث الأسرة المتاحة للحجاج الآخرين في نفس النافذة
+    refreshOtherBedSelects(pilgrimId, campVal, bedVal);
+    // تحديث المخيمات في الخلفية
+    renderCamps();
+  } catch(e) { showToast('خطأ: '+e.message, 'error'); }
+}
+
+function refreshOtherBedSelects(savedPilgrimId, savedCamp, savedBed) {
+  const { fieldKey, bedKey, locCamps } = window._unassignedData || {};
+  if(!fieldKey) return;
+  // ابحث عن كل قوائم الأسرة في النافذة وأزل السرير المحجوز
+  document.querySelectorAll('[id^="ua-bed-"]').forEach(bedSel => {
+    const pid = bedSel.id.replace('ua-bed-', '');
+    if(pid === String(savedPilgrimId)) return;
+    const campSel = document.getElementById('ua-camp-'+pid);
+    if(!campSel || campSel.value !== savedCamp) return;
+    // أزل السرير المحجوز من القائمة
+    Array.from(bedSel.options).forEach(opt => {
+      if(opt.value === savedBed) opt.remove();
+    });
+  });
+}
+
+function printUnassignedReport(location) {
+  const { fieldKey, bedKey, pilgrims } = window._unassignedData || {};
+  const locLabel = location === 'منى' ? 'منى' : location === 'عرفات' ? 'عرفات' : 'مزدلفة';
+  const now = new Date();
+  const today = now.toLocaleDateString('ar-SA');
+  const timeStr = now.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit'});
+
+  // استخدام نفس الفلترة والترتيب الحالي في النافذة
+  const search = (window._uaSearch||'').trim().toLowerCase();
+  const sortCol = window._uaSortCol;
+  const sortDir = window._uaSortDir;
+
+  let list = (pilgrims||[]).filter(p => {
+    if(p['__saved']) return false;
+    if(!search) return true;
+    return [p['اسم الحاج'],p['رقم الهوية'],p['الجنسية'],p['الجنس'],p['رقم الجوال'],p['رقم الحجز'],p['المدينة']]
+      .some(v => (v||'').toLowerCase().includes(search));
+  });
+
+  if(sortCol) {
+    list = [...list].sort((a,b) => {
+      const av = (a[sortCol]||'').toString().toLowerCase();
+      const bv = (b[sortCol]||'').toString().toLowerCase();
+      return sortDir==='asc' ? av.localeCompare(bv,'ar') : bv.localeCompare(av,'ar');
+    });
+  }
+
+  const logoSrc = 'data:image/png;base64,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';
+
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>​</title>
+<style>
+  @page{margin:5mm 10mm 10mm 10mm;size:A4 landscape}
+  body{font-family:Arial,sans-serif;font-size:11px;margin:0;direction:rtl;color:#222}
+  .header{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;border-bottom:3px solid #b8860b;padding:4mm 8mm;background:#fff}
+  .header-right{text-align:right}
+  .header-center{text-align:center}
+  .header-left{text-align:right;margin:0 auto;width:fit-content}
+  .name{font-size:14px;font-weight:bold;color:#3d2000}
+  .sub{font-size:11px;color:#555;margin-top:1px}
+  .content{padding:3mm 8mm 8mm}
+  table{width:100%;border-collapse:collapse;margin-top:4px}
+  thead{display:table-header-group}
+  th{background:#d0d0d0;color:#333;padding:3px 6px;text-align:center;font-size:11px;border:1px solid #ccc;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  td{padding:3px 6px;border:1px solid #e0d0b0;font-size:10px;text-align:center}
+  tr:nth-child(even){background:#fffbf0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .footer{display:flex;justify-content:space-between;margin-top:8px;border-top:2px solid #b8860b;padding-top:6px;font-size:11px;font-weight:bold;color:#3d2000}
+</style>
+</head>
+<body>
+<table style="width:100%;border-collapse:collapse">
+  <thead style="display:table-header-group">
+    <tr><td colspan="10" style="padding-bottom:4mm">
+    <div class="header">
+  <div class="header-right">
+    <div class="name">شركة محسن بن سالم الاحمدي وشركاه</div>
+    <div class="sub">لخدمات حجاج الداخل</div>
+    <div class="sub">الحجاج الغير مُسكَّنين — مشعر ${locLabel}</div>
+  </div>
+  <div class="header-center">
+    <img src="${logoSrc}" style="height:75px;width:auto;object-fit:contain"><br>
+    <div style="font-size:15px;font-weight:bold;color:#3d2000;margin-top:4px">بيان الحجاج الغير مُسكَّنين — مشعر ${locLabel}</div>
+  </div>
+  <div class="header-left">
+    <div class="sub">التاريخ: ${today}</div>
+    <div class="sub">وقت الطباعة: ${timeStr}</div>
+    <div class="sub">عدد الحجاج: <strong>${list.length}</strong></div>
+  </div>
+</div>
+    </td></tr>
+    <tr>
+      <th>#</th><th>اسم الحاج</th><th>رقم الهوية</th><th>الجنسية</th><th>الجنس</th><th>رقم الجوال</th><th>رقم الحجز</th><th>المدينة</th><th>رقم المخيم</th><th>رقم السرير</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${list.map((p,i)=>`<tr>
+      <td>${i+1}</td>
+      <td><strong>${p['اسم الحاج']||'—'}</strong></td>
+      <td>${p['رقم الهوية']||'—'}</td>
+      <td>${p['الجنسية']||'—'}</td>
+      <td>${p['الجنس']||'—'}</td>
+      <td>${p['رقم الجوال']||'—'}</td>
+      <td>${p['رقم الحجز']||'—'}</td>
+      <td>${p['المدينة']||'—'}</td>
+      <td style="color:#c00">${fieldKey?(p[fieldKey]||'غير مُسكَّن'):'—'}</td>
+      <td style="color:#c00">${bedKey?(p[bedKey]||'—'):'—'}</td>
+    </tr>`).join('')}
+  </tbody>
+</table>
+<div class="footer">
+  <div>المشعر: ${locLabel}</div>
+  <div>إجمالي الغير مُسكَّنين: ${list.length} حاج</div>
+  <div>صفحة 1 من 1</div>
+</div>
+<script>window.onload=()=>{window.print();}<\/script>
+</body></html>`);
+  printWin.document.close();
+}
+
+
+// ===== تتبع تعديلات نافذة الغير مُسكَّنين =====
+window._uaModifiedRows = new Set();
+
+function markUARowModified(pilgrimId) {
+  if(!window._uaModifiedRows) window._uaModifiedRows = new Set();
+  window._uaModifiedRows.add(String(pilgrimId));
+  const row = document.getElementById('unassigned-row-'+pilgrimId);
+  if(row) row.style.borderRight = '3px solid #c8971a';
+}
+
+async function closeUAModal() {
+  if(!window._uaModifiedRows || window._uaModifiedRows.size === 0) {
+    closeModals(); return;
+  }
+  const count = window._uaModifiedRows.size;
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:99999;display:flex;align-items:center;justify-content:center';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:16px;padding:32px;max-width:440px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+        <div style="font-size:44px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:17px;font-weight:700;color:#3d2000;margin-bottom:8px">تعديلات غير محفوظة</div>
+        <div style="font-size:14px;color:#666;margin-bottom:24px;line-height:1.6">
+          هناك <strong>${count}</strong> تعديلات تم إدخالها ولم يتم حفظها.<br>هل تريد حفظ الكل؟
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <button id="ua-unsaved-yes" style="padding:12px 24px;background:#1a7a1a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">✅ نعم — حفظ الكل</button>
+          <button id="ua-unsaved-no" style="padding:12px 24px;background:#c00;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">❌ لا — تجاهل</button>
+          <button id="ua-unsaved-cancel" style="padding:12px 24px;background:#f5f5f5;color:#555;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">↩️ رجوع</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    document.getElementById('ua-unsaved-cancel').onclick = () => { overlay.remove(); resolve(null); };
+
+    document.getElementById('ua-unsaved-no').onclick = () => {
+      overlay.remove();
+      showConfirm('هل أنت متأكد من تجاهل جميع التعديلات؟', 'تأكيد التجاهل', 'نعم، تجاهل', '#c00', '⚠️').then(confirmed => {
+        if(confirmed) { window._uaModifiedRows.clear(); closeModals(); resolve(true); }
+        else resolve(null);
+      });
+    };
+
+    document.getElementById('ua-unsaved-yes').onclick = () => {
+      overlay.remove();
+      showConfirm('هل أنت متأكد من حفظ جميع التعديلات؟', 'تأكيد الحفظ', 'نعم، حفظ الكل', '#1a7a1a', '💾').then(async confirmed => {
+        if(confirmed) {
+          await saveAllUAModifiedRows();
+          resolve(true);
+        } else resolve(null);
+      });
+    };
+  });
+}
+
+async function saveAllUAModifiedRows() {
+  const ids = [...window._uaModifiedRows];
+  const { fieldKey, bedKey, location } = window._unassignedData || {};
+  let saved = 0;
+  for(const pilgrimId of ids) {
+    const campSel = document.getElementById('ua-camp-'+pilgrimId);
+    const bedSel = document.getElementById('ua-bed-'+pilgrimId);
+    if(!campSel || !bedSel || !campSel.value || !bedSel.value) continue;
+    const updates = {};
+    updates[fieldKey] = campSel.value;
+    updates[bedKey] = bedSel.value;
+    if(location==='منى') updates.mina_seat = bedSel.value;
+    else if(location==='عرفات') updates.arafat_seat = bedSel.value;
+    try {
+      await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+      const idx = ALL_DATA.findIndex(p=>String(p['_supabase_id'])===String(pilgrimId));
+      if(idx>=0) { ALL_DATA[idx][fieldKey]=campSel.value; ALL_DATA[idx][bedKey]=bedSel.value; }
+      const row = document.getElementById('unassigned-row-'+pilgrimId);
+      if(row) { row.style.opacity='0.3'; row.style.pointerEvents='none'; row.style.background='#e8f8e8'; }
+      saved++;
+    } catch(e) { console.error('UA Save error:', e); }
+  }
+  window._uaModifiedRows.clear();
+  showToast('تم حفظ ' + saved + ' تسكين بنجاح', 'success');
+  renderCamps();
+  closeModals();
 }
 
 
