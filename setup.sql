@@ -28,6 +28,7 @@ create table pilgrims (
   camp_status text,
   mina_seat text,
   arafat_seat text,
+  muzdalifah_seat text,
   supervisor_name text,
   supervisor_phone text,
   group_num text,

@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>بوابة الحاج — الأحمدي</title>
+<title>بوابة الحاج</title>
+<link id="favicon" rel="icon" type="image/png" href="">
 <style>
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -53,7 +54,7 @@ body.ltr .input-wrapper input{padding:14px 16px 14px 48px}
 .input-wrapper input:focus{border-color:#c8971a;background:#fff;box-shadow:0 0 0 3px rgba(200,151,26,0.12)}
 .input-wrapper input::placeholder{color:#bbb}
 .remember-row{display:flex;align-items:center;gap:8px;margin-top:12px;justify-content:center}
-.login-btn{width:100%;padding:15px;background:linear-gradient(135deg,#b8860b 0%,#8b6508 100%);color:#fff;border:none;border-radius:12px;font-size:16px;font-family:inherit;cursor:pointer;margin-top:10px;font-weight:600;letter-spacing:.3px;touch-action:manipulation;box-shadow:0 4px 14px rgba(139,101,8,0.4)}
+.login-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--p-primary,#b8860b),var(--p-accent,#8b6508));color:#fff;border:none;border-radius:12px;font-size:16px;font-family:inherit;cursor:pointer;margin-top:10px;font-weight:600;letter-spacing:.3px;touch-action:manipulation;box-shadow:0 4px 14px rgba(0,0,0,0.3)}
 .login-btn:active{background:linear-gradient(135deg,#8b6508 0%,#6b4e06 100%);transform:scale(0.98)}
 .error-msg{background:#ffebee;color:#c62828;border-radius:10px;padding:12px 14px;font-size:13px;margin-top:14px;display:none;line-height:1.5}
 
@@ -151,6 +152,34 @@ body.ltr .section-title{border-right:none;border-left:4px solid #c8971a;padding-
 
 </style>
 
+<style id="portal-dynamic-style"></style>
+<script>
+// تطبيق فوري للألوان قبل رسم الصفحة (يمنع وميض اللون القديم)
+(function(){
+  try {
+    // تطبيق الألوان فوراً
+    const cached = localStorage.getItem('hajj_portal_colors');
+    if(cached) {
+      const t = JSON.parse(cached);
+      const s = document.getElementById('portal-dynamic-style');
+      if(s && t.c1 && t.c2) {
+        s.textContent = ':root{--p-primary:'+t.c1+';--p-accent:'+t.c2+'}'
+          +'.login-btn{background:linear-gradient(135deg,'+t.c1+','+t.c2+')!important}'
+          +'.company-top{background:linear-gradient(135deg,'+t.c1+','+t.c2+')!important}'
+          +'.header{border-bottom-color:'+t.c2+'!important}'
+          +'.section-title{border-right-color:'+t.c2+'!important}';
+      }
+    }
+    // تطبيق الأيقونة فوراً من cache
+    const logoCached = localStorage.getItem('hajj_portal_logo_cache');
+    if(logoCached) {
+      const fav = document.getElementById('favicon');
+      if(fav) fav.href = logoCached;
+    }
+  } catch(e){}
+})();
+</script>
+
   <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
@@ -163,9 +192,9 @@ body.ltr .section-title{border-right:none;border-left:4px solid #c8971a;padding-
 
 <div class="header">
   <div class="header-right">
-    <img id="logo" src="" alt="الأحمدي">
+    <img id="logo" src="" alt="" style="height:48px;display:none">
     <div class="header-text">
-      <h1 id="h-title">بوابة الحاج — الأحمدي</h1>
+      <h1 id="h-title" style="opacity:0;transition:opacity .3s">بوابة الحاج</h1>
       <p id="h-sub">تتبع حجزك ومعلوماتك بكل سهولة</p>
     </div>
   </div>
@@ -201,9 +230,9 @@ body.ltr .section-title{border-right:none;border-left:4px solid #c8971a;padding-
 
 <div id="login-screen">
   <div class="login-card">
-    <img id="logo2" src="" alt="الأحمدي" style="height:160px;width:160px;object-fit:contain;display:block;margin:0 auto 20px">
-    <h2 id="l-welcome" style="text-align:center;font-size:26px;font-weight:700;color:#3d2000;margin-bottom:6px">مرحباً بك</h2>
-    <p id="l-desc" style="text-align:center;font-size:13px;color:#888;margin-bottom:20px">تتبع حجزك ومعلوماتك بكل سهولة</p>
+    <img id="logo2" src="" alt="" style="height:120px;width:120px;object-fit:contain;display:none;margin:0 auto 16px">
+    <h2 id="l-welcome" style="text-align:center;font-size:26px;font-weight:700;color:#3d2000;margin-bottom:6px;opacity:0;transition:opacity .3s"></h2>
+    <p id="l-desc" style="text-align:center;font-size:13px;color:#888;margin-bottom:20px;display:none"></p>
     <label id="l-id-label" style="display:block;text-align:right;font-size:17px;font-weight:700;color:#555;margin-bottom:5px">رقم الهوية</label>
     <div class="input-group">
       <span class="input-icon">🪪</span>
@@ -222,7 +251,7 @@ body.ltr .section-title{border-right:none;border-left:4px solid #c8971a;padding-
       ❌ رقم الهوية أو رقم الحجز غير صحيح
     </div>
     <button class="login-btn" id="l-btn" onclick="doLogin()">دخول</button>
-    <p style="text-align:center;margin-top:14px;color:#888;font-size:13px">🤝 نعتز بخدمتكم</p>
+    <p id="l-tagline" style="text-align:center;margin-top:14px;color:#888;font-size:13px">🤝 نعتز بخدمتكم</p>
   </div>
 </div>
 
@@ -356,7 +385,7 @@ const LANGS = {
   ar: {
     name:'العربية', dir:'rtl', flag:'🇸🇦',
     nationalities:['المملكة العربية السعودية','مصر','اليمن','السودان','سوريا','الصومال'],
-    hTitle:'بوابة الحاج — الأحمدي', hSub:'تتبع حجزك ومعلوماتك بكل سهولة',
+    hTitle:'بوابة الحاج', hSub:'تتبع حجزك ومعلوماتك بكل سهولة',
     welcome:'أهلاً بك حاجنا الكريم',
     desc:'أدخل رقم الهوية ورقم الحجز للاطلاع على تفاصيل حجزك',
     bookingLabel:'رقم الحجز', idLabel:'رقم الهوية', btnText:'عرض معلومات حجزي',
@@ -368,7 +397,7 @@ const LANGS = {
     pending:'لم يتم بعد',
     confirmed:'مؤكد', cancelled:'ملغي', paid:'مدفوع', unpaid:'غير مدفوع',
     
-    minaSeat:'موقع جلوسك في مخيم منى', arafatSeat:'موقع جلوسك في مخيم عرفات', fawjNum:'رقم الفوج الخاص بك', busNum:'رقم الحافلة الخاصة بك', supervisorTitle:'المشرف الخاص بك', supervisorNone:'لم يتم تعيين مشرف بعد', supervisorContact:'تواصل مع مشرفك على واتساب', announcementsTitle:'📢 التعاميم', sheikhTitle:'🕋 الدعاة والمرشدون', companyTitle:'🏢 معلومات الشركة', surveyTitle:'⭐ الاستبيان', surveyMsg:'سيتم إتاحة الاستبيان قريباً، شكراً لاهتمامكم.', whatsappBtn:'💬 تواصل معنا على واتساب', mapsMina:'📍 خريطة منى', mapsArafat:'📍 خريطة عرفات', mapsTitle:'مواقع الحملة'
+    minaSeat:'موقع جلوسك في مخيم منى', arafatSeat:'موقع جلوسك في مخيم عرفات', muzdalifahSeat:'موقع جلوسك في مخيم مزدلفة', fawjNum:'رقم الفوج الخاص بك', busNum:'رقم الحافلة الخاصة بك', supervisorTitle:'المشرف الخاص بك', supervisorNone:'لم يتم تعيين مشرف بعد', supervisorContact:'تواصل مع مشرفك على واتساب', announcementsTitle:'📢 التعاميم', sheikhTitle:'🕋 الدعاة والمرشدون', companyTitle:'🏢 معلومات الشركة', surveyTitle:'⭐ الاستبيان', surveyMsg:'سيتم إتاحة الاستبيان قريباً، شكراً لاهتمامكم.', whatsappBtn:'💬 تواصل معنا على واتساب', mapsMina:'📍 خريطة منى', mapsArafat:'📍 خريطة عرفات', mapsTitle:'مواقع الحملة'
   ,
     annTitle:'📢 التعاميم والتعليمات', mapsTitle:'📍 مواقع الحملة بالمشاعر المقدسة', minaBtnTxt:'موقع الحملة في منى', arafatBtnTxt:'موقع الحملة في عرفات', transportTitle:'🚌 معلومات الفوج والحافلة', supervisorTitle2:'👤 المشرف الخاص بك', surveyTitle2:'⭐ تقييم الحملة وتعبئة استبيان', surveyMsg2:'سيتم رفع الاستبيان في وقت لاحق، شكراً لاهتمامكم 🙏', whatsappTitle:'📞 للاستفسارات والطلبات', whatsappBtnTxt:'تواصل معنا على واتساب'
   },
@@ -387,7 +416,7 @@ const LANGS = {
     pending:'Not yet',
     confirmed:'Confirmed', cancelled:'Cancelled', paid:'Paid', unpaid:'Unpaid',
     
-    minaSeat:'Your seat in Mina Camp', arafatSeat:'Your seat in Arafat Camp', fawjNum:'Your Group Number', busNum:'Your Bus Number', supervisorTitle:'Your Supervisor', supervisorNone:'No supervisor assigned yet', supervisorContact:'Contact your supervisor on WhatsApp', announcementsTitle:'📢 Announcements', sheikhTitle:'🕋 Scholars & Guides', companyTitle:'🏢 Company Information', surveyTitle:'⭐ Survey', surveyMsg:'The survey will be available soon. Thank you for your interest.', whatsappBtn:'💬 Contact us on WhatsApp', mapsMina:'📍 Mina Map', mapsArafat:'📍 Arafat Map', mapsTitle:'Camp Locations'
+    minaSeat:'Your seat in Mina Camp', arafatSeat:'Your seat in Arafat Camp', muzdalifahSeat:'Your seat in Muzdalifah Camp', fawjNum:'Your Group Number', busNum:'Your Bus Number', supervisorTitle:'Your Supervisor', supervisorNone:'No supervisor assigned yet', supervisorContact:'Contact your supervisor on WhatsApp', announcementsTitle:'📢 Announcements', sheikhTitle:'🕋 Scholars & Guides', companyTitle:'🏢 Company Information', surveyTitle:'⭐ Survey', surveyMsg:'The survey will be available soon. Thank you for your interest.', whatsappBtn:'💬 Contact us on WhatsApp', mapsMina:'📍 Mina Map', mapsArafat:'📍 Arafat Map', mapsTitle:'Camp Locations'
   ,
     annTitle:'📢 Announcements & Instructions', mapsTitle:'📍 Camp Locations at Holy Sites', minaBtnTxt:'Camp location in Mina', arafatBtnTxt:'Camp location in Arafat', transportTitle:'🚌 Group & Bus Information', supervisorTitle2:'👤 Your Supervisor', surveyTitle2:'⭐ Camp Evaluation Survey', surveyMsg2:'The survey will be uploaded later, thank you for your interest 🙏', whatsappTitle:'📞 For Inquiries & Requests', whatsappBtnTxt:'Contact us on WhatsApp'
   },
@@ -406,7 +435,7 @@ const LANGS = {
     pending:'ابھی نہیں',
     confirmed:'تصدیق شدہ', cancelled:'منسوخ', paid:'ادا', unpaid:'ادا نہیں',
     
-    minaSeat:'منیٰ کیمپ میں آپ کی نشست', arafatSeat:'عرفات کیمپ میں آپ کی نشست', fawjNum:'آپ کا گروپ نمبر', busNum:'آپ کی بس نمبر', supervisorTitle:'آپ کا نگران', supervisorNone:'ابھی کوئی نگران مقرر نہیں', supervisorContact:'واٹس ایپ پر نگران سے رابطہ کریں', announcementsTitle:'📢 اعلانات', sheikhTitle:'🕋 علماء و رہنما', companyTitle:'🏢 کمپنی کی معلومات', surveyTitle:'⭐ سروے', surveyMsg:'سروے جلد دستیاب ہوگا، آپ کی دلچسپی کا شکریہ۔', whatsappBtn:'💬 واٹس ایپ پر ہم سے رابطہ کریں', mapsMina:'📍 منیٰ نقشہ', mapsArafat:'📍 عرفات نقشہ', mapsTitle:'کیمپ مقامات'
+    minaSeat:'منیٰ کیمپ میں آپ کی نشست', arafatSeat:'عرفات کیمپ میں آپ کی نشست', muzdalifahSeat:'مزدلفہ کیمپ میں آپ کی نشست', fawjNum:'آپ کا گروپ نمبر', busNum:'آپ کی بس نمبر', supervisorTitle:'آپ کا نگران', supervisorNone:'ابھی کوئی نگران مقرر نہیں', supervisorContact:'واٹس ایپ پر نگران سے رابطہ کریں', announcementsTitle:'📢 اعلانات', sheikhTitle:'🕋 علماء و رہنما', companyTitle:'🏢 کمپنی کی معلومات', surveyTitle:'⭐ سروے', surveyMsg:'سروے جلد دستیاب ہوگا، آپ کی دلچسپی کا شکریہ۔', whatsappBtn:'💬 واٹس ایپ پر ہم سے رابطہ کریں', mapsMina:'📍 منیٰ نقشہ', mapsArafat:'📍 عرفات نقشہ', mapsTitle:'کیمپ مقامات'
   ,
     annTitle:'📢 اعلانات اور ہدایات', mapsTitle:'📍 مقدس مقامات پر کیمپ کے مقامات', minaBtnTxt:'منیٰ میں کیمپ کا مقام', arafatBtnTxt:'عرفات میں کیمپ کا مقام', transportTitle:'🚌 گروپ اور بس کی معلومات', supervisorTitle2:'👤 آپ کا نگران', surveyTitle2:'⭐ کیمپ کا جائزہ سروے', surveyMsg2:'سروے بعد میں اپلوڈ کیا جائے گا، آپ کی دلچسپی کا شکریہ 🙏', whatsappTitle:'📞 استفسارات اور درخواستوں کے لیے', whatsappBtnTxt:'واٹس ایپ پر ہم سے رابطہ کریں'
   },
@@ -425,7 +454,7 @@ const LANGS = {
     pending:'এখনো না',
     confirmed:'নিশ্চিত', cancelled:'বাতিল', paid:'পরিশোধিত', unpaid:'অপরিশোধিত',
     
-    minaSeat:'মিনা ক্যাম্পে আপনার আসন', arafatSeat:'আরাফাত ক্যাম্পে আপনার আসন', fawjNum:'আপনার গ্রুপ নম্বর', busNum:'আপনার বাস নম্বর', supervisorTitle:'আপনার তত্ত্বাবধায়ক', supervisorNone:'এখনো কোনো তত্ত্বাবধায়ক নিযুক্ত হয়নি', supervisorContact:'হোয়াটসঅ্যাপে তত্ত্বাবধায়কের সাথে যোগাযোগ করুন', announcementsTitle:'📢 ঘোষণা', sheikhTitle:'🕋 আলেম ও গাইড', companyTitle:'🏢 কোম্পানির তথ্য', surveyTitle:'⭐ জরিপ', surveyMsg:'জরিপ শীঘ্রই পাওয়া যাবে, আপনার আগ্রহের জন্য ধন্যবাদ।', whatsappBtn:'💬 হোয়াটসঅ্যাপে আমাদের সাথে যোগাযোগ করুন', mapsMina:'📍 মিনার মানচিত্র', mapsArafat:'📍 আরাফাতের মানচিত্র', mapsTitle:'ক্যাম্পের অবস্থান'
+    minaSeat:'মিনা ক্যাম্পে আপনার আসন', arafatSeat:'আরাফাত ক্যাম্পে আপনার আসন', muzdalifahSeat:'মুযদালিফা ক্যাম্পে আপনার আসন', fawjNum:'আপনার গ্রুপ নম্বর', busNum:'আপনার বাস নম্বর', supervisorTitle:'আপনার তত্ত্বাবধায়ক', supervisorNone:'এখনো কোনো তত্ত্বাবধায়ক নিযুক্ত হয়নি', supervisorContact:'হোয়াটসঅ্যাপে তত্ত্বাবধায়কের সাথে যোগাযোগ করুন', announcementsTitle:'📢 ঘোষণা', sheikhTitle:'🕋 আলেম ও গাইড', companyTitle:'🏢 কোম্পানির তথ্য', surveyTitle:'⭐ জরিপ', surveyMsg:'জরিপ শীঘ্রই পাওয়া যাবে, আপনার আগ্রহের জন্য ধন্যবাদ।', whatsappBtn:'💬 হোয়াটসঅ্যাপে আমাদের সাথে যোগাযোগ করুন', mapsMina:'📍 মিনার মানচিত্র', mapsArafat:'📍 আরাফাতের মানচিত্র', mapsTitle:'ক্যাম্পের অবস্থান'
   ,
     annTitle:'📢 ঘোষণা ও নির্দেশনা', mapsTitle:'📍 পবিত্র স্থানে ক্যাম্পের অবস্থান', minaBtnTxt:'মিনায় ক্যাম্পের অবস্থান', arafatBtnTxt:'আরাফাতে ক্যাম্পের অবস্থান', transportTitle:'🚌 গ্রুপ ও বাসের তথ্য', supervisorTitle2:'👤 আপনার তত্ত্বাবধায়ক', surveyTitle2:'⭐ ক্যাম্প মূল্যায়ন জরিপ', surveyMsg2:'জরিপটি পরে আপলোড করা হবে, আপনার আগ্রহের জন্য ধন্যবাদ 🙏', whatsappTitle:'📞 জিজ্ঞাসা ও অনুরোধের জন্য', whatsappBtnTxt:'হোয়াটসঅ্যাপে আমাদের সাথে যোগাযোগ করুন'
   },
@@ -445,6 +474,7 @@ const LANGS = {
     confirmed:'Confirmé', cancelled:'Annulé', paid:'Payé', unpaid:'Non payé',
     minaSeat:'Votre place au camp de Mina',
     arafatSeat:'Votre place au camp de Arafat',
+    muzdalifahSeat:'Votre place au camp de Muzdalifah',
     fawjNum:'Votre numéro de groupe',
     busNum:'Votre numéro de bus',
     supervisorTitle:'Votre superviseur',
@@ -484,7 +514,7 @@ const LANGS = {
     pending:'尚未完成',
     confirmed:'已确认', cancelled:'已取消', paid:'已付款', unpaid:'未付款',
     
-    minaSeat:'您在米纳营地的座位', arafatSeat:'您在阿拉法特营地的座位', fawjNum:'您的团队编号', busNum:'您的巴士编号', supervisorTitle:'您的监督员', supervisorNone:'尚未分配监督员', supervisorContact:'在WhatsApp上联系您的监督员', announcementsTitle:'📢 公告', sheikhTitle:'🕋 学者与向导', companyTitle:'🏢 公司信息', surveyTitle:'⭐ 调查', surveyMsg:'调查即将开放，感谢您的关注。', whatsappBtn:'💬 在WhatsApp上联系我们', mapsMina:'📍 米纳地图', mapsArafat:'📍 阿拉法特地图', mapsTitle:'营地位置'
+    minaSeat:'您在米纳营地的座位', arafatSeat:'您在阿拉法特营地的座位', muzdalifahSeat:'您在穆兹达利法营地的座位', fawjNum:'您的团队编号', busNum:'您的巴士编号', supervisorTitle:'您的监督员', supervisorNone:'尚未分配监督员', supervisorContact:'在WhatsApp上联系您的监督员', announcementsTitle:'📢 公告', sheikhTitle:'🕋 学者与向导', companyTitle:'🏢 公司信息', surveyTitle:'⭐ 调查', surveyMsg:'调查即将开放，感谢您的关注。', whatsappBtn:'💬 在WhatsApp上联系我们', mapsMina:'📍 米纳地图', mapsArafat:'📍 阿拉法特地图', mapsTitle:'营地位置'
   ,
     annTitle:'📢 公告与说明', mapsTitle:'📍 圣地营地位置', minaBtnTxt:'米纳营地位置', arafatBtnTxt:'阿拉法特营地位置', transportTitle:'🚌 团队与巴士信息', supervisorTitle2:'👤 您的监督员', surveyTitle2:'⭐ 营地评估调查', surveyMsg2:'调查将稍后上传，感谢您的关注 🙏', whatsappTitle:'📞 咨询与请求', whatsappBtnTxt:'在WhatsApp上联系我们'
   }
@@ -597,6 +627,7 @@ async function doLogin(){
           'حالة الإركاب': pilgrim.bus_status,
           'موقع الجلوس في منى': pilgrim.mina_seat,
           'موقع الجلوس في عرفات': pilgrim.arafat_seat,
+          'موقع الجلوس في مزدلفة': pilgrim.muzdalifah_seat,
           'اسم المشرف الخاص بالحاج': pilgrim.supervisor_name,
           'رقم جوال المشرف': pilgrim.supervisor_phone,
           'رقم فوج التفويج الخاص بك': pilgrim.group_num,
@@ -704,10 +735,10 @@ async function showResult(r){
     {title:ts[0], desc:r['تاريخ الحجز'], done:true},
     {title:ts[1], desc:tv(booking), done:booking==='مؤكد'},
     {title:ts[2], desc:tv(pay), done:pay==='مدفوع'},
-    {title:ts[3], desc:permit&&permit!=='-'?permit:L.pending, done:permit&&!permit.includes('انتظار')&&permit!=='-'},
-    {title:ts[4], desc:card&&card!=='-'?card:L.pending, done:card&&card!=='-'},
-    {title:ts[5], desc:bus&&bus!=='-'?bus:L.pending, done:bus&&bus!=='-'},
-    {title:ts[6], desc:camp&&camp!=='-'?camp:L.pending, done:camp&&camp!=='-'},
+    {title:ts[3], desc:permit&&permit!=='-'?permit:L.pending, done:permit&&permit!=='-'&&!permit.includes('انتظار')&&!permit.includes('لم يتم')&&!permit.includes('لم يصدر')},
+    {title:ts[4], desc:card&&card!=='-'?card:L.pending, done:card&&card!=='-'&&!card.includes('لم يتم')&&!card.includes('لم يسلم')},
+    {title:ts[5], desc:bus&&bus!=='-'?bus:L.pending, done:bus&&bus!=='-'&&!bus.includes('لم يتم')},
+    {title:ts[6], desc:camp&&camp!=='-'?camp:L.pending, done:camp&&camp!=='-'&&!camp.includes('لم يتم')},
   ];
   document.getElementById('r-timeline').innerHTML = steps.map((s,i)=>`
     <div class="tl-item${i===steps.length-1?' tl-last':''}">
@@ -726,9 +757,10 @@ async function showResult(r){
 
   window.scrollTo(0,0);
 
-  // مقعد منى وعرفات
+  // مقعد منى وعرفات ومزدلفة
   const mina = r['موقع الجلوس في منى'] || '—';
   const arafat = r['موقع الجلوس في عرفات'] || '—';
+  const muzdalifah = r['موقع الجلوس في مزدلفة'] || '—';
   document.getElementById('r-seats').innerHTML = `
     <div class="seat-card">
       <div class="slbl">🏕️ ${L.minaSeat}</div>
@@ -737,6 +769,10 @@ async function showResult(r){
     <div class="seat-card">
       <div class="slbl">🌄 ${L.arafatSeat}</div>
       <div class="snum">${arafat}</div>
+    </div>
+    <div class="seat-card">
+      <div class="slbl">🌙 ${L.muzdalifahSeat}</div>
+      <div class="snum">${muzdalifah}</div>
     </div>
   `;
 
@@ -836,6 +872,8 @@ async function applyPortalSettings() {
     const root = document.documentElement.style;
     root.setProperty('--p-primary', c1);
     root.setProperty('--p-accent', c2);
+    // حفظ في localStorage للتطبيق الفوري في التحديثات القادمة
+    try { localStorage.setItem('hajj_portal_colors', JSON.stringify({c1,c2})); } catch(e){}
     // تطبيق على العناصر
     document.querySelectorAll('.header').forEach(el =>
       el.style.borderBottomColor = c2);
@@ -854,8 +892,9 @@ async function applyPortalSettings() {
     let styleTag = document.getElementById('portal-dynamic-style');
     if(!styleTag){ styleTag = document.createElement('style'); styleTag.id='portal-dynamic-style'; document.head.appendChild(styleTag); }
     styleTag.textContent = `
+      :root { --p-primary:${c1}; --p-accent:${c2}; }
       .input-wrapper input:focus { border-color:${c2}!important; box-shadow:0 0 0 3px ${c2}33!important; }
-      .login-btn { background:linear-gradient(135deg,${c1},${c2})!important; box-shadow:0 4px 14px ${c1}66!important; }
+      .login-btn { background:linear-gradient(135deg,${c1},${c2})!important; box-shadow:0 4px 14px ${c1}44!important; }
       .company-top { background:linear-gradient(135deg,${c1},${c2})!important; border-bottom-color:${c2}!important; }
       .section-title { border-right-color:${c2}!important; }
       .header { border-bottom-color:${c2}!important; }
@@ -865,33 +904,52 @@ async function applyPortalSettings() {
       .tl-badge-done { border-color:${c1}!important; }
     `;
 
-    // ===== الشعار =====
-    if(s.logo) {
-      const logoEl = document.getElementById('logo');
-      if(logoEl) logoEl.src = s.logo;
-    }
+    // ===== الشعار (من مفتاح منفصل) =====
+    try {
+      const logoSaved = await window.DB.Settings.get('hajj_portal_logo');
+      if(logoSaved?.data) {
+        // الهيدر + شاشة الدخول
+        ['logo','logo2'].forEach(id => {
+          const el = document.getElementById(id);
+          if(el) { el.src = logoSaved.data; el.style.display='block'; }
+        });
+        // الأيقونة في تبويب المتصفح
+        const fav = document.getElementById('favicon');
+        if(fav) fav.href = logoSaved.data;
+        // حفظ في localStorage للتطبيق الفوري
+        try { localStorage.setItem('hajj_portal_logo_cache', logoSaved.data); } catch(e){}
+      }
+    } catch(e){}
+
+    // ===== الخلفية (من مفتاح منفصل) =====
+    try {
+      const bgSaved = await window.DB.Settings.get('hajj_portal_bg');
+      if(bgSaved?.data) {
+        const bgEl = document.getElementById('page-bg');
+        if(bgEl) {
+          bgEl.style.display='block';
+          bgEl.style.cssText='position:fixed;inset:0;z-index:0;background-image:url('+bgSaved.data+');background-size:cover;background-position:center;opacity:.07;pointer-events:none';
+        }
+      }
+    } catch(e){}
 
     // ===== اسم الشركة وعنوان البوابة =====
-    if(s.company) {
-      const titleEl = document.getElementById('h-title');
-      // نُحدّث فقط الجزء الثابت (الأحمدي)
-      if(titleEl) titleEl.textContent = 'بوابة الحاج — ' + s.company;
-      // كذلك في company-top
-      document.querySelectorAll('.company-top').forEach(el => {
-        if(!el.dataset.customized) el.dataset.customized='1';
-      });
+    const titleEl = document.getElementById('h-title');
+    if(s.company && titleEl) {
+      titleEl.textContent = 'بوابة الحاج — ' + s.company;
     }
+    if(titleEl) titleEl.style.opacity = '1';
 
     // ===== رسالة الترحيب =====
-    if(s.welcome) {
-      const wEl = document.getElementById('l-welcome');
-      if(wEl) wEl.textContent = s.welcome;
+    const wEl = document.getElementById('l-welcome');
+    if(wEl) {
+      wEl.textContent = s.welcome || LANGS['ar'].welcome;
+      wEl.style.opacity = '1';
     }
-
     // ===== رسالة وصف =====
-    if(s.greeting) {
-      const gEl = document.getElementById('l-desc');
-      if(gEl) gEl.textContent = s.greeting;
+    const gEl = document.getElementById('l-desc');
+    if(gEl) {
+      if(s.greeting) { gEl.textContent = s.greeting; gEl.style.display='block'; }
     }
 
     // ===== رابط الخريطة =====
@@ -916,25 +974,30 @@ async function applyPortalSettings() {
       if(emLink) emLink.href = 'tel:' + s.emergency;
     }
 
-    // ===== صورة الخلفية =====
-    if(s.bg) {
-      const bgEl = document.getElementById('page-bg');
-      if(bgEl) {
-        bgEl.style.display = 'block';
-        bgEl.style.cssText = 'position:fixed;inset:0;z-index:0;background-image:url('+s.bg+');background-size:cover;background-position:center;opacity:.07;pointer-events:none';
-      }
-    }
+
 
     // ===== نص زر الدخول =====
     if(s['btn-label']) {
       const btnEl = document.getElementById('l-btn');
       if(btnEl) btnEl.textContent = s['btn-label'];
     }
+    // ===== النص تحت الزر =====
+    if(s['tagline']) {
+      const tEl = document.getElementById('l-tagline');
+      if(tEl) tEl.textContent = s['tagline'];
+    }
 
   } catch(e) { console.warn('Portal settings error:', e); }
 }
 
-applyPortalSettings();
+applyPortalSettings().catch(()=>{
+  // fallback: أظهر القيم الافتراضية
+  const wEl = document.getElementById('l-welcome');
+  if(wEl){ wEl.textContent = LANGS['ar'].welcome; wEl.style.opacity='1'; }
+  const tEl = document.getElementById('h-title');
+  if(tEl) tEl.style.opacity='1';
+  ['logo','logo2'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='block'; });
+});
 
 setLang('ar', true);
 applyVisibilitySettings();
