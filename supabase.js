@@ -27,6 +27,10 @@ const Pilgrims = {
     const { error } = await _db.from('pilgrims').update(updates).eq('id', id);
     if (error) throw error;
   },
+  async bulkUpdate(ids, updates) {
+    const { error } = await _db.from('pilgrims').update(updates).in('id', ids);
+    if (error) throw error;
+  },
   async deleteAll() {
     const { error } = await _db.from('pilgrims').delete().neq('id', 0);
     if (error) throw error;
