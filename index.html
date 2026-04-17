@@ -820,6 +820,122 @@ function rejectHajConsent() {
   document.getElementById('logout-btn').style.display = 'none';
 }
 
+
+// ===== إعدادات بوابة الحاج من الأدمن =====
+const PORTAL_SETTINGS_KEY = 'hajj_portal_settings';
+
+async function applyPortalSettings() {
+  try {
+    if(!window.DB) return;
+    const s = await window.DB.Settings.get(PORTAL_SETTINGS_KEY);
+    if(!s) return;
+
+    // ===== الألوان =====
+    const c1 = s.color1 || '#3d2000';
+    const c2 = s.color2 || '#c8971a';
+    const root = document.documentElement.style;
+    root.setProperty('--p-primary', c1);
+    root.setProperty('--p-accent', c2);
+    // تطبيق على العناصر
+    document.querySelectorAll('.header').forEach(el =>
+      el.style.borderBottomColor = c2);
+    document.querySelectorAll('.section-title').forEach(el =>
+      el.style.borderRightColor = c2);
+    document.querySelectorAll('.login-btn').forEach(el =>
+      el.style.background = `linear-gradient(135deg,${c1},${c2})`);
+    document.querySelectorAll('.company-top').forEach(el =>
+      el.style.background = `linear-gradient(135deg,${c1},${c2})`);
+    document.querySelectorAll('.survey-btn').forEach(el =>
+      el.style.background = `linear-gradient(135deg,${c1},${c2})`);
+    document.querySelectorAll('.map-btn').forEach(el => {
+      el.style.borderColor = c2; el.style.color = c1;
+    });
+    // inject CSS for persistent colors
+    let styleTag = document.getElementById('portal-dynamic-style');
+    if(!styleTag){ styleTag = document.createElement('style'); styleTag.id='portal-dynamic-style'; document.head.appendChild(styleTag); }
+    styleTag.textContent = `
+      .input-wrapper input:focus { border-color:${c2}!important; box-shadow:0 0 0 3px ${c2}33!important; }
+      .login-btn { background:linear-gradient(135deg,${c1},${c2})!important; box-shadow:0 4px 14px ${c1}66!important; }
+      .company-top { background:linear-gradient(135deg,${c1},${c2})!important; border-bottom-color:${c2}!important; }
+      .section-title { border-right-color:${c2}!important; }
+      .header { border-bottom-color:${c2}!important; }
+      .map-btn { border-color:${c2}!important; color:${c1}!important; }
+      .survey-btn,.whatsapp-btn:not([href*="wa.me"]) { background:linear-gradient(135deg,${c1},${c2})!important; }
+      .announcement-badge { background:${c2}!important; }
+      .tl-badge-done { border-color:${c1}!important; }
+    `;
+
+    // ===== الشعار =====
+    if(s.logo) {
+      const logoEl = document.getElementById('logo');
+      if(logoEl) logoEl.src = s.logo;
+    }
+
+    // ===== اسم الشركة وعنوان البوابة =====
+    if(s.company) {
+      const titleEl = document.getElementById('h-title');
+      // نُحدّث فقط الجزء الثابت (الأحمدي)
+      if(titleEl) titleEl.textContent = 'بوابة الحاج — ' + s.company;
+      // كذلك في company-top
+      document.querySelectorAll('.company-top').forEach(el => {
+        if(!el.dataset.customized) el.dataset.customized='1';
+      });
+    }
+
+    // ===== رسالة الترحيب =====
+    if(s.welcome) {
+      const wEl = document.getElementById('l-welcome');
+      if(wEl) wEl.textContent = s.welcome;
+    }
+
+    // ===== رسالة وصف =====
+    if(s.greeting) {
+      const gEl = document.getElementById('l-desc');
+      if(gEl) gEl.textContent = s.greeting;
+    }
+
+    // ===== رابط الخريطة =====
+    if(s.map) {
+      const minaBtn = document.getElementById('r-mina-map');
+      const arafatBtn = document.getElementById('r-arafat-map');
+      if(minaBtn) minaBtn.href = s.map;
+      if(arafatBtn) arafatBtn.href = s.map;
+    }
+
+    // ===== واتساب =====
+    if(s.whatsapp) {
+      const waBtn = document.querySelector('.whatsapp-btn');
+      if(waBtn) waBtn.href = s.whatsapp;
+    }
+
+    // ===== رقم الطوارئ =====
+    if(s.emergency) {
+      const emEl = document.getElementById('emergency-number');
+      if(emEl) emEl.textContent = s.emergency;
+      const emLink = document.getElementById('emergency-link');
+      if(emLink) emLink.href = 'tel:' + s.emergency;
+    }
+
+    // ===== صورة الخلفية =====
+    if(s.bg) {
+      const bgEl = document.getElementById('page-bg');
+      if(bgEl) {
+        bgEl.style.display = 'block';
+        bgEl.style.cssText = 'position:fixed;inset:0;z-index:0;background-image:url('+s.bg+');background-size:cover;background-position:center;opacity:.07;pointer-events:none';
+      }
+    }
+
+    // ===== نص زر الدخول =====
+    if(s['btn-label']) {
+      const btnEl = document.getElementById('l-btn');
+      if(btnEl) btnEl.textContent = s['btn-label'];
+    }
+
+  } catch(e) { console.warn('Portal settings error:', e); }
+}
+
+applyPortalSettings();
+
 setLang('ar', true);
 applyVisibilitySettings();
 

@@ -1,4 +1,4 @@
-<!-- HAJJ_PORTAL v7.8 | DO NOT EDIT MANUALLY -->
+<!-- HAJJ_PORTAL v9.0 | DO NOT EDIT MANUALLY -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -198,7 +198,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 
 /* Housing tabs */
 .hs-btn{padding:8px 14px;border:1.5px solid #ddd;background:#fff;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:#555;transition:all .2s}
-.hs-btn.hs-active{background:linear-gradient(135deg,#3d2000,#c8971a);color:#fff;border-color:#c8971a}
+.hs-btn.hs-active{background:linear-gradient(135deg,var(--brown),var(--gold));color:#fff!important;border-color:var(--gold)}
 .btn-add-item{background:linear-gradient(135deg,#3d2000,#c8971a);color:#fff;border:none;border-radius:10px;padding:10px 18px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600}
 
 /* Cards */
@@ -409,6 +409,38 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   .stat:hover{transform:none;box-shadow:var(--shadow-sm)}
   tbody tr:not([data-rel="1"]):hover td{background:var(--surface)}
 }
+
+/* ===== Theme Customizer ===== */
+.preset-btn{
+  padding:10px 8px;border:none;border-radius:10px;color:#fff;
+  cursor:pointer;font-size:12px;font-weight:700;font-family:inherit;
+  transition:transform .15s,box-shadow .15s;text-align:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.preset-btn:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.3)}
+.color-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:12px;background:#fff;
+  border:1.5px solid #ede8df;cursor:pointer;
+  transition:border-color .15s,box-shadow .15s;
+  position:relative;
+}
+.color-row:hover{border-color:#c8971a;box-shadow:0 2px 10px rgba(200,151,26,.15)}
+.color-swatch{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  box-shadow:0 2px 6px rgba(0,0,0,.15);transition:transform .15s;
+}
+.color-row:hover .color-swatch{transform:scale(1.08)}
+
+/* ===== Pilgrim Portal Tabs ===== */
+.pt-btn{
+  padding:8px 16px;border:none;background:none;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:600;color:#888;
+  border-bottom:2px solid transparent;margin-bottom:-2px;
+  transition:all .15s;white-space:nowrap;
+}
+.pt-btn.pt-active{color:var(--brown);border-bottom-color:var(--gold);font-weight:700}
+.pt-btn:hover:not(.pt-active){color:var(--brown-mid)}
 /* Toast Notifications */
 #toast-container { position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:99999; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
 .toast { padding:14px 24px; border-radius:12px; font-size:14px; font-weight:600; font-family:inherit; box-shadow:0 8px 30px rgba(0,0,0,0.2); animation:toastIn 0.3s ease; display:flex; align-items:center; gap:10px; min-width:260px; justify-content:center; pointer-events:all; }
@@ -429,6 +461,8 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   <script src="config.js"></script>
   <script src="supabase.js"></script>
 
+
+  <style id="dynamic-theme-style"></style>
 </head>
 <body>
 <div id="toast-container"></div>
@@ -602,7 +636,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 
   <!-- تبويبات -->
   <div class="nav-tabs" style="display:flex;background:#fff;border-bottom:2px solid #e0d5c5;padding:0 20px;overflow-x:auto;flex-wrap:nowrap">
-    <button id="tab-data-btn" onclick="switchTab('data')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:#b8860b;border-bottom:3px solid #b8860b;margin-bottom:-2px;white-space:nowrap">📊 بيانات الحجاج</button>
+    <button id="tab-data-btn" onclick="switchTab('data')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:var(--gold,#b8860b);border-bottom:3px solid var(--gold,#b8860b);margin-bottom:-2px;white-space:nowrap">📊 بيانات الحجاج</button>
     <button id="tab-settings-btn" onclick="switchTab('settings')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">⚙️ إعدادات النظام</button>
     <button id="tab-housing-btn" onclick="switchTab('housing')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">🗂️ الإدارة والخدمات</button>
     <button id="tab-staff-btn" onclick="switchTab('staff')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">👨‍💼 إدارة الموظفين</button>
@@ -617,7 +651,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
     <!-- أزرار الأقسام -->
     <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
       <button id="cfg-pilgrim-btn" onclick="switchCfg('pilgrim')" style="padding:10px 20px;border:2px solid #b8860b;border-radius:10px;background:#b8860b;color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">🕋 بوابة الحاج</button>
-      <button id="cfg-groups-btn" onclick="switchCfg('groups')" style="padding:10px 20px;border:2px solid #ddd;border-radius:10px;background:#fff;color:#555;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">👥 إدارة المجموعات</button>
+      <button id="cfg-theme-btn" onclick="switchCfg('theme')" style="padding:10px 20px;border:2px solid #ddd;border-radius:10px;background:#fff;color:#555;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">🎨 تخصيص الثيم</button>
       <button id="cfg-general-btn" onclick="switchCfg('general')" style="padding:10px 20px;border:2px solid #ddd;border-radius:10px;background:#fff;color:#555;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">🏢 إعدادات عامة</button>
       <button id="cfg-dev-btn" onclick="switchCfg('dev')" style="display:none;padding:10px 20px;border:2px solid #c00;border-radius:10px;background:#fff;color:#c00;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">🔐 إعدادات النظام</button>
       <button id="cfg-import-btn" onclick="switchCfg('import')" style="display:none;padding:10px 20px;border:2px solid #1a5fa8;border-radius:10px;background:#fff;color:#1a5fa8;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">📥 استيراد بيانات المنصة</button>
@@ -625,22 +659,229 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 
     <!-- قسم بوابة الحاج -->
     <div id="cfg-pilgrim" style="display:block">
-      <h3 style="font-size:15px;font-weight:700;color:#3d2000;margin-bottom:6px">🕋 لوحة تحكم بوابة الحاج</h3>
-      <p style="font-size:13px;color:#888;margin-bottom:16px">تحكم في إظهار وإخفاء الأقسام في صفحة الحاج</p>
-      <div id="sections-toggles" style="display:flex;flex-direction:column;gap:12px"></div>
-      <button onclick="saveVisibilitySettings()" style="margin-top:20px;width:100%;padding:14px;background:linear-gradient(135deg,#3d2000,#c8971a);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">💾 حفظ إعدادات البوابة</button>
-      <div id="settings-msg" style="display:none;margin-top:12px;text-align:center;color:#1a7a1a;font-weight:600;font-size:14px">✅ تم الحفظ بنجاح</div>
-    </div>
 
-    <!-- قسم إدارة المجموعات -->
-    <div id="cfg-groups" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-        <h3 style="font-size:15px;font-weight:700;color:#3d2000;margin:0">👥 المجموعات — لوحة تحكم إدارة الحجاج</h3>
-        <button onclick="openGroupCfgModal()" class="btn-add-item">+ إضافة مجموعة</button>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #f0e8d8">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#3d2000,#c8971a);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🕋</div>
+        <div>
+          <div style="font-size:17px;font-weight:800;color:#1a1208">تحكم في بوابة الحاج</div>
+          <div style="font-size:12px;color:#a89070;margin-top:2px">جميع التغييرات تنعكس فوراً على بوابة الحاج</div>
+        </div>
       </div>
-      <div id="groups-cfg-list"></div>
-    </div>
 
+      <!-- الهوية البصرية -->
+      <div style="font-size:11px;font-weight:700;color:#a89070;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">🎨 الهوية البصرية</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="form-row">
+          <label>اسم الشركة / الحملة</label>
+          <input type="text" id="pp-company" placeholder="الأحمدي">
+        </div>
+        <div class="form-row">
+          <label>شعار الترحيب</label>
+          <input type="text" id="pp-welcome" placeholder="أهلاً بكم في بوابة الحجاج">
+        </div>
+        <div class="form-row">
+          <label>اللون الأساسي</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="color" id="pp-color1" value="#3d2000" style="width:44px;height:38px;border:none;border-radius:8px;cursor:pointer;padding:2px">
+            <input type="text" id="pp-color1-txt" value="#3d2000" oninput="document.getElementById('pp-color1').value=this.value" style="flex:1;padding:8px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:12px;font-family:monospace">
+          </div>
+        </div>
+        <div class="form-row">
+          <label>لون التمييز</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="color" id="pp-color2" value="#c8971a" style="width:44px;height:38px;border:none;border-radius:8px;cursor:pointer;padding:2px">
+            <input type="text" id="pp-color2-txt" value="#c8971a" oninput="document.getElementById('pp-color2').value=this.value" style="flex:1;padding:8px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:12px;font-family:monospace">
+          </div>
+        </div>
+        <div class="form-row" style="grid-column:1/-1">
+          <label>شعار الشركة (رابط الصورة)</label>
+          <input type="url" id="pp-logo" placeholder="https://...">
+        </div>
+        <div class="form-row" style="grid-column:1/-1">
+          <label>صورة خلفية (اختياري)</label>
+          <input type="url" id="pp-bg" placeholder="https://...">
+        </div>
+      </div>
+
+      <!-- المحتوى والتواصل -->
+      <div style="font-size:11px;font-weight:700;color:#a89070;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">📝 المحتوى والتواصل</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div class="form-row" style="grid-column:1/-1">
+          <label>رسالة ترحيبية للحاج</label>
+          <textarea id="pp-greeting" rows="2" placeholder="أدخل رقم الهوية ورقم الحجز للاطلاع على تفاصيل حجزك"></textarea>
+        </div>
+        <div class="form-row">
+          <label>رابط واتساب</label>
+          <input type="url" id="pp-whatsapp" placeholder="https://wa.me/...">
+        </div>
+        <div class="form-row">
+          <label>رقم الطوارئ</label>
+          <input type="tel" id="pp-emergency" placeholder="0555000000">
+        </div>
+        <div class="form-row">
+          <label>رابط خريطة منى</label>
+          <input type="url" id="pp-map" placeholder="https://maps.google.com/...">
+        </div>
+        <div class="form-row">
+          <label>نص زر الدخول</label>
+          <input type="text" id="pp-btn-label" placeholder="عرض معلومات حجزي">
+        </div>
+      </div>
+
+      <!-- الأقسام -->
+      <div style="font-size:11px;font-weight:700;color:#a89070;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">👁️ الأقسام المرئية للحاج</div>
+      <div id="sections-toggles" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+
+      <!-- حفظ -->
+      <div style="display:flex;gap:10px;padding-top:16px;border-top:2px solid #f0e8d8">
+        <button onclick="savePilgrimPortalSettings()" style="flex:1;padding:13px;background:linear-gradient(135deg,var(--brown),var(--brown-mid));color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;box-shadow:0 3px 10px rgba(61,32,0,.2)">💾 حفظ وتطبيق على البوابة</button>
+      </div>
+      <div id="settings-msg" style="display:none;margin-top:10px;text-align:center;color:#1a7a1a;font-weight:600;font-size:13px">✅ تم الحفظ — سيظهر على البوابة فوراً</div>
+    </div>
+    <!-- قسم تخصيص الثيم -->
+    <div id="cfg-theme" style="display:none">
+
+      <!-- رأس القسم -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #f0e8d8">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#3d2000,#c8971a);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🎨</div>
+        <div>
+          <div style="font-size:17px;font-weight:800;color:#1a1208">تخصيص هوية الواجهة</div>
+          <div style="font-size:12px;color:#a89070;margin-top:2px">غيّر ألوان النظام وشاهد التغيير فوراً</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+
+        <!-- اليسار: الأدوات -->
+        <div>
+
+          <!-- ثيمات جاهزة -->
+          <div style="margin-bottom:22px">
+            <div style="font-size:11px;font-weight:700;color:#a89070;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">ثيمات جاهزة</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
+              <button onclick="applyPreset('hajj')" class="preset-btn" style="background:linear-gradient(135deg,#3d2000,#c8971a)">🕋 الحج</button>
+              <button onclick="applyPreset('blue')" class="preset-btn" style="background:linear-gradient(135deg,#1a3a6a,#3a8fd0)">🌊 البحري</button>
+              <button onclick="applyPreset('green')" class="preset-btn" style="background:linear-gradient(135deg,#1a4a1a,#5ab85a)">🌿 الأخضر</button>
+              <button onclick="applyPreset('dark')" class="preset-btn" style="background:linear-gradient(135deg,#111,#444)">🌙 الداكن</button>
+              <button onclick="applyPreset('purple')" class="preset-btn" style="background:linear-gradient(135deg,#3a1a6a,#9a5ae8)">💜 بنفسجي</button>
+              <button onclick="applyPreset('rose')" class="preset-btn" style="background:linear-gradient(135deg,#6a1a2a,#e83a6a)">🌹 وردي</button>
+            </div>
+          </div>
+
+          <!-- منتقيات الألوان -->
+          <div style="margin-bottom:22px">
+            <div style="font-size:11px;font-weight:700;color:#a89070;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">تخصيص يدوي</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+
+              <div class="color-row" onclick="document.getElementById('tc-brown').click()">
+                <input type="color" id="tc-brown" value="#3d2000" oninput="applyThemePreview()" style="position:absolute;opacity:0;pointer-events:none">
+                <div class="color-swatch" id="swatch-brown" style="background:#3d2000"></div>
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:700;color:#1a1208">اللون الأساسي</div>
+                  <div style="font-size:11px;color:#a89070">Header • شريط التبويبات</div>
+                </div>
+                <code id="tc-brown-txt" style="font-size:12px;color:#888;background:#f5f0ea;padding:4px 8px;border-radius:6px">#3d2000</code>
+              </div>
+
+              <div class="color-row" onclick="document.getElementById('tc-mid').click()">
+                <input type="color" id="tc-mid" value="#7a4500" oninput="applyThemePreview()" style="position:absolute;opacity:0;pointer-events:none">
+                <div class="color-swatch" id="swatch-mid" style="background:#7a4500"></div>
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:700;color:#1a1208">اللون الثانوي</div>
+                  <div style="font-size:11px;color:#a89070">رأس الجداول • أزرار</div>
+                </div>
+                <code id="tc-mid-txt" style="font-size:12px;color:#888;background:#f5f0ea;padding:4px 8px;border-radius:6px">#7a4500</code>
+              </div>
+
+              <div class="color-row" onclick="document.getElementById('tc-gold').click()">
+                <input type="color" id="tc-gold" value="#c8971a" oninput="applyThemePreview()" style="position:absolute;opacity:0;pointer-events:none">
+                <div class="color-swatch" id="swatch-gold" style="background:#c8971a"></div>
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:700;color:#1a1208">لون التمييز</div>
+                  <div style="font-size:11px;color:#a89070">أزرار الحفظ • labels • الترقيم</div>
+                </div>
+                <code id="tc-gold-txt" style="font-size:12px;color:#888;background:#f5f0ea;padding:4px 8px;border-radius:6px">#c8971a</code>
+              </div>
+
+              <div class="color-row" onclick="document.getElementById('tc-surface').click()">
+                <input type="color" id="tc-surface" value="#f3ede4" oninput="applyThemePreview()" style="position:absolute;opacity:0;pointer-events:none">
+                <div class="color-swatch" id="swatch-surface" style="background:#f3ede4;border:1px solid #e0d5c5"></div>
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:700;color:#1a1208">خلفية الصفحة</div>
+                  <div style="font-size:11px;color:#a89070">لون الخلفية العامة</div>
+                </div>
+                <code id="tc-surface-txt" style="font-size:12px;color:#888;background:#f5f0ea;padding:4px 8px;border-radius:6px">#f3ede4</code>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- أزرار -->
+          <div style="display:flex;gap:10px">
+            <button onclick="saveTheme()" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--brown),var(--brown-mid));color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;box-shadow:0 3px 10px rgba(61,32,0,.25)">💾 حفظ وتطبيق</button>
+            <button onclick="resetTheme()" style="padding:12px 18px;background:#fff;border:1.5px solid #e0d5c5;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:#888">↺ إعادة تعيين</button>
+          </div>
+
+        </div>
+
+        <!-- اليمين: معاينة حية -->
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#a89070;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">معاينة مباشرة</div>
+          <div style="border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.12);border:1px solid #e0d5c5">
+            <!-- Header preview -->
+            <div id="prev-header" style="padding:10px 14px;background:linear-gradient(135deg,#3d2000,#7a4500,#c8971a);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;gap:8px">
+              <span>⛺</span> بوابة حجاج الأحمدي
+            </div>
+            <!-- Tabs preview -->
+            <div id="prev-tabs" style="display:flex;background:#fff;border-bottom:2px solid #e0d5c5">
+              <div style="padding:8px 12px;font-size:10px;font-weight:700;color:#c8971a;border-bottom:2px solid #c8971a;margin-bottom:-2px">📊 البيانات</div>
+              <div style="padding:8px 12px;font-size:10px;color:#888">⚙️ الإعدادات</div>
+            </div>
+            <!-- Stats preview -->
+            <div id="prev-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;background:#f3ede4">
+              <div style="background:#fff;border-radius:8px;padding:8px;text-align:center;border-top:2px solid #3d2000">
+                <div style="font-size:14px;font-weight:800;color:#3d2000" id="ps-num1">251</div>
+                <div style="font-size:8px;color:#888;margin-top:2px">إجمالي</div>
+              </div>
+              <div style="background:#fff;border-radius:8px;padding:8px;text-align:center;border-top:2px solid #1a7a1a">
+                <div style="font-size:14px;font-weight:800;color:#1a7a1a">198</div>
+                <div style="font-size:8px;color:#888;margin-top:2px">مؤكد</div>
+              </div>
+              <div style="background:#fff;border-radius:8px;padding:8px;text-align:center;border-top:2px solid #c8971a" id="prev-gold-stat">
+                <div style="font-size:14px;font-weight:800;color:#c8971a">180</div>
+                <div style="font-size:8px;color:#888;margin-top:2px">مدفوع</div>
+              </div>
+            </div>
+            <!-- Table preview -->
+            <div style="overflow:hidden">
+              <div id="prev-thead" style="display:grid;grid-template-columns:1fr 1fr 1fr">
+                <div style="padding:7px 10px;background:linear-gradient(180deg,#4a2800,#3d2000);color:#fff;font-size:9px;font-weight:700;border-left:1px solid rgba(255,255,255,.1)">اسم الحاج</div>
+                <div style="padding:7px 10px;background:linear-gradient(180deg,#4a2800,#3d2000);color:#fff;font-size:9px;font-weight:700;border-left:1px solid rgba(255,255,255,.1)">الجنسية</div>
+                <div style="padding:7px 10px;background:linear-gradient(180deg,#4a2800,#3d2000);color:#fff;font-size:9px;font-weight:700">المخيم</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;background:#fff">
+                <div style="padding:6px 10px;font-size:9px;border-left:1px solid #f0ebe3;border-bottom:1px solid #f5f0ea">محمد أحمد</div>
+                <div style="padding:6px 10px;font-size:9px;border-left:1px solid #f0ebe3;border-bottom:1px solid #f5f0ea">باكستان</div>
+                <div style="padding:6px 10px;font-size:9px;border-bottom:1px solid #f5f0ea">101</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;background:#f5f0ea">
+                <div style="padding:6px 10px;font-size:9px;border-left:1px solid #f0ebe3">عبدالله خان</div>
+                <div style="padding:6px 10px;font-size:9px;border-left:1px solid #f0ebe3">الهند</div>
+                <div style="padding:6px 10px;font-size:9px">102</div>
+              </div>
+            </div>
+            <!-- Button preview -->
+            <div style="padding:10px;background:#fff;display:flex;gap:6px;align-items:center">
+              <div id="prev-btn" style="padding:6px 14px;border-radius:7px;background:linear-gradient(135deg,#c8971a,#b8860b);color:#fff;font-size:10px;font-weight:700">💾 حفظ</div>
+              <div id="prev-badge" style="padding:3px 8px;border-radius:12px;background:#e6faf0;color:#0a6e3a;border:1px solid #a8dfc0;font-size:9px;font-weight:700">مؤكد</div>
+              <div id="prev-page-btn" style="padding:5px 10px;border-radius:7px;background:linear-gradient(135deg,#3d2000,#7a4500);color:#fff;font-size:10px;font-weight:700">1</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
     <!-- قسم إعدادات عامة -->
     <div id="cfg-general" style="display:none">
       <h3 style="font-size:15px;font-weight:700;color:#3d2000;margin-bottom:16px">🏢 إعدادات عامة</h3>
@@ -1507,7 +1748,7 @@ function showHousingSection(sec) {
     const el = document.getElementById('hs-' + s);
     const btn = document.getElementById('hs-' + s + '-btn');
     if(el) el.style.display = s === sec ? '' : 'none';
-    if(btn) btn.classList.toggle('hs-active', s === sec);
+    if(btn) { btn.classList.toggle('hs-active', s === sec); btn.style.background=''; btn.style.borderColor=''; btn.style.color=''; }
   });
   currentHousingSection = sec;
   renderHousingSection();
@@ -3982,6 +4223,61 @@ async function deleteStaff(id) {
   await window.DB.Staff.delete(parseInt(id)); renderStaff();
 }
 
+
+// ===== تبويبات بوابة الحاج =====
+const PORTAL_SETTINGS_KEY = 'hajj_portal_settings';
+
+function switchPT(tab) {
+  ['identity','content','sections','contact'].forEach(t => {
+    const el = document.getElementById('pt-'+t);
+    const btn = document.getElementById('pt-'+t+'-btn');
+    if(el) el.style.display = t===tab ? '' : 'none';
+    if(btn) { btn.classList.toggle('pt-active', t===tab); }
+  });
+  if(tab==='sections') renderToggles();
+}
+
+function syncPPColor(colorId, txtId) {
+  const el = document.getElementById(colorId);
+  const txt = document.getElementById(txtId);
+  if(txt && /^#[0-9a-fA-F]{6}$/.test(txt.value)) { if(el) el.value = txt.value; }
+  if(el) { const ti = document.getElementById(txtId); if(ti) ti.value = el.value; }
+}
+
+async function loadPilgrimPortalSettings() {
+  try {
+    const saved = window.DB ? await window.DB.Settings.get(PORTAL_SETTINGS_KEY) : null;
+    if(!saved) return;
+    const fields = ['company','welcome','color1','color2','logo','bg','greeting','map','whatsapp','btn-label','emergency','email','twitter','instagram'];
+    fields.forEach(k => {
+      const el = document.getElementById('pp-'+k);
+      if(el && saved[k]) el.value = saved[k];
+    });
+    // ألوان
+    ['color1','color2'].forEach(k => {
+      const el = document.getElementById('pp-'+k);
+      const txt = document.getElementById('pp-'+k+'-txt');
+      if(el && saved[k]) el.value = saved[k];
+      if(txt && saved[k]) txt.value = saved[k];
+    });
+  } catch(e){}
+}
+
+async function savePilgrimPortalSettings() {
+  const fields = ['company','welcome','color1','color2','logo','bg','greeting','map','whatsapp','btn-label','emergency','email','twitter','instagram'];
+  const data = {};
+  fields.forEach(k => { const el = document.getElementById('pp-'+k); if(el) data[k] = el.value; });
+  // أيضاً حفظ إعدادات الأقسام
+  data._sections = currentSettings;
+  try {
+    await window.DB.Settings.set(PORTAL_SETTINGS_KEY, data);
+    await saveVisibilitySettings();
+    const msg = document.getElementById('settings-msg');
+    if(msg) { msg.style.display='block'; setTimeout(()=>msg.style.display='none', 3000); }
+    showToast('تم حفظ إعدادات البوابة ✅','success');
+  } catch(e) { showToast('خطأ في الحفظ','error'); }
+}
+
 const SECTIONS_KEY = 'haj_sections_visibility';
 
 const SECTIONS_CONFIG = [
@@ -4055,8 +4351,9 @@ function switchTab(tab) {
     const btn = document.getElementById('tab-'+t+'-btn');
     if(panel) panel.style.display = t===tab ? (t==='data'?'':'block') : 'none';
     if(btn){
-      btn.style.color = t===tab ? '#b8860b' : '#888';
-      btn.style.borderBottomColor = t===tab ? '#b8860b' : 'transparent';
+      const activeColor = getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() || '#b8860b';
+      btn.style.color = t===tab ? activeColor : '#888';
+      btn.style.borderBottomColor = t===tab ? activeColor : 'transparent';
       btn.style.fontWeight = t===tab ? '700' : '600';
     }
   });
@@ -4064,7 +4361,7 @@ function switchTab(tab) {
   const pag = document.getElementById('pagination');
   if(pag) pag.style.display = tab==='data' ? '' : 'none';
   if(tab==='data') document.getElementById('tab-data').style.display='';
-  if(tab==='settings') { loadVisibilitySettings(); showDevBtnIfSuperAdmin(); }
+  if(tab==='settings') { loadVisibilitySettings(); loadPilgrimPortalSettings(); showDevBtnIfSuperAdmin(); }
   if(tab==='housing') renderHousingSection();
   if(tab==='staff') renderStaff();
   if(tab==='ann') renderAnnouncements();
@@ -4692,6 +4989,7 @@ async function executeImport() {
 
     showToast('✅ تم الاستيراد بنجاح — ' + total + ' سجل', 'success');
     await loadData();
+  loadSavedTheme(); // بعد تحميل بيانات المستخدم
     resetImport();
   } catch(e) {
     showToast('خطأ: ' + e.message, 'error');
@@ -4713,8 +5011,289 @@ function resetImport() {
   document.getElementById('import-execute-btn').disabled = false;
 }
 
+
+// ===== نظام تخصيص الثيم =====
+const THEME_PRESETS = {
+  hajj:   {brown:'#3d2000', mid:'#7a4500', gold:'#c8971a', surface:'#f3ede4'},
+  rose:   {brown:'#6a1a2a', mid:'#c03a5a', gold:'#e87a9a', surface:'#fdf0f3'},
+  blue:   {brown:'#1a3a6a', mid:'#1a5fa8', gold:'#3a8fd0', surface:'#eef4fc'},
+  green:  {brown:'#1a4a1a', mid:'#2a7a2a', gold:'#5ab85a', surface:'#eef8ee'},
+  dark:   {brown:'#111111', mid:'#2a2a2a', gold:'#c8971a', surface:'#1a1a1a'},
+  purple: {brown:'#3a1a6a', mid:'#6a3aaa', gold:'#aa6aff', surface:'#f0eafc'},
+};
+
+function syncColorInput(colorId, textId) {
+  const txt = document.getElementById(textId)?.value||'';
+  if(/^#[0-9a-fA-F]{6}$/.test(txt)) {
+    const el = document.getElementById(colorId);
+    if(el) el.value = txt;
+    applyThemePreview();
+  }
+}
+
+function applyThemePreview() {
+  const brown   = document.getElementById('tc-brown')?.value  || '#3d2000';
+  const mid     = document.getElementById('tc-mid')?.value    || '#7a4500';
+  const gold    = document.getElementById('tc-gold')?.value   || '#c8971a';
+  const surface = document.getElementById('tc-surface')?.value|| '#f3ede4';
+  // تحديث labels
+  ['brown','mid','gold','surface'].forEach(k=>{
+    const el = document.getElementById('lbl-'+k);
+    const v = {brown,mid,gold,surface}[k];
+    if(el) el.textContent = v;
+    const txt = document.getElementById('tc-'+k+'-txt');
+    if(txt) txt.value = v;
+  });
+  // تحديث swatches
+  ['brown','mid','gold','surface'].forEach(k=>{
+    const sw = document.getElementById('swatch-'+k);
+    const txt = document.getElementById('tc-'+k+'-txt');
+    const v = {brown,mid,gold,surface}[k];
+    if(sw) sw.style.background = v;
+    if(txt) txt.textContent = v;
+  });
+  // معاينة مباشرة
+  const ph = document.getElementById('prev-header');
+  const pt = document.getElementById('prev-thead');
+  const pb = document.getElementById('prev-btn');
+  const pp = document.getElementById('prev-page-btn');
+  const ps = document.getElementById('prev-stats');
+  const pg = document.getElementById('prev-gold-stat');
+  if(ph) ph.style.background = `linear-gradient(135deg,${brown},${mid},${gold})`;
+  if(pt) [...pt.children].forEach(d=>d.style.background=`linear-gradient(180deg,${brown}cc,${brown})`);
+  if(pb) pb.style.background = `linear-gradient(135deg,${gold},${mid})`;
+  if(pp) pp.style.background = `linear-gradient(135deg,${brown},${mid})`;
+  if(ps) ps.style.background = surface;
+  if(pg) { pg.style.borderTopColor=gold; pg.querySelector('div').style.color=gold; }
+}
+
+function applyPreset(name) {
+  const p = THEME_PRESETS[name];
+  if(!p) return;
+  ['brown','mid','gold','surface'].forEach(k=>{
+    const el = document.getElementById('tc-'+k);
+    const txt = document.getElementById('tc-'+k+'-txt');
+    if(el) el.value = p[k];
+    if(txt) txt.value = p[k];
+  });
+  applyThemePreview();
+}
+
+function applyThemeToPage(t) {
+  const r = document.documentElement.style;
+  // CSS Variables — تطبيق على كل ما يستخدم var()
+  r.setProperty('--brown', t.brown);
+  r.setProperty('--brown-mid', t.mid);
+  r.setProperty('--gold', t.gold);
+  r.setProperty('--gold-dark', shadeColor(t.gold,-20));
+  r.setProperty('--gold-light', shadeColor(t.gold,30));
+  r.setProperty('--surface-3', t.surface);
+  r.setProperty('--surface-2', shadeColor(t.surface,3));
+
+  const G = (sel) => [...document.querySelectorAll(sel)];
+
+  // Header
+  G('.header').forEach(el=>el.style.background=`linear-gradient(135deg,${t.brown},${t.mid},${t.gold})`);
+
+  // Nav tabs active border
+  G('.nav-tabs button').forEach(btn=>{
+    if(btn.style.color===t.gold||btn.style.borderBottomColor===t.gold||btn.style.color==='rgb(184, 134, 11)'||btn.style.borderBottomColor!=='transparent'){
+      btn.style.color=t.gold; btn.style.borderBottomColor=t.gold;
+    }
+  });
+
+  // Table headers (th)
+  G('th').forEach(th=>{ th.style.background=`linear-gradient(180deg,${shadeColor(t.brown,10)},${t.brown})`; });
+
+  // Pagination active button
+  G('.pagination button.active').forEach(btn=>{
+    btn.style.background=`linear-gradient(135deg,${t.brown},${t.mid})`;
+    btn.style.borderColor=t.brown;
+  });
+
+  // Buttons with class btn-save
+  G('.btn-save').forEach(btn=>{ btn.style.background=`linear-gradient(135deg,${t.brown},${t.mid})`; });
+
+  // Buttons with class btn-add-item
+  G('.btn-add-item').forEach(btn=>{ btn.style.background=t.mid; btn.style.borderColor=t.mid; });
+
+  // Tab buttons bar (hs-btn active)
+  // hs-btn handled by CSS class
+  G('.hs-btn').forEach(btn=>{ btn.style.background=''; btn.style.borderColor=''; btn.style.color=''; });
+
+  // Filters reset buttons
+  G('.filters .reset').forEach(btn=>{ btn.style.background=`linear-gradient(135deg,${t.gold},${shadeColor(t.gold,-15)})`; });
+
+  // Stat cards top border
+  G('.stat.total').forEach(el=>el.style.setProperty('--_c',t.brown));
+
+  // Cfg section buttons (active)
+  G('[id^="cfg-"][id$="-btn"]').forEach(btn=>{
+    if(btn.style.background&&btn.style.background!=='rgb(255, 255, 255)'&&!btn.style.display.includes('none')){
+      const active = btn.style.fontWeight==='700'||btn.style.fontWeight==='bold';
+      if(active){ btn.style.background=t.gold; btn.style.borderColor=t.gold; }
+    }
+  });
+
+  // Page background
+  const tabData = document.getElementById('tab-data');
+  if(tabData) tabData.style.background=t.surface;
+
+  // === CSS ديناميكي شامل يغطي كل النوافذ ورؤوس الجداول ===
+  const styleTag = document.getElementById('dynamic-theme-style');
+  if(styleTag) {
+    const mid2 = shadeColor(t.brown, 12);
+    styleTag.textContent = `
+      /* Header */
+      .header { background: linear-gradient(135deg,${t.brown},${t.mid},${t.gold}) !important; }
+
+      /* جميع رؤوس الجداول — كل النوافذ */
+      th {
+        background: linear-gradient(180deg,${mid2},${t.brown}) !important;
+        border-bottom: 2px solid ${t.gold} !important;
+      }
+
+      /* رؤوس النوافذ (modal headers) */
+      [style*="background:linear-gradient(135deg,#3d2000"],
+      [style*="background:linear-gradient(135deg,#b8860b"],
+      [style*="background:linear-gradient(135deg,#1a3a6a"],
+      [style*="background:linear-gradient(135deg,#7a4500"],
+      [style*="background:linear-gradient(135deg,#e6820a"],
+      [style*="background:linear-gradient(135deg,#3d2000,#7a4500)"] {
+        background: linear-gradient(135deg,${t.brown},${t.mid}) !important;
+      }
+
+      /* رؤوس الأفواج */
+      [style*="background:linear-gradient(135deg,#3d2000,#7a4500,#c8971a"],
+      [style*="background:linear-gradient(135deg,#b8860b,#c8971a"] {
+        background: linear-gradient(135deg,${t.brown},${t.mid},${t.gold}) !important;
+      }
+
+      /* أزرار الحفظ والإجراءات */
+      .btn-save, [class~="btn-save"] {
+        background: linear-gradient(135deg,${t.brown},${t.mid}) !important;
+      }
+      .btn-add-item {
+        background: ${t.mid} !important;
+        border-color: ${t.mid} !important;
+      }
+      .filters .reset {
+        background: linear-gradient(135deg,${t.gold},${shadeColor(t.gold,-15)}) !important;
+      }
+
+      /* الترقيم النشط */
+      .pagination button.active {
+        background: linear-gradient(135deg,${t.brown},${t.mid}) !important;
+        border-color: ${t.brown} !important;
+      }
+
+      /* شريط التبويبات */
+      #tab-data { background: ${t.surface} !important; }
+
+      /* hs-btn النشط */
+      .hs-btn.hs-active {
+        background: linear-gradient(135deg,${t.brown},${t.gold}) !important;
+        border-color: ${t.gold} !important;
+        color: #fff !important;
+      }
+
+      /* أزرار التبويبات النشطة */
+      .nav-tabs button[style*="color: rgb(184"] ,
+      .nav-tabs button[style*="color: ${t.gold}"] {
+        color: ${t.gold} !important;
+        border-bottom-color: ${t.gold} !important;
+      }
+
+      /* أزرار cfg النشطة - فقط cfg وليس tab */
+      [id^="cfg-"][id$="-btn"][style*="font-weight: 700"]:not([style*="display: none"]) {
+        background: ${t.gold} !important;
+        border-color: ${t.gold} !important;
+      }
+      /* أزرار التبويب - خلفية شفافة دائماً */
+      [id^="tab-"][id$="-btn"] {
+        background: none !important;
+      }
+    `;
+  }
+
+  // إعادة بناء الجدول والترقيم
+  if(typeof buildThead==='function') buildThead();
+  if(typeof render==='function') render();
+}
+
+function shadeColor(hex, pct) {
+  const num = parseInt(hex.replace('#',''),16);
+  const r = Math.min(255,Math.max(0,((num>>16)&0xFF)+Math.round(2.55*pct)));
+  const g = Math.min(255,Math.max(0,((num>>8)&0xFF)+Math.round(2.55*pct)));
+  const b = Math.min(255,Math.max(0,(num&0xFF)+Math.round(2.55*pct)));
+  return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+async function saveTheme() {
+  const theme = {
+    brown:   document.getElementById('tc-brown')?.value   || '#3d2000',
+    mid:     document.getElementById('tc-mid')?.value     || '#7a4500',
+    gold:    document.getElementById('tc-gold')?.value    || '#c8971a',
+    surface: document.getElementById('tc-surface')?.value || '#f3ede4',
+  };
+  try {
+    const themeStr = JSON.stringify(theme);
+    // حفظ محلي
+    localStorage.setItem('hajj_theme', themeStr);
+    // حفظ في قاعدة البيانات مرتبط بالمستخدم
+    const user = window._currentUser;
+    if(user && user.id && window.DB?.SysUsers?.update) {
+      await window.DB.SysUsers.update(user.id, { theme: themeStr });
+      user.theme = themeStr; // تحديث الذاكرة
+    }
+    applyThemeToPage(theme);
+    showToast('تم حفظ الثيم لحسابك ✅','success');
+  } catch(e) { showToast('خطأ في الحفظ: '+e.message,'error'); }
+}
+
+async function resetTheme() {
+  applyPreset('hajj');
+  const def = THEME_PRESETS.hajj;
+  localStorage.removeItem('hajj_theme');
+  // حذف من قاعدة البيانات
+  const user = window._currentUser;
+  if(user && user.id && window.DB?.SysUsers?.update) {
+    try { await window.DB.SysUsers.update(user.id, { theme: null }); user.theme=null; } catch(e){}
+  }
+  applyThemeToPage(def);
+  showToast('تم إعادة الثيم للافتراضي','success');
+}
+
+function loadSavedTheme() {
+  try {
+    // أولوية: بيانات المستخدم من قاعدة البيانات
+    const user = window._currentUser;
+    const fromDB = user?.theme ? user.theme : null;
+    const fromLocal = localStorage.getItem('hajj_theme');
+    const saved = fromDB || fromLocal;
+    if(saved) {
+      const t = JSON.parse(saved);
+      // تحديث localStorage بأحدث نسخة
+      if(fromDB) localStorage.setItem('hajj_theme', fromDB);
+      applyThemeToPage(t);
+      _syncThemeInputs(t);
+    }
+  } catch(e){}
+}
+
+function _syncThemeInputs(t) {
+  ['brown','mid','gold','surface'].forEach(k=>{
+    const el  = document.getElementById('tc-'+k);
+    const sw  = document.getElementById('swatch-'+k);
+    const txt = document.getElementById('tc-'+k+'-txt');
+    if(el  && t[k]) el.value = t[k];
+    if(sw  && t[k]) sw.style.background = t[k];
+    if(txt && t[k]) txt.textContent = t[k];
+  });
+}
+
 function switchCfg(section) {
-  ['pilgrim','groups','general','dev','import'].forEach(s => {
+  ['pilgrim','theme','general','dev','import'].forEach(s => {
     const panel = document.getElementById('cfg-'+s);
     const btn = document.getElementById('cfg-'+s+'-btn');
     if(panel) panel.style.display = s===section ? 'block' : 'none';
@@ -4728,9 +5307,9 @@ function switchCfg(section) {
       btn.style.fontWeight = active ? '700' : '600';
     }
   });
-  if(section==='groups') renderGroupsCfg();
   if(section==='general') loadGeneralSettings();
   if(section==='dev') loadDevSettings();
+  if(section==='theme') applyThemePreview();
 }
 
 // ===== إعدادات المبرمج =====
@@ -4865,25 +5444,6 @@ async function saveDevSettings() {
 }
 
 
-async function renderGroupsCfg() {
-  const groups = await getGroups();
-  const el = document.getElementById('groups-cfg-list');
-  if(!el) return;
-  if(!groups.length){ el.innerHTML = '<p style="color:#888;text-align:center;padding:30px">لا توجد مجموعات بعد.</p>'; return; }
-  el.innerHTML = groups.map(g => `
-    <div class="item-card">
-      <div class="item-card-body">
-        <div class="item-card-title">👥 مجموعة رقم ${g.num} — ${g.name||''}</div>
-        <div class="item-card-sub">👤 المشرف: ${g.supervisor||'—'} &nbsp;|&nbsp; 🚌 الحافلة: ${g.camp||'—'}</div>
-        ${g.notes?`<div class="item-card-sub" style="color:#999">📝 ${g.notes}</div>`:''}
-      </div>
-      <div class="item-card-actions">
-        <button class="btn-edit" onclick="openGroupCfgModal('${g.id}')">✏️ تعديل</button>
-        <button class="btn-delete" onclick="deleteGroupCfg('${g.id}')">🗑️</button>
-      </div>
-    </div>`).join('');
-}
-
 async function openGroupCfgModal(id) {
   let g = {};
   if(id) { const groups = await getGroups(); g = groups.find(x=>x.id===id)||{}; }
@@ -4906,17 +5466,6 @@ async function openGroupCfgModal(id) {
       <button class="btn-save" onclick="saveGroupCfg('${id||''}')">💾 حفظ</button>
       <button class="btn-cancel" onclick="closeModals()">إلغاء</button>
     </div>`);
-}
-
-async function saveGroupCfg(id) {
-  const num = document.getElementById('gcfg-num').value.trim();
-  if(!num) return showToast('أدخل رقم المجموعة', 'warning');
-  const obj = { num, name: document.getElementById('gcfg-name').value.trim(), supervisor: document.getElementById('gcfg-supervisor').value.trim(), camp: document.getElementById('gcfg-bus').value, notes: document.getElementById('gcfg-notes').value.trim() };
-  try {
-    if(id) { await window.DB.Groups.update(parseInt(id), obj); }
-    else { await window.DB.Groups.insert(obj); }
-    closeModals(); renderGroupsCfg(); showToast('تم الحفظ', 'success');
-  } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
 }
 
 async function deleteGroupCfg(id) {
