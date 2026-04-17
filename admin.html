@@ -1,4 +1,4 @@
-<!-- HAJJ_PORTAL v9.0 | DO NOT EDIT MANUALLY -->
+<!-- HAJJ_PORTAL v9.4 | DO NOT EDIT MANUALLY -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -694,13 +694,18 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
           </div>
         </div>
         <div class="form-row" style="grid-column:1/-1">
-          <label>شعار الشركة (رابط الصورة)</label>
-          <input type="url" id="pp-logo" placeholder="https://...">
+          <label>شعار الشركة</label>
+          <div style="display:flex;gap:10px;align-items:center">
+            <label for="pp-logo-file" style="display:flex;align-items:center;gap:8px;padding:9px 16px;background:#fff;border:1.5px dashed #c8971a;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#7a4500;flex-shrink:0">
+              📁 اختر صورة
+              <input type="file" id="pp-logo-file" accept="image/*" style="display:none" onchange="uploadPortalImage(this,'logo')">
+            </label>
+            <div id="pp-logo-preview" style="width:60px;height:60px;border-radius:10px;border:1.5px solid #e0d5c5;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#faf7f2"><span style="font-size:22px;color:#ccc">🖼️</span></div>
+            <span style="flex:1;font-size:11px;color:#aaa" id="pp-logo-name">لم يتم اختيار صورة</span>
+            <input type="hidden" id="pp-logo">
+          </div>
         </div>
-        <div class="form-row" style="grid-column:1/-1">
-          <label>صورة خلفية (اختياري)</label>
-          <input type="url" id="pp-bg" placeholder="https://...">
-        </div>
+
       </div>
 
       <!-- المحتوى والتواصل -->
@@ -710,21 +715,31 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
           <label>رسالة ترحيبية للحاج</label>
           <textarea id="pp-greeting" rows="2" placeholder="أدخل رقم الهوية ورقم الحجز للاطلاع على تفاصيل حجزك"></textarea>
         </div>
-        <div class="form-row">
-          <label>رابط واتساب</label>
-          <input type="url" id="pp-whatsapp" placeholder="https://wa.me/...">
-        </div>
-        <div class="form-row">
-          <label>رقم الطوارئ</label>
-          <input type="tel" id="pp-emergency" placeholder="0555000000">
-        </div>
-        <div class="form-row">
-          <label>رابط خريطة منى</label>
-          <input type="url" id="pp-map" placeholder="https://maps.google.com/...">
-        </div>
+
         <div class="form-row">
           <label>نص زر الدخول</label>
           <input type="text" id="pp-btn-label" placeholder="عرض معلومات حجزي">
+        </div>
+        <div class="form-row">
+          <label>النص تحت الزر</label>
+          <input type="text" id="pp-tagline" placeholder="🤝 نعتز بخدمتكم">
+        </div>
+      </div>
+
+      <!-- روابط مواقع الحملة -->
+      <div style="font-size:11px;font-weight:700;color:#a89070;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">🔗 روابط مواقع الحملة بالمشاعر المقدسة</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:20px">
+        <div class="form-row">
+          <label>🏕️ رابط موقع الحملة في منى</label>
+          <input type="url" id="pp-mina_url" placeholder="https://maps.app.goo.gl/...">
+        </div>
+        <div class="form-row">
+          <label>🌙 رابط موقع الحملة في مزدلفة</label>
+          <input type="url" id="pp-muzdalifah_url" placeholder="https://maps.app.goo.gl/...">
+        </div>
+        <div class="form-row">
+          <label>🌄 رابط موقع الحملة في عرفات</label>
+          <input type="url" id="pp-arafat_url" placeholder="https://maps.app.goo.gl/...">
         </div>
       </div>
 
@@ -4244,15 +4259,71 @@ function syncPPColor(colorId, txtId) {
   if(el) { const ti = document.getElementById(txtId); if(ti) ti.value = el.value; }
 }
 
+
+// ===== ضغط وتحميل صورة البوابة =====
+function uploadPortalImage(input, type) {
+  const file = input.files[0];
+  if(!file) return;
+  const maxW = 200;  // شعار صغير وواضح
+  const maxH = 200;
+  const quality = 0.80;
+  const nameEl = document.getElementById('pp-'+type+'-name');
+  const previewEl = document.getElementById('pp-'+type+'-preview');
+  const hiddenEl = document.getElementById('pp-'+type);
+  if(nameEl) nameEl.textContent = '⏳ جاري الضغط...';
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      // حساب الأبعاد مع الحفاظ على النسبة
+      let w = img.width, h = img.height;
+      if(w > maxW) { h = Math.round(h*maxW/w); w = maxW; }
+      if(h > maxH) { w = Math.round(w*maxH/h); h = maxH; }
+      // ضغط عبر Canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', quality);
+      // تحديث الـ preview
+      if(previewEl) {
+        previewEl.innerHTML = `<img src="${compressed}" style="width:100%;height:100%;object-fit:contain">`;
+      }
+      // حفظ Base64 في الـ hidden input
+      if(hiddenEl) hiddenEl.value = compressed;
+      // تحديث الاسم مع حجم الملف
+      const kb = Math.round(compressed.length * 0.75 / 1024);
+      if(nameEl) nameEl.textContent = `✅ ${file.name} — ${kb} KB بعد الضغط`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 async function loadPilgrimPortalSettings() {
   try {
     const saved = window.DB ? await window.DB.Settings.get(PORTAL_SETTINGS_KEY) : null;
     if(!saved) return;
-    const fields = ['company','welcome','color1','color2','logo','bg','greeting','map','whatsapp','btn-label','emergency','email','twitter','instagram'];
+    const fields = ['company','welcome','color1','color2','greeting','btn-label','tagline','mina_url','muzdalifah_url','arafat_url'];
     fields.forEach(k => {
       const el = document.getElementById('pp-'+k);
       if(el && saved[k]) el.value = saved[k];
     });
+    // تحميل الصور من مفاتيح منفصلة
+    for(const type of ['logo','bg']) {
+      try {
+        const imgSaved = await window.DB.Settings.get('hajj_portal_'+type);
+        if(imgSaved?.data) {
+          const hiddenEl = document.getElementById('pp-'+type);
+          if(hiddenEl) hiddenEl.value = imgSaved.data;
+          const previewEl = document.getElementById('pp-'+type+'-preview');
+          if(previewEl) previewEl.innerHTML = `<img src="${imgSaved.data}" style="width:100%;height:100%;object-fit:contain">`;
+          const nameEl = document.getElementById('pp-'+type+'-name');
+          if(nameEl) nameEl.textContent = '✅ صورة محفوظة';
+        }
+      } catch(e){}
+    }
     // ألوان
     ['color1','color2'].forEach(k => {
       const el = document.getElementById('pp-'+k);
@@ -4264,35 +4335,48 @@ async function loadPilgrimPortalSettings() {
 }
 
 async function savePilgrimPortalSettings() {
-  const fields = ['company','welcome','color1','color2','logo','bg','greeting','map','whatsapp','btn-label','emergency','email','twitter','instagram'];
+  // الحقول النصية (بدون الصور)
+  const fields = ['company','welcome','color1','color2','greeting','btn-label','tagline','mina_url','muzdalifah_url','arafat_url'];
   const data = {};
   fields.forEach(k => { const el = document.getElementById('pp-'+k); if(el) data[k] = el.value; });
-  // أيضاً حفظ إعدادات الأقسام
   data._sections = currentSettings;
   try {
+    // حفظ الإعدادات النصية
     await window.DB.Settings.set(PORTAL_SETTINGS_KEY, data);
+    // حفظ الصور بمفاتيح منفصلة (Base64 كبير)
+    const logoVal = document.getElementById('pp-logo')?.value;
+    const bgVal   = document.getElementById('pp-bg')?.value;
+    if(logoVal) await window.DB.Settings.set('hajj_portal_logo', { data: logoVal });
+    if(bgVal)   await window.DB.Settings.set('hajj_portal_bg',   { data: bgVal   });
     await saveVisibilitySettings();
     const msg = document.getElementById('settings-msg');
     if(msg) { msg.style.display='block'; setTimeout(()=>msg.style.display='none', 3000); }
     showToast('تم حفظ إعدادات البوابة ✅','success');
-  } catch(e) { showToast('خطأ في الحفظ','error'); }
+  } catch(e) { showToast('خطأ في الحفظ: '+e.message,'error'); }
 }
 
 const SECTIONS_KEY = 'haj_sections_visibility';
 
 const SECTIONS_CONFIG = [
-  { id:'sec-personal',        label:'👤 المعلومات الشخصية',           default:true },
-  { id:'sec-status',          label:'📋 حالة الحجز والخدمات',         default:true },
-  { id:'sec-timeline',        label:'🗓️ الخط الزمني',                 default:true },
-  { id:'announcements-section', label:'📢 التعاميم والتعليمات',       default:true },
-  { id:'sec-maps',            label:'📍 مواقع الحملة',                default:true },
-  { id:'sec-transport',       label:'🚌 الفوج والحافلة',              default:true },
-  { id:'sec-supervisor',      label:'👤 المشرف الخاص بالحاج',         default:true },
-  { id:'sec-vaccines',        label:'💉 التطعيمات',                   default:true },
-  { id:'sec-sheikh',          label:'🕋 الدعاة والفتوى',              default:true },
-  { id:'sec-company',         label:'🏢 معلومات الشركة',              default:true },
-  { id:'sec-survey',          label:'⭐ الاستبيان',                   default:true },
-  { id:'sec-whatsapp',        label:'📞 التواصل والاستفسارات',         default:true },
+  { id:'sec-personal',            label:'👤 المعلومات الشخصية',           default:true },
+  { id:'sec-status',              label:'📋 حالة الحجز والخدمات',         default:true },
+  { id:'sec-timeline',            label:'🗓️ الخط الزمني',                 default:true },
+  { id:'announcements-section',   label:'📢 التعاميم والتعليمات',         default:true },
+  { id:'sec-maps',                label:'📍 مواقع الحملة (الرئيسي)',      default:true },
+  { id:'sec-maps-mina',           label:'   └ زر منى',                    default:true },
+  { id:'sec-maps-muzdalifah',     label:'   └ زر مزدلفة',                 default:true },
+  { id:'sec-maps-arafat',         label:'   └ زر عرفات',                  default:true },
+  { id:'sec-seats',               label:'📍 مواقع جلوسك (الرئيسي)',       default:true },
+  { id:'sec-seats-mina',          label:'   └ بطاقة منى',                 default:true },
+  { id:'sec-seats-muzdalifah',    label:'   └ بطاقة مزدلفة',              default:true },
+  { id:'sec-seats-arafat',        label:'   └ بطاقة عرفات',               default:true },
+  { id:'sec-transport',           label:'🚌 الفوج والحافلة',              default:true },
+  { id:'sec-supervisor',          label:'👤 المشرف الخاص بالحاج',         default:true },
+  { id:'sec-vaccines',            label:'💉 التطعيمات',                   default:true },
+  { id:'sec-sheikh',              label:'🕋 الدعاة والفتوى',              default:true },
+  { id:'sec-company',             label:'🏢 معلومات الشركة',              default:true },
+  { id:'sec-survey',              label:'⭐ الاستبيان',                   default:true },
+  { id:'sec-whatsapp',            label:'📞 التواصل والاستفسارات',        default:true },
 ];
 
 let currentSettings = {};

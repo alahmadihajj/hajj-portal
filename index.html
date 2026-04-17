@@ -284,17 +284,25 @@ body.ltr .section-title{border-right:none;border-left:4px solid #c8971a;padding-
     </div>
   </div>
 
-  <!-- المواقع -->
+  <!-- مواقع الحملة (الروابط) -->
   <div class="extra-section" id="sec-maps">
     <div class="section-title"><span id="r-maps-title">📍 مواقع الحملة بالمشاعر المقدسة</span></div>
     <div class="map-grid">
-      <a class="map-btn" href="https://maps.app.goo.gl/ZiP2mSwfjHdz93Hx5?g_st=ic" target="_blank">
+      <a class="map-btn" id="sec-maps-mina" href="#" target="_blank">
         <span class="map-ico">🏕️</span><span id="r-mina-btn">موقع الحملة في منى</span>
       </a>
-      <a class="map-btn" href="https://maps.app.goo.gl/9181F5w56abBMCX29?g_st=iw" target="_blank">
+      <a class="map-btn" id="sec-maps-muzdalifah" href="#" target="_blank">
+        <span class="map-ico">🌙</span><span id="r-muzdalifah-btn">موقع الحملة في مزدلفة</span>
+      </a>
+      <a class="map-btn" id="sec-maps-arafat" href="#" target="_blank">
         <span class="map-ico">🌄</span><span id="r-arafat-btn">موقع الحملة في عرفات</span>
       </a>
     </div>
+  </div>
+
+  <!-- مواقع جلوسك (البطاقات) -->
+  <div class="extra-section" id="sec-seats">
+    <div class="section-title"><span id="r-seats-title">📍 مواقع جلوسك بالمشاعر المقدسة</span></div>
     <div class="seat-grid" id="r-seats"></div>
   </div>
 
@@ -399,7 +407,7 @@ const LANGS = {
     
     minaSeat:'موقع جلوسك في مخيم منى', arafatSeat:'موقع جلوسك في مخيم عرفات', muzdalifahSeat:'موقع جلوسك في مخيم مزدلفة', fawjNum:'رقم الفوج الخاص بك', busNum:'رقم الحافلة الخاصة بك', supervisorTitle:'المشرف الخاص بك', supervisorNone:'لم يتم تعيين مشرف بعد', supervisorContact:'تواصل مع مشرفك على واتساب', announcementsTitle:'📢 التعاميم', sheikhTitle:'🕋 الدعاة والمرشدون', companyTitle:'🏢 معلومات الشركة', surveyTitle:'⭐ الاستبيان', surveyMsg:'سيتم إتاحة الاستبيان قريباً، شكراً لاهتمامكم.', whatsappBtn:'💬 تواصل معنا على واتساب', mapsMina:'📍 خريطة منى', mapsArafat:'📍 خريطة عرفات', mapsTitle:'مواقع الحملة'
   ,
-    annTitle:'📢 التعاميم والتعليمات', mapsTitle:'📍 مواقع الحملة بالمشاعر المقدسة', minaBtnTxt:'موقع الحملة في منى', arafatBtnTxt:'موقع الحملة في عرفات', transportTitle:'🚌 معلومات الفوج والحافلة', supervisorTitle2:'👤 المشرف الخاص بك', surveyTitle2:'⭐ تقييم الحملة وتعبئة استبيان', surveyMsg2:'سيتم رفع الاستبيان في وقت لاحق، شكراً لاهتمامكم 🙏', whatsappTitle:'📞 للاستفسارات والطلبات', whatsappBtnTxt:'تواصل معنا على واتساب'
+    annTitle:'📢 التعاميم والتعليمات', mapsTitle:'📍 مواقع الحملة بالمشاعر المقدسة', seatsTitle:'📍 مواقع جلوسك بالمشاعر المقدسة', minaBtnTxt:'موقع الحملة في منى', muzdalifahBtnTxt:'موقع الحملة في مزدلفة', arafatBtnTxt:'موقع الحملة في عرفات', transportTitle:'🚌 معلومات الفوج والحافلة', supervisorTitle2:'👤 المشرف الخاص بك', surveyTitle2:'⭐ تقييم الحملة وتعبئة استبيان', surveyMsg2:'سيتم رفع الاستبيان في وقت لاحق، شكراً لاهتمامكم 🙏', whatsappTitle:'📞 للاستفسارات والطلبات', whatsappBtnTxt:'تواصل معنا على واتساب'
   },
   en: {
     name:'English', dir:'ltr', flag:'🇬🇧',
@@ -418,7 +426,7 @@ const LANGS = {
     
     minaSeat:'Your seat in Mina Camp', arafatSeat:'Your seat in Arafat Camp', muzdalifahSeat:'Your seat in Muzdalifah Camp', fawjNum:'Your Group Number', busNum:'Your Bus Number', supervisorTitle:'Your Supervisor', supervisorNone:'No supervisor assigned yet', supervisorContact:'Contact your supervisor on WhatsApp', announcementsTitle:'📢 Announcements', sheikhTitle:'🕋 Scholars & Guides', companyTitle:'🏢 Company Information', surveyTitle:'⭐ Survey', surveyMsg:'The survey will be available soon. Thank you for your interest.', whatsappBtn:'💬 Contact us on WhatsApp', mapsMina:'📍 Mina Map', mapsArafat:'📍 Arafat Map', mapsTitle:'Camp Locations'
   ,
-    annTitle:'📢 Announcements & Instructions', mapsTitle:'📍 Camp Locations at Holy Sites', minaBtnTxt:'Camp location in Mina', arafatBtnTxt:'Camp location in Arafat', transportTitle:'🚌 Group & Bus Information', supervisorTitle2:'👤 Your Supervisor', surveyTitle2:'⭐ Camp Evaluation Survey', surveyMsg2:'The survey will be uploaded later, thank you for your interest 🙏', whatsappTitle:'📞 For Inquiries & Requests', whatsappBtnTxt:'Contact us on WhatsApp'
+    annTitle:'📢 Announcements & Instructions', mapsTitle:'📍 Camp Locations at Holy Sites', seatsTitle:'📍 Your Seating Locations at Holy Sites', minaBtnTxt:'Camp location in Mina', muzdalifahBtnTxt:'Camp location in Muzdalifah', arafatBtnTxt:'Camp location in Arafat', transportTitle:'🚌 Group & Bus Information', supervisorTitle2:'👤 Your Supervisor', surveyTitle2:'⭐ Camp Evaluation Survey', surveyMsg2:'The survey will be uploaded later, thank you for your interest 🙏', whatsappTitle:'📞 For Inquiries & Requests', whatsappBtnTxt:'Contact us on WhatsApp'
   },
   ur: {
     name:'اردو', dir:'rtl', flag:'🇵🇰',
@@ -437,7 +445,7 @@ const LANGS = {
     
     minaSeat:'منیٰ کیمپ میں آپ کی نشست', arafatSeat:'عرفات کیمپ میں آپ کی نشست', muzdalifahSeat:'مزدلفہ کیمپ میں آپ کی نشست', fawjNum:'آپ کا گروپ نمبر', busNum:'آپ کی بس نمبر', supervisorTitle:'آپ کا نگران', supervisorNone:'ابھی کوئی نگران مقرر نہیں', supervisorContact:'واٹس ایپ پر نگران سے رابطہ کریں', announcementsTitle:'📢 اعلانات', sheikhTitle:'🕋 علماء و رہنما', companyTitle:'🏢 کمپنی کی معلومات', surveyTitle:'⭐ سروے', surveyMsg:'سروے جلد دستیاب ہوگا، آپ کی دلچسپی کا شکریہ۔', whatsappBtn:'💬 واٹس ایپ پر ہم سے رابطہ کریں', mapsMina:'📍 منیٰ نقشہ', mapsArafat:'📍 عرفات نقشہ', mapsTitle:'کیمپ مقامات'
   ,
-    annTitle:'📢 اعلانات اور ہدایات', mapsTitle:'📍 مقدس مقامات پر کیمپ کے مقامات', minaBtnTxt:'منیٰ میں کیمپ کا مقام', arafatBtnTxt:'عرفات میں کیمپ کا مقام', transportTitle:'🚌 گروپ اور بس کی معلومات', supervisorTitle2:'👤 آپ کا نگران', surveyTitle2:'⭐ کیمپ کا جائزہ سروے', surveyMsg2:'سروے بعد میں اپلوڈ کیا جائے گا، آپ کی دلچسپی کا شکریہ 🙏', whatsappTitle:'📞 استفسارات اور درخواستوں کے لیے', whatsappBtnTxt:'واٹس ایپ پر ہم سے رابطہ کریں'
+    annTitle:'📢 اعلانات اور ہدایات', mapsTitle:'📍 مقدس مقامات پر کیمپ کے مقامات', seatsTitle:'📍 مقدس مقامات پر آپ کی نشستیں', minaBtnTxt:'منیٰ میں کیمپ کا مقام', muzdalifahBtnTxt:'مزدلفہ میں کیمپ کا مقام', arafatBtnTxt:'عرفات میں کیمپ کا مقام', transportTitle:'🚌 گروپ اور بس کی معلومات', supervisorTitle2:'👤 آپ کا نگران', surveyTitle2:'⭐ کیمپ کا جائزہ سروے', surveyMsg2:'سروے بعد میں اپلوڈ کیا جائے گا، آپ کی دلچسپی کا شکریہ 🙏', whatsappTitle:'📞 استفسارات اور درخواستوں کے لیے', whatsappBtnTxt:'واٹس ایپ پر ہم سے رابطہ کریں'
   },
   bn: {
     name:'বাংলা', dir:'ltr', flag:'🇧🇩',
@@ -456,7 +464,7 @@ const LANGS = {
     
     minaSeat:'মিনা ক্যাম্পে আপনার আসন', arafatSeat:'আরাফাত ক্যাম্পে আপনার আসন', muzdalifahSeat:'মুযদালিফা ক্যাম্পে আপনার আসন', fawjNum:'আপনার গ্রুপ নম্বর', busNum:'আপনার বাস নম্বর', supervisorTitle:'আপনার তত্ত্বাবধায়ক', supervisorNone:'এখনো কোনো তত্ত্বাবধায়ক নিযুক্ত হয়নি', supervisorContact:'হোয়াটসঅ্যাপে তত্ত্বাবধায়কের সাথে যোগাযোগ করুন', announcementsTitle:'📢 ঘোষণা', sheikhTitle:'🕋 আলেম ও গাইড', companyTitle:'🏢 কোম্পানির তথ্য', surveyTitle:'⭐ জরিপ', surveyMsg:'জরিপ শীঘ্রই পাওয়া যাবে, আপনার আগ্রহের জন্য ধন্যবাদ।', whatsappBtn:'💬 হোয়াটসঅ্যাপে আমাদের সাথে যোগাযোগ করুন', mapsMina:'📍 মিনার মানচিত্র', mapsArafat:'📍 আরাফাতের মানচিত্র', mapsTitle:'ক্যাম্পের অবস্থান'
   ,
-    annTitle:'📢 ঘোষণা ও নির্দেশনা', mapsTitle:'📍 পবিত্র স্থানে ক্যাম্পের অবস্থান', minaBtnTxt:'মিনায় ক্যাম্পের অবস্থান', arafatBtnTxt:'আরাফাতে ক্যাম্পের অবস্থান', transportTitle:'🚌 গ্রুপ ও বাসের তথ্য', supervisorTitle2:'👤 আপনার তত্ত্বাবধায়ক', surveyTitle2:'⭐ ক্যাম্প মূল্যায়ন জরিপ', surveyMsg2:'জরিপটি পরে আপলোড করা হবে, আপনার আগ্রহের জন্য ধন্যবাদ 🙏', whatsappTitle:'📞 জিজ্ঞাসা ও অনুরোধের জন্য', whatsappBtnTxt:'হোয়াটসঅ্যাপে আমাদের সাথে যোগাযোগ করুন'
+    annTitle:'📢 ঘোষণা ও নির্দেশনা', mapsTitle:'📍 পবিত্র স্থানে ক্যাম্পের অবস্থান', seatsTitle:'📍 পবিত্র স্থানে আপনার আসনের অবস্থান', minaBtnTxt:'মিনায় ক্যাম্পের অবস্থান', muzdalifahBtnTxt:'মুযদালিফায় ক্যাম্পের অবস্থান', arafatBtnTxt:'আরাফাতে ক্যাম্পের অবস্থান', transportTitle:'🚌 গ্রুপ ও বাসের তথ্য', supervisorTitle2:'👤 আপনার তত্ত্বাবধায়ক', surveyTitle2:'⭐ ক্যাম্প মূল্যায়ন জরিপ', surveyMsg2:'জরিপটি পরে আপলোড করা হবে, আপনার আগ্রহের জন্য ধন্যবাদ 🙏', whatsappTitle:'📞 জিজ্ঞাসা ও অনুরোধের জন্য', whatsappBtnTxt:'হোয়াটসঅ্যাপে আমাদের সাথে যোগাযোগ করুন'
   },
   fr: {
     name:'Français', dir:'ltr', flag:'🇫🇷',
@@ -490,7 +498,9 @@ const LANGS = {
     mapsArafat:'📍 Carte de Arafat',
     mapsTitle:'Emplacements du camp',
     annTitle:'📢 Annonces et Instructions',
+    seatsTitle:'📍 Vos emplacements aux lieux saints',
     minaBtnTxt:'Emplacement du camp a Mina',
+    muzdalifahBtnTxt:'Emplacement du camp a Muzdalifah',
     arafatBtnTxt:'Emplacement du camp a Arafat',
     transportTitle:'🚌 Informations groupe et bus',
     supervisorTitle2:'👤 Votre superviseur',
@@ -516,7 +526,7 @@ const LANGS = {
     
     minaSeat:'您在米纳营地的座位', arafatSeat:'您在阿拉法特营地的座位', muzdalifahSeat:'您在穆兹达利法营地的座位', fawjNum:'您的团队编号', busNum:'您的巴士编号', supervisorTitle:'您的监督员', supervisorNone:'尚未分配监督员', supervisorContact:'在WhatsApp上联系您的监督员', announcementsTitle:'📢 公告', sheikhTitle:'🕋 学者与向导', companyTitle:'🏢 公司信息', surveyTitle:'⭐ 调查', surveyMsg:'调查即将开放，感谢您的关注。', whatsappBtn:'💬 在WhatsApp上联系我们', mapsMina:'📍 米纳地图', mapsArafat:'📍 阿拉法特地图', mapsTitle:'营地位置'
   ,
-    annTitle:'📢 公告与说明', mapsTitle:'📍 圣地营地位置', minaBtnTxt:'米纳营地位置', arafatBtnTxt:'阿拉法特营地位置', transportTitle:'🚌 团队与巴士信息', supervisorTitle2:'👤 您的监督员', surveyTitle2:'⭐ 营地评估调查', surveyMsg2:'调查将稍后上传，感谢您的关注 🙏', whatsappTitle:'📞 咨询与请求', whatsappBtnTxt:'在WhatsApp上联系我们'
+    annTitle:'📢 公告与说明', mapsTitle:'📍 圣地营地位置', seatsTitle:'📍 您在圣地的座位位置', minaBtnTxt:'米纳营地位置', muzdalifahBtnTxt:'穆兹达利法营地位置', arafatBtnTxt:'阿拉法特营地位置', transportTitle:'🚌 团队与巴士信息', supervisorTitle2:'👤 您的监督员', surveyTitle2:'⭐ 营地评估调查', surveyMsg2:'调查将稍后上传，感谢您的关注 🙏', whatsappTitle:'📞 咨询与请求', whatsappBtnTxt:'在WhatsApp上联系我们'
   }
 };
 
@@ -560,7 +570,9 @@ function setLang(code, skipResult=false) {
   _s('r-ann-title',        L.annTitle);
   _s('r-maps-title',       L.mapsTitle);
   _s('r-mina-btn',         L.minaBtnTxt);
+  _s('r-muzdalifah-btn',   L.muzdalifahBtnTxt);
   _s('r-arafat-btn',       L.arafatBtnTxt);
+  _s('r-seats-title',      L.seatsTitle);
   _s('r-transport-title',  L.transportTitle);
   _s('r-supervisor-title', L.supervisorTitle2);
   _s('r-survey-title',     L.surveyTitle2);
@@ -762,17 +774,17 @@ async function showResult(r){
   const arafat = r['موقع الجلوس في عرفات'] || '—';
   const muzdalifah = r['موقع الجلوس في مزدلفة'] || '—';
   document.getElementById('r-seats').innerHTML = `
-    <div class="seat-card">
+    <div class="seat-card" id="sec-seats-mina">
       <div class="slbl">🏕️ ${L.minaSeat}</div>
       <div class="snum">${mina}</div>
     </div>
-    <div class="seat-card">
-      <div class="slbl">🌄 ${L.arafatSeat}</div>
-      <div class="snum">${arafat}</div>
-    </div>
-    <div class="seat-card">
+    <div class="seat-card" id="sec-seats-muzdalifah">
       <div class="slbl">🌙 ${L.muzdalifahSeat}</div>
       <div class="snum">${muzdalifah}</div>
+    </div>
+    <div class="seat-card" id="sec-seats-arafat">
+      <div class="slbl">🌄 ${L.arafatSeat}</div>
+      <div class="snum">${arafat}</div>
     </div>
   `;
 
@@ -811,7 +823,10 @@ const SECTIONS_KEY = 'haj_sections_visibility';
 
 const SECTION_IDS = [
   'sec-personal','sec-status','sec-timeline',
-  'announcements-section','sec-maps','sec-transport',
+  'announcements-section',
+  'sec-maps','sec-maps-mina','sec-maps-muzdalifah','sec-maps-arafat',
+  'sec-seats','sec-seats-mina','sec-seats-muzdalifah','sec-seats-arafat',
+  'sec-transport',
   'sec-supervisor','sec-vaccines','sec-sheikh',
   'sec-company','sec-survey','sec-whatsapp'
 ];
@@ -952,13 +967,14 @@ async function applyPortalSettings() {
       if(s.greeting) { gEl.textContent = s.greeting; gEl.style.display='block'; }
     }
 
-    // ===== رابط الخريطة =====
-    if(s.map) {
-      const minaBtn = document.getElementById('r-mina-map');
-      const arafatBtn = document.getElementById('r-arafat-map');
-      if(minaBtn) minaBtn.href = s.map;
-      if(arafatBtn) arafatBtn.href = s.map;
-    }
+    // ===== روابط مواقع الحملة =====
+    const _setHref = (id, url) => {
+      const el = document.getElementById(id);
+      if(el) el.href = url || '#';
+    };
+    _setHref('sec-maps-mina',        s.mina_url);
+    _setHref('sec-maps-muzdalifah',  s.muzdalifah_url);
+    _setHref('sec-maps-arafat',      s.arafat_url);
 
     // ===== واتساب =====
     if(s.whatsapp) {
