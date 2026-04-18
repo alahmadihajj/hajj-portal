@@ -458,11 +458,102 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15/Sortable.min.js"></script>
   <script src="config.js"></script>
   <script src="supabase.js"></script>
 
 
   <style id="dynamic-theme-style"></style>
+
+  <!-- ===== نظام الاستبيانات — CSS ===== -->
+  <style id="surveys-styles">
+    .tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 7px;background:#c8971a;color:#fff;font-size:11px;font-weight:700;border-radius:10px;margin-right:6px;line-height:1}
+    .tab-badge.empty{background:#bbb}
+
+    .surveys-page{padding:24px;max-width:1200px;margin:0 auto}
+
+    .surveys-header{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:18px;border-bottom:2px solid var(--border-light)}
+    .surveys-header .sh-title{font-size:22px;font-weight:800;color:var(--text-primary)}
+    .surveys-header .sh-desc{font-size:13px;color:var(--text-muted);margin-top:4px}
+    .surveys-header .sh-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+    .sh-btn{padding:10px 16px;border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;transition:transform .15s,box-shadow .15s}
+    .sh-btn.primary{background:linear-gradient(135deg,var(--brown),var(--gold));color:#fff;box-shadow:var(--shadow-sm)}
+    .sh-btn.primary:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+    .sh-btn.secondary{background:var(--surface-2);color:var(--text-primary);border:1.5px solid var(--border)}
+    .sh-btn.secondary:hover{background:var(--surface);border-color:var(--gold)}
+
+    .sh-search{flex:1;min-width:200px;max-width:320px;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface-2);transition:border-color .15s,background .15s}
+    .sh-search:focus{outline:none;border-color:var(--gold);background:var(--surface);box-shadow:0 0 0 3px rgba(200,151,26,.12)}
+
+    .surveys-stats-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:26px}
+    .sv-stat{background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius);padding:18px 16px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+    .sv-stat:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+    .sv-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+    .sv-stat.c1::before{background:linear-gradient(90deg,var(--brown),var(--brown-mid))}
+    .sv-stat.c2::before{background:linear-gradient(90deg,#0a6e3a,#1a9a5a)}
+    .sv-stat.c3::before{background:linear-gradient(90deg,#0a3a8e,#1a5fa8)}
+    .sv-stat.c4::before{background:linear-gradient(90deg,#b56a00,var(--gold))}
+    .sv-stat .sv-num{font-size:28px;font-weight:900;color:var(--text-primary);line-height:1.1;letter-spacing:-1px}
+    .sv-stat .sv-lbl{font-size:11px;color:var(--text-muted);margin-top:6px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+    .sv-stat .sv-ico{position:absolute;top:14px;left:14px;font-size:22px;opacity:.25}
+    body.rtl .sv-stat .sv-ico{left:auto;right:14px}
+
+    .surveys-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+
+    .survey-card{background:var(--surface);border:1.5px solid var(--border-light);border-radius:var(--radius-lg);padding:20px;position:relative;transition:transform .2s,box-shadow .2s,border-color .2s;display:flex;flex-direction:column;min-height:260px}
+    .survey-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--gold-light)}
+
+    .survey-card .sc-top{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}
+    .sc-icon-circle{flex-shrink:0;width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:var(--shadow-sm)}
+    .sc-icon-circle.ic-pre_trip{background:linear-gradient(135deg,#1a5fa8,#4a8ac8);color:#fff}
+    .sc-icon-circle.ic-arrival{background:linear-gradient(135deg,#7a3fa8,#b06fd4);color:#fff}
+    .sc-icon-circle.ic-mashaer{background:linear-gradient(135deg,#b8860b,#e0b84a);color:#fff}
+    .sc-icon-circle.ic-transport{background:linear-gradient(135deg,#1a7a3a,#2eb85c);color:#fff}
+    .sc-icon-circle.ic-post_trip{background:linear-gradient(135deg,#c0365a,#e85a7a);color:#fff}
+    .sc-icon-circle.ic-custom{background:linear-gradient(135deg,var(--brown),var(--gold));color:#fff}
+
+    .sc-head{flex:1;min-width:0}
+    .sc-title{font-size:16px;font-weight:800;color:var(--text-primary);line-height:1.3;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .sc-desc{font-size:12px;color:var(--text-muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+    .sc-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
+    .sc-badge.st-active{background:#e3f8eb;color:#0a6e3a;border:1px solid #8cd4a8}
+    .sc-badge.st-inactive{background:#f0f0f0;color:#666;border:1px solid #d4d4d4}
+    .sc-badge.st-scheduled{background:#e8f0fd;color:#0a3a8e;border:1px solid #a8c4e8}
+    .sc-badge.st-expired{background:#fdf0e0;color:#b56a00;border:1px solid #f0c48a}
+    .sc-badge.st-system{background:#faf3e5;color:#7a4500;border:1px solid #e8d0a8;font-size:9px}
+
+    .sc-mini-stats{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;padding:10px 12px;background:var(--surface-2);border-radius:var(--radius-sm);font-size:11px;color:var(--text-secondary)}
+    .sc-mini-stats .sc-stat-item{display:inline-flex;align-items:center;gap:4px;font-weight:600}
+    .sc-mini-stats .sc-stat-item .sc-stat-val{color:var(--text-primary);font-weight:800}
+
+    .sc-progress{margin:12px 0 14px;height:6px;background:var(--surface-3);border-radius:3px;overflow:hidden;position:relative}
+    .sc-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-dark));border-radius:3px;transition:width .4s ease}
+    .sc-progress-label{font-size:10px;color:var(--text-muted);margin-bottom:4px;font-weight:700}
+
+    .sc-actions{display:flex;gap:6px;margin-top:auto;padding-top:12px;border-top:1px solid var(--border-light)}
+    .sc-action{flex:1;padding:8px 6px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;color:var(--text-secondary);transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
+    .sc-action:hover:not(.disabled){background:var(--surface-2);border-color:var(--gold);color:var(--text-primary)}
+    .sc-action.disabled{opacity:.4;cursor:not-allowed}
+    .sc-action.more{flex:0 0 32px}
+
+    .surveys-empty{padding:60px 20px;text-align:center;color:var(--text-muted);background:var(--surface-2);border:2px dashed var(--border);border-radius:var(--radius-lg)}
+    .surveys-empty .se-ico{font-size:48px;margin-bottom:14px;opacity:.5}
+    .surveys-empty .se-title{font-size:16px;font-weight:700;color:var(--text-secondary);margin-bottom:6px}
+    .surveys-empty .se-desc{font-size:13px}
+
+    @media (max-width:640px){
+      .surveys-page{padding:14px}
+      .surveys-grid{grid-template-columns:1fr}
+      .surveys-header{flex-direction:column;align-items:stretch}
+      .sh-actions{flex-direction:column}
+      .sh-search{max-width:100%}
+    }
+  </style>
 </head>
 <body>
 <div id="toast-container"></div>
@@ -641,6 +732,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
     <button id="tab-housing-btn" onclick="switchTab('housing')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">🗂️ الإدارة والخدمات</button>
     <button id="tab-staff-btn" onclick="switchTab('staff')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">👨‍💼 إدارة الموظفين</button>
     <button id="tab-ann-btn" onclick="switchTab('ann')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">📢 التعاميم</button>
+    <button id="tab-surveys-btn" onclick="switchTab('surveys')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">📋 الاستبيانات <span id="surveys-badge" class="tab-badge empty">0</span></button>
     <button id="tab-users-btn" onclick="switchTab('users')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">👤 إدارة المستخدمين</button>
   </div>
 
@@ -651,6 +743,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
     <!-- أزرار الأقسام -->
     <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
       <button id="cfg-pilgrim-btn" onclick="switchCfg('pilgrim')" style="padding:10px 20px;border:2px solid #b8860b;border-radius:10px;background:#b8860b;color:#fff;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">🕋 بوابة الحاج</button>
+      <button id="cfg-content-btn" onclick="switchCfg('content')" style="padding:10px 20px;border:2px solid #ddd;border-radius:10px;background:#fff;color:#555;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">📝 محتويات البوابة</button>
       <button id="cfg-theme-btn" onclick="switchCfg('theme')" style="padding:10px 20px;border:2px solid #ddd;border-radius:10px;background:#fff;color:#555;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">🎨 تخصيص الثيم</button>
       <button id="cfg-general-btn" onclick="switchCfg('general')" style="padding:10px 20px;border:2px solid #ddd;border-radius:10px;background:#fff;color:#555;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">🏢 إعدادات عامة</button>
       <button id="cfg-dev-btn" onclick="switchCfg('dev')" style="display:none;padding:10px 20px;border:2px solid #c00;border-radius:10px;background:#fff;color:#c00;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer">🔐 إعدادات النظام</button>
@@ -753,6 +846,68 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       </div>
       <div id="settings-msg" style="display:none;margin-top:10px;text-align:center;color:#1a7a1a;font-weight:600;font-size:13px">✅ تم الحفظ — سيظهر على البوابة فوراً</div>
     </div>
+
+    <!-- قسم محتويات البوابة -->
+    <div id="cfg-content" style="display:none">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid #f0e8d8">
+        <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#3d2000,#c8971a);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📝</div>
+        <div>
+          <div style="font-size:17px;font-weight:800;color:#1a1208">محتويات أقسام البوابة</div>
+          <div style="font-size:12px;color:#a89070;margin-top:2px">محرر نصوص غني لكل قسم — التغييرات تنعكس فور الحفظ</div>
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-bottom:24px">
+        <label style="font-weight:700;color:#1a1208;margin-bottom:8px;display:block">💉 التطعيمات الخاصة بموسم الحج</label>
+        <div id="editor-vaccines" style="min-height:250px;direction:rtl;background:#fff;border-radius:8px"></div>
+      </div>
+
+      <div class="form-row" style="margin-bottom:14px">
+        <label style="font-weight:700;color:#1a1208;margin-bottom:8px;display:block">🕋 التواصل مع الدعاة</label>
+        <div id="editor-sheikh" style="min-height:250px;direction:rtl;background:#fff;border-radius:8px"></div>
+      </div>
+      <div class="form-row" style="margin-bottom:24px">
+        <label style="font-weight:700;color:#1a1208;margin-bottom:8px;display:block">👤 قائمة الدعاة (حتى 3 — اترك الاسم فارغاً لحذف الداعية)</label>
+        <div id="sheikhs-inputs" style="display:grid;gap:14px">
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;padding:12px;border:1.5px solid #e8ddd0;border-radius:10px;background:#faf7f2">
+            <div><label style="font-size:11px;color:#6b5a45">اسم الداعية 1</label><input type="text" id="sheikh1-name" placeholder="الشيخ / ..."></div>
+            <div><label style="font-size:11px;color:#6b5a45">رقم الهاتف</label><input type="text" id="sheikh1-phone" placeholder="0500000000"></div>
+            <div><label style="font-size:11px;color:#6b5a45">رقم الواتساب</label><input type="text" id="sheikh1-whatsapp" placeholder="966500000000"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;padding:12px;border:1.5px solid #e8ddd0;border-radius:10px;background:#faf7f2">
+            <div><label style="font-size:11px;color:#6b5a45">اسم الداعية 2</label><input type="text" id="sheikh2-name" placeholder="الشيخ / ..."></div>
+            <div><label style="font-size:11px;color:#6b5a45">رقم الهاتف</label><input type="text" id="sheikh2-phone" placeholder="0500000000"></div>
+            <div><label style="font-size:11px;color:#6b5a45">رقم الواتساب</label><input type="text" id="sheikh2-whatsapp" placeholder="966500000000"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;padding:12px;border:1.5px solid #e8ddd0;border-radius:10px;background:#faf7f2">
+            <div><label style="font-size:11px;color:#6b5a45">اسم الداعية 3</label><input type="text" id="sheikh3-name" placeholder="الشيخ / ..."></div>
+            <div><label style="font-size:11px;color:#6b5a45">رقم الهاتف</label><input type="text" id="sheikh3-phone" placeholder="0500000000"></div>
+            <div><label style="font-size:11px;color:#6b5a45">رقم الواتساب</label><input type="text" id="sheikh3-whatsapp" placeholder="966500000000"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-bottom:24px">
+        <label style="font-weight:700;color:#1a1208;margin-bottom:8px;display:block">🏢 معلومات عن الشركة</label>
+        <div style="font-size:12px;color:#a89070;margin-bottom:8px">اسم الشركة نفسه يُدار من تبويب "بوابة الحاج" — هنا الوصف فقط</div>
+        <div id="editor-company" style="min-height:250px;direction:rtl;background:#fff;border-radius:8px"></div>
+      </div>
+
+      <div class="form-row" style="margin-bottom:14px">
+        <label style="font-weight:700;color:#1a1208;margin-bottom:8px;display:block">📞 للاستفسارات والطلبات</label>
+        <div id="editor-whatsapp" style="min-height:250px;direction:rtl;background:#fff;border-radius:8px"></div>
+      </div>
+      <div class="form-row" style="margin-bottom:24px">
+        <label>رقم واتساب الاستفسارات (مع كود الدولة، مثال: 966500000000)</label>
+        <input type="text" id="cfg-whatsapp-number" placeholder="966500000000">
+      </div>
+
+      <div style="display:flex;gap:10px;padding-top:16px;border-top:2px solid #f0e8d8">
+        <button onclick="saveContentSettings()" style="flex:1;padding:13px;background:linear-gradient(135deg,var(--brown),var(--brown-mid));color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;box-shadow:0 3px 10px rgba(61,32,0,.2)">💾 حفظ الكل</button>
+      </div>
+      <div id="content-msg" style="display:none;margin-top:10px;text-align:center;color:#1a7a1a;font-weight:600;font-size:13px">✅ تم الحفظ — سيظهر على البوابة فوراً</div>
+    </div>
+
     <!-- قسم تخصيص الثيم -->
     <div id="cfg-theme" style="display:none">
 
@@ -902,7 +1057,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       <h3 style="font-size:15px;font-weight:700;color:#3d2000;margin-bottom:16px">🏢 إعدادات عامة</h3>
       <div class="form-row"><label>اسم الشركة</label><input type="text" id="cfg-company" placeholder="شركة محسن بن سالم الاحمدي وشركاه"></div>
       <div class="form-row"><label>موسم الحج</label><input type="text" id="cfg-season" placeholder="1446هـ"></div>
-      <div class="form-row"><label>رقم التواصل الرئيسي</label><input type="text" id="cfg-phone" placeholder="05xxxxxxxx"></div>
+      <div class="form-row"><label>رقم التواصل الرئيسي</label><input type="text" id="cfg-phone" placeholder="0500000000"></div>
       <hr style="border:none;border-top:1px solid #eee;margin:20px 0">
       <h4 style="font-size:14px;font-weight:700;color:#3d2000;margin-bottom:14px">⚙️ إعدادات التوزيع</h4>
       <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #e0e0e0;border-radius:12px;padding:14px 18px;margin-bottom:10px">
@@ -1160,6 +1315,27 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 
     <!-- قائمة التعاميم -->
     <div id="ann-list"></div>
+  </div>
+
+  <!-- ===== تبويب الاستبيانات ===== -->
+  <div id="tab-surveys" style="display:none">
+    <div class="surveys-page">
+      <div class="surveys-header">
+        <div>
+          <div class="sh-title">📋 إدارة الاستبيانات</div>
+          <div class="sh-desc">إنشاء وإدارة استبيانات التقييم لحجاج الحملة</div>
+        </div>
+        <div class="sh-actions">
+          <input id="surveys-search" class="sh-search" type="text" placeholder="🔍 ابحث في الاستبيانات..." oninput="filterSurveys(this.value)">
+          <button class="sh-btn secondary" onclick="importSurveyJSON()">📥 استيراد</button>
+          <button class="sh-btn primary" onclick="openCreateSurvey()">➕ استبيان جديد</button>
+        </div>
+      </div>
+
+      <div id="surveys-stats-bar" class="surveys-stats-bar"></div>
+
+      <div id="surveys-grid" class="surveys-grid"></div>
+    </div>
   </div>
 
   <!-- ===== النوافذ المنبثقة ===== -->
@@ -3856,7 +4032,7 @@ async function openBusModal(id) {
       </div>
       <div class="form-row">
         <label>📱 جوال السائق <span style="color:#c00">*</span></label>
-        <input type="text" id="m-b-phone" value="${b.driverPhone||''}" placeholder="05xxxxxxxx">
+        <input type="text" id="m-b-phone" value="${b.driverPhone||''}" placeholder="0500000000">
       </div>
       <div class="form-row" style="grid-column:1/-1">
         <label>🪪 هوية السائق <span style="color:#c00">*</span></label>
@@ -4059,7 +4235,7 @@ async function openSupervisorModal(username) {
     <h3 class="modal-title">🎯 ${username?'تعديل':'إضافة'} مشرف حجاج</h3>
     <div class="form-row"><label>اسم المستخدم (للدخول)</label><input type="text" id="sv-username" value="${u.username||''}" placeholder="رقم الجوال أو الهوية" ${username?'readonly':''}></div>
     <div class="form-row"><label>الاسم الكامل</label><input type="text" id="sv-name" value="${u.name||''}" placeholder="اسم المشرف"></div>
-    <div class="form-row"><label>📱 رقم الجوال</label><input type="text" id="sv-phone" value="${u.phone||''}" placeholder="05xxxxxxxx"></div>
+    <div class="form-row"><label>📱 رقم الجوال</label><input type="text" id="sv-phone" value="${u.phone||''}" placeholder="0500000000"></div>
     <div class="form-row"><label>📍 المدينة</label><input type="text" id="sv-city" value="${u.city||''}" placeholder="جدة، الرياض..."></div>
     <div class="form-row"><label>كلمة المرور ${username?'(اتركها فارغة للإبقاء)':''}</label><input type="password" id="sv-password" placeholder="••••••••"></div>
     <div class="form-row"><label>🚌 رقم الحافلة</label>
@@ -4212,7 +4388,7 @@ async function openStaffModal(id) {
     <div class="form-row"><label>الاسم الكامل</label><input type="text" id="m-s-name" value="${s.name||''}" placeholder="اسم الموظف"></div>
     <div class="form-row"><label>المسمى الوظيفي</label><input type="text" id="m-s-title" value="${s.title||''}" placeholder="مشرف / مرشد / سائق..."></div>
     <div class="form-row"><label>القسم</label><input type="text" id="m-s-dept" value="${s.department||''}" placeholder="التسكين / النقل / الإرشاد..."></div>
-    <div class="form-row"><label>رقم الجوال</label><input type="text" id="m-s-phone" value="${s.phone||''}" placeholder="05xxxxxxxx" inputmode="tel"></div>
+    <div class="form-row"><label>رقم الجوال</label><input type="text" id="m-s-phone" value="${s.phone||''}" placeholder="0500000000" inputmode="tel"></div>
     <div class="form-row"><label>المهام والمسؤوليات</label><textarea id="m-s-tasks" rows="2">${s.tasks||''}</textarea></div>
     <div class="form-row"><label>أرقام هوية الحجاج المرتبطين (مفصولة بفاصلة)</label><textarea id="m-s-pilgrims" rows="2" placeholder="2530190376, 2234356935...">${s.pilgrims_ids||''}</textarea></div>
     <div class="modal-btns">
@@ -4370,7 +4546,9 @@ const SECTIONS_CONFIG = [
   { id:'sec-seats-mina',          label:'   └ بطاقة منى',                 default:true },
   { id:'sec-seats-muzdalifah',    label:'   └ بطاقة مزدلفة',              default:true },
   { id:'sec-seats-arafat',        label:'   └ بطاقة عرفات',               default:true },
-  { id:'sec-transport',           label:'🚌 الفوج والحافلة',              default:true },
+  { id:'sec-transport',           label:'🚌 الفوج والحافلة (الرئيسي)',    default:true },
+  { id:'sec-transport-fawj',      label:'   └ مربع رقم الفوج',            default:true },
+  { id:'sec-transport-bus',       label:'   └ مربع رقم الحافلة',          default:true },
   { id:'sec-supervisor',          label:'👤 المشرف الخاص بالحاج',         default:true },
   { id:'sec-vaccines',            label:'💉 التطعيمات',                   default:true },
   { id:'sec-sheikh',              label:'🕋 الدعاة والفتوى',              default:true },
@@ -4429,7 +4607,7 @@ async function saveVisibilitySettings() {
 }
 
 function switchTab(tab) {
-  const tabs = ['data','settings','housing','staff','ann','users'];
+  const tabs = ['data','settings','housing','staff','ann','surveys','users'];
   tabs.forEach(t => {
     const panel = document.getElementById('tab-'+t);
     const btn = document.getElementById('tab-'+t+'-btn');
@@ -4449,6 +4627,7 @@ function switchTab(tab) {
   if(tab==='housing') renderHousingSection();
   if(tab==='staff') renderStaff();
   if(tab==='ann') renderAnnouncements();
+  if(tab==='surveys') renderSurveys();
   if(tab==='users') renderUsers();
 }
 
@@ -5377,7 +5556,7 @@ function _syncThemeInputs(t) {
 }
 
 function switchCfg(section) {
-  ['pilgrim','theme','general','dev','import'].forEach(s => {
+  ['pilgrim','content','theme','general','dev','import'].forEach(s => {
     const panel = document.getElementById('cfg-'+s);
     const btn = document.getElementById('cfg-'+s+'-btn');
     if(panel) panel.style.display = s===section ? 'block' : 'none';
@@ -5394,6 +5573,136 @@ function switchCfg(section) {
   if(section==='general') loadGeneralSettings();
   if(section==='dev') loadDevSettings();
   if(section==='theme') applyThemePreview();
+  if(section==='content') loadContentSettings();
+}
+
+// ===== محررات محتويات البوابة =====
+const _quillEditors = {};
+
+function initContentEditors() {
+  if(Object.keys(_quillEditors).length || typeof Quill === 'undefined') return;
+  const toolbar = [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold','italic','underline','strike'],
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'align': [] }],
+    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+    ['link','clean']
+  ];
+  ['vaccines','sheikh','company','whatsapp'].forEach(k => {
+    const target = document.getElementById('editor-'+k);
+    if(!target) return;
+    _quillEditors[k] = new Quill(target, {
+      theme:'snow',
+      modules:{ toolbar },
+      placeholder:'اكتب المحتوى هنا...'
+    });
+  });
+}
+
+async function loadContentSettings() {
+  initContentEditors();
+  try {
+    const keys = {
+      vaccines_content:'vaccines', sheikh_content:'sheikh',
+      company_content:'company',   whatsapp_content:'whatsapp'
+    };
+    for(const [dbKey, edKey] of Object.entries(keys)) {
+      const v = await window.DB.Settings.get(dbKey);
+      if(v && _quillEditors[edKey]) _quillEditors[edKey].root.innerHTML = v;
+    }
+    const sheikhs = await window.DB.Settings.get('sheikhs_list');
+    if(Array.isArray(sheikhs)) {
+      sheikhs.slice(0, 3).forEach((s, i) => {
+        const idx = i + 1;
+        const nameEl = document.getElementById('sheikh'+idx+'-name');
+        const phoneEl = document.getElementById('sheikh'+idx+'-phone');
+        const waEl = document.getElementById('sheikh'+idx+'-whatsapp');
+        if(nameEl && s?.name) nameEl.value = s.name;
+        if(phoneEl && s?.phone) phoneEl.value = s.phone;
+        if(waEl && s?.whatsapp) waEl.value = s.whatsapp;
+      });
+    }
+    const wn = await window.DB.Settings.get('whatsapp_number');
+    if(wn) document.getElementById('cfg-whatsapp-number').value = wn;
+  } catch(e){}
+}
+
+// ===== دوال تطبيع الأرقام السعودية =====
+function normalizePhone(input) {
+  if(!input) return null;
+  let s = String(input).trim().replace(/[\s\-()]/g, '');
+  if(s.startsWith('+')) s = s.slice(1);
+  if(s.startsWith('00')) s = s.slice(2);
+  s = s.replace(/\D/g, '');
+  if(s.startsWith('966')) s = s.slice(3);
+  if(s.startsWith('5') && s.length === 9) s = '0' + s;
+  return /^05\d{8}$/.test(s) ? s : null;
+}
+
+function normalizeWhatsApp(input) {
+  if(!input) return null;
+  let s = String(input).trim().replace(/[\s\-()]/g, '').replace(/^\+/, '');
+  if(s.startsWith('00')) s = s.slice(2);
+  s = s.replace(/\D/g, '');
+  if(s.startsWith('05') && s.length === 10) s = '966' + s.slice(1);
+  else if(s.startsWith('5') && s.length === 9) s = '966' + s;
+  return /^9665\d{8}$/.test(s) ? s : null;
+}
+
+async function saveContentSettings() {
+  // ===== تحقق مسبق من الأرقام قبل أي حفظ =====
+  const sheikhs = [];
+  for(let i = 1; i <= 3; i++) {
+    const name = document.getElementById('sheikh'+i+'-name').value.trim();
+    if(!name) continue;
+    const rawPhone = document.getElementById('sheikh'+i+'-phone').value.trim();
+    const rawWa = document.getElementById('sheikh'+i+'-whatsapp').value.trim();
+    let phone = '', whatsapp = '';
+    if(rawPhone) {
+      phone = normalizePhone(rawPhone);
+      if(!phone) {
+        showToast(`رقم هاتف غير صحيح للداعية "${name}" — يجب أن يكون بصيغة 05XXXXXXXX`, 'error');
+        return;
+      }
+    }
+    if(rawWa) {
+      whatsapp = normalizeWhatsApp(rawWa);
+      if(!whatsapp) {
+        showToast(`رقم واتساب غير صحيح للداعية "${name}" — يجب أن يبدأ بـ 9665`, 'error');
+        return;
+      }
+    }
+    sheikhs.push({ name, phone, whatsapp });
+  }
+  const rawWn = document.getElementById('cfg-whatsapp-number').value.trim();
+  let wn = '';
+  if(rawWn) {
+    wn = normalizeWhatsApp(rawWn);
+    if(!wn) {
+      showToast('رقم واتساب الاستفسارات غير صحيح — يجب أن يبدأ بـ 9665', 'error');
+      return;
+    }
+  }
+
+  // ===== كل الأرقام صحيحة — نبدأ الحفظ =====
+  try {
+    const sanitize = (html) => (window.DOMPurify ? DOMPurify.sanitize(html, {
+      ALLOWED_TAGS:['p','br','strong','em','u','s','ol','ul','li','a','span','div','h1','h2','h3','blockquote','hr','img'],
+      ALLOWED_ATTR:['href','target','rel','class','style','src','alt']
+    }) : html);
+    for(const k of ['vaccines','sheikh','company','whatsapp']) {
+      if(!_quillEditors[k]) continue;
+      const clean = sanitize(_quillEditors[k].root.innerHTML);
+      await window.DB.Settings.set(k+'_content', clean);
+    }
+    await window.DB.Settings.set('sheikhs_list', sheikhs);
+    try { await window.DB.Settings.delete('sheikh_whatsapp'); } catch(e){}
+    await window.DB.Settings.set('whatsapp_number', wn);
+    const msg = document.getElementById('content-msg');
+    if(msg) { msg.style.display='block'; setTimeout(()=>msg.style.display='none', 3000); }
+    showToast('تم حفظ المحتويات ✅','success');
+  } catch(e) { showToast('خطأ في الحفظ: '+e.message,'error'); }
 }
 
 // ===== إعدادات المبرمج =====
@@ -5636,7 +5945,7 @@ async function openUserModal(username) {
     <h3 class="modal-title">👤 ${_mt} مستخدم</h3>
     <div class="form-row"><label>اسم المستخدم</label><input type="text" id="mu-username" value="${u.username||''}" placeholder="username" ${_ro}></div>
     <div class="form-row"><label>الاسم الكامل</label><input type="text" id="mu-name" value="${u.name||''}" placeholder="الاسم الكامل"></div>
-    <div class="form-row"><label>📱 رقم الجوال</label><input type="text" id="mu-phone" value="${u.phone||''}" placeholder="05xxxxxxxx"></div>
+    <div class="form-row"><label>📱 رقم الجوال</label><input type="text" id="mu-phone" value="${u.phone||''}" placeholder="0500000000"></div>
     <div class="form-row"><label>كلمة المرور ${_pw}</label><input type="password" id="mu-password" placeholder="••••••••"></div>
     <div class="form-row"><label>الصلاحية</label>
       <select id="mu-role" onchange="toggleGroupField()">
@@ -6171,7 +6480,7 @@ async function openPilgrimAssign(pilgrimId) {
       </div>
       <div class="form-row">
         <label>📱 جوال المشرف</label>
-        <input type="text" id="pa-supervisor-phone" value="${pilgrim['رقم جوال المشرف']||''}" placeholder="05xxxxxxxx">
+        <input type="text" id="pa-supervisor-phone" value="${pilgrim['رقم جوال المشرف']||''}" placeholder="0500000000">
       </div>
     </div>
     <div class="modal-btns" style="margin-top:16px">
@@ -7986,6 +8295,203 @@ async function saveAllUAModifiedRows() {
   showToast('تم حفظ ' + saved + ' تسكين بنجاح', 'success');
   renderCamps();
   closeModals();
+}
+
+
+// ======================================================================
+// ===== نظام الاستبيانات — المرحلة 2A: الشاشة الرئيسية =====
+// ======================================================================
+
+const SYSTEM_SURVEY_CODES = ['pre_trip','arrival','mashaer','transport','post_trip'];
+window._surveysCache = null;
+window._surveysResponseCounts = {};
+window._surveysSearchQuery = '';
+
+function isSystemSurvey(survey) {
+  return survey && SYSTEM_SURVEY_CODES.indexOf(survey.code) !== -1;
+}
+
+function getSurveyStatus(s) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!s.active) return 'inactive';
+  if (s.start_date && s.start_date > today) return 'scheduled';
+  if (s.end_date && s.end_date < today) return 'expired';
+  return 'active';
+}
+
+function getSurveyStatusLabel(status) {
+  return {
+    active: 'مفعّل',
+    inactive: 'متوقف',
+    scheduled: 'مجدول',
+    expired: 'منتهي'
+  }[status] || status;
+}
+
+function getRepeatLabel(repeatType) {
+  return {
+    once: 'مرة واحدة',
+    daily: 'يومي',
+    weekly: 'أسبوعي'
+  }[repeatType] || repeatType || 'مرة واحدة';
+}
+
+async function renderSurveys() {
+  const grid = document.getElementById('surveys-grid');
+  const statsBar = document.getElementById('surveys-stats-bar');
+  if (!grid || !statsBar) return;
+
+  // حالة تحميل
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted)">⏳ جارٍ التحميل...</div>';
+  statsBar.innerHTML = '';
+
+  try {
+    const [surveys, counts] = await Promise.all([
+      window.DB.Surveys.getAll(),
+      window.DB.Surveys.getAllResponseCountsBySurvey()
+    ]);
+    window._surveysCache = surveys;
+    window._surveysResponseCounts = counts;
+    renderSurveysStats();
+    renderSurveysGrid();
+    updateSurveysBadge();
+    loadQuestionCountsForCards();
+  } catch (e) {
+    grid.innerHTML = '<div class="surveys-empty"><div class="se-ico">⚠️</div><div class="se-title">خطأ في التحميل</div><div class="se-desc">' + (e.message || 'حاول مرة أخرى') + '</div></div>';
+  }
+}
+
+function renderSurveysStats() {
+  const surveys = window._surveysCache || [];
+  const counts = window._surveysResponseCounts || {};
+  const total = surveys.length;
+  const active = surveys.filter(s => s.active).length;
+  const totalResponses = Object.values(counts).reduce((a, b) => a + b, 0);
+  const totalPilgrims = (typeof ALL_DATA !== 'undefined' && ALL_DATA.length) ? ALL_DATA.length : 0;
+  const participation = (totalPilgrims && totalResponses) ? Math.round((totalResponses / (totalPilgrims * Math.max(1, active))) * 100) : 0;
+
+  const statsBar = document.getElementById('surveys-stats-bar');
+  statsBar.innerHTML = `
+    <div class="sv-stat c1"><span class="sv-ico">📋</span><div class="sv-num">${total}</div><div class="sv-lbl">إجمالي الاستبيانات</div></div>
+    <div class="sv-stat c2"><span class="sv-ico">✅</span><div class="sv-num">${active}</div><div class="sv-lbl">الاستبيانات المفعّلة</div></div>
+    <div class="sv-stat c3"><span class="sv-ico">💬</span><div class="sv-num">${totalResponses}</div><div class="sv-lbl">إجمالي الإجابات</div></div>
+    <div class="sv-stat c4"><span class="sv-ico">📊</span><div class="sv-num">${participation}%</div><div class="sv-lbl">نسبة المشاركة</div></div>
+  `;
+}
+
+function renderSurveysGrid() {
+  const grid = document.getElementById('surveys-grid');
+  const q = (window._surveysSearchQuery || '').toLowerCase().trim();
+  let list = window._surveysCache || [];
+  if (q) {
+    list = list.filter(s =>
+      (s.title || '').toLowerCase().includes(q) ||
+      (s.description || '').toLowerCase().includes(q) ||
+      (s.code || '').toLowerCase().includes(q)
+    );
+  }
+  if (!list.length) {
+    grid.innerHTML = `
+      <div class="surveys-empty" style="grid-column:1/-1">
+        <div class="se-ico">${q ? '🔍' : '📋'}</div>
+        <div class="se-title">${q ? 'لا توجد نتائج' : 'لا توجد استبيانات بعد'}</div>
+        <div class="se-desc">${q ? 'جرّب كلمة بحث أخرى' : 'أنشئ استبيانك الأول للبدء'}</div>
+      </div>`;
+    return;
+  }
+  const counts = window._surveysResponseCounts || {};
+  const totalPilgrims = (typeof ALL_DATA !== 'undefined' && ALL_DATA.length) ? ALL_DATA.length : 0;
+  grid.innerHTML = list.map(s => buildSurveyCardHTML(s, counts[s.id] || 0, totalPilgrims)).join('');
+}
+
+function buildSurveyCardHTML(s, responseCount, totalPilgrims) {
+  const status = getSurveyStatus(s);
+  const isSystem = isSystemSurvey(s);
+  const iconClass = isSystem ? ('ic-' + s.code) : 'ic-custom';
+  const progress = totalPilgrims ? Math.min(100, Math.round((responseCount / totalPilgrims) * 100)) : 0;
+  const hasResponses = responseCount > 0;
+  const icon = s.icon || '📋';
+  const title = escapeHTML(s.title || 'استبيان');
+  const desc = escapeHTML(s.description || '');
+
+  return `
+    <div class="survey-card" data-id="${s.id}">
+      <div class="sc-top">
+        <div class="sc-icon-circle ${iconClass}">${icon}</div>
+        <div class="sc-head">
+          <div class="sc-title">
+            ${title}
+            <span class="sc-badge st-${status}">${getSurveyStatusLabel(status)}</span>
+            ${isSystem ? '<span class="sc-badge st-system">نظامي</span>' : ''}
+          </div>
+          ${desc ? `<div class="sc-desc">${desc}</div>` : ''}
+        </div>
+      </div>
+
+      <div class="sc-mini-stats">
+        <span class="sc-stat-item">📝 <span class="sc-stat-val" id="sc-q-${s.id}">—</span> سؤال</span>
+        <span class="sc-stat-item">💬 <span class="sc-stat-val">${responseCount}</span> إجابة</span>
+        <span class="sc-stat-item">🔁 ${getRepeatLabel(s.repeat_type)}</span>
+      </div>
+
+      <div>
+        <div class="sc-progress-label">نسبة المشاركة: ${progress}%${totalPilgrims ? ` (${responseCount}/${totalPilgrims})` : ''}</div>
+        <div class="sc-progress"><div class="sc-progress-fill" style="width:${progress}%"></div></div>
+      </div>
+
+      <div class="sc-actions">
+        <button class="sc-action" onclick="previewSurvey(${s.id})" title="معاينة">👁️ معاينة</button>
+        <button class="sc-action" onclick="openSurveySettings(${s.id})" title="إعدادات">⚙️</button>
+        <button class="sc-action" onclick="openQuestionsManager(${s.id})" title="الأسئلة">📝 الأسئلة</button>
+        <button class="sc-action ${hasResponses ? '' : 'disabled'}" onclick="${hasResponses ? `openSurveyResults(${s.id})` : `showToast('لا توجد إجابات بعد','info')`}" title="النتائج">📊</button>
+        <button class="sc-action more" onclick="openSurveyMoreMenu(event, ${s.id})" title="المزيد">⋮</button>
+      </div>
+    </div>`;
+}
+
+function escapeHTML(str) {
+  if (str == null) return '';
+  return String(str).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function filterSurveys(query) {
+  window._surveysSearchQuery = query || '';
+  renderSurveysGrid();
+}
+
+function updateSurveysBadge() {
+  const badge = document.getElementById('surveys-badge');
+  if (!badge) return;
+  const surveys = window._surveysCache || [];
+  const active = surveys.filter(s => s.active).length;
+  badge.textContent = active;
+  badge.classList.toggle('empty', active === 0);
+}
+
+// ===== تحميل عدد الأسئلة لكل استبيان (بشكل بطيء بعد الرسم) =====
+async function loadQuestionCountsForCards() {
+  const surveys = window._surveysCache || [];
+  for (const s of surveys) {
+    try {
+      const qs = await window.DB.Surveys.getQuestions(s.id);
+      const el = document.getElementById('sc-q-' + s.id);
+      if (el) el.textContent = qs.length;
+    } catch (e) {}
+  }
+}
+
+// ===== placeholders للمراحل القادمة =====
+function openSurveySettings(id) { showToast('إعدادات الاستبيان — المرحلة 2B قادمة', 'info'); }
+function openQuestionsManager(id) { showToast('إدارة الأسئلة — المرحلة 2C قادمة', 'info'); }
+function previewSurvey(id) { showToast('المعاينة — المرحلة 2D قادمة', 'info'); }
+function openCreateSurvey() { showToast('إنشاء استبيان — المرحلة 2D قادمة', 'info'); }
+function importSurveyJSON() { showToast('الاستيراد — المرحلة 2D قادمة', 'info'); }
+function openSurveyResults(id) { showToast('لوحة النتائج — المرحلة 4 قادمة', 'info'); }
+function openSurveyMoreMenu(ev, id) {
+  ev.stopPropagation();
+  const survey = (window._surveysCache || []).find(s => s.id === id);
+  const isSystem = isSystemSurvey(survey);
+  showToast(isSystem ? 'هذا استبيان نظامي — النسخ والتصدير قادمان في المرحلة 2D' : 'قائمة المزيد — المرحلة 2D قادمة', 'info');
 }
 
 

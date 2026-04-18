@@ -224,10 +224,128 @@ const Settings = {
       .from('settings')
       .upsert({ key, value: JSON.stringify(value) }, { onConflict: 'key' });
     if (error) throw error;
+  },
+  async delete(key) {
+    const { error } = await _db.from('settings').delete().eq('key', key);
+    if (error) throw error;
+  }
+};
+
+// ===== الاستبيانات =====
+const Surveys = {
+  async getAll() {
+    const { data, error } = await _db
+      .from('surveys')
+      .select('*')
+      .order('display_order', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+  async getActive() {
+    const { data, error } = await _db
+      .from('surveys')
+      .select('*')
+      .eq('active', true)
+      .order('display_order', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+  async getById(id) {
+    const { data, error } = await _db.from('surveys').select('*').eq('id', id).single();
+    if (error) return null;
+    return data;
+  },
+  async update(id, updates) {
+    const payload = { ...updates, updated_at: new Date().toISOString() };
+    const { error } = await _db.from('surveys').update(payload).eq('id', id);
+    if (error) throw error;
+  },
+  async getQuestions(surveyId) {
+    const { data, error } = await _db
+      .from('survey_questions')
+      .select('*')
+      .eq('survey_id', surveyId)
+      .order('display_order', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+  async addQuestion(surveyId, question) {
+    const payload = { ...question, survey_id: surveyId };
+    const { data, error } = await _db.from('survey_questions').insert(payload).select().single();
+    if (error) throw error;
+    return data;
+  },
+  async updateQuestion(id, updates) {
+    const { error } = await _db.from('survey_questions').update(updates).eq('id', id);
+    if (error) throw error;
+  },
+  async deleteQuestion(id) {
+    const { error } = await _db.from('survey_questions').delete().eq('id', id);
+    if (error) throw error;
+  },
+  async submitResponse(response) {
+    const { data, error } = await _db.from('survey_responses').insert(response).select().single();
+    if (error) throw error;
+    return data;
+  },
+  async getResponses(surveyId) {
+    const { data, error } = await _db
+      .from('survey_responses')
+      .select('*')
+      .eq('survey_id', surveyId)
+      .order('submitted_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+  async getAllResponseCountsBySurvey() {
+    const { data, error } = await _db.from('survey_responses').select('survey_id');
+    if (error) throw error;
+    const counts = {};
+    (data || []).forEach(r => { counts[r.survey_id] = (counts[r.survey_id] || 0) + 1; });
+    return counts;
+  },
+  async getMyResponse(surveyId, pilgrimId, date) {
+    let q = _db.from('survey_responses').select('*').eq('survey_id', surveyId).eq('pilgrim_id', pilgrimId);
+    if (date) q = q.eq('response_date', date);
+    const { data, error } = await q;
+    if (error) return null;
+    return data && data.length ? data : null;
+  },
+  async getStats(surveyId) {
+    const [questions, responses] = await Promise.all([
+      this.getQuestions(surveyId),
+      this.getResponses(surveyId)
+    ]);
+    const stats = { total_responses: responses.length, questions: {} };
+    for (const q of questions) {
+      const answers = responses
+        .map(r => r.answers && r.answers[q.id])
+        .filter(v => v !== undefined && v !== null && v !== '');
+      if (q.question_type === 'rating') {
+        const nums = answers.map(Number).filter(n => !isNaN(n));
+        const sum = nums.reduce((s, n) => s + n, 0);
+        stats.questions[q.id] = {
+          type: 'rating',
+          count: nums.length,
+          avg: nums.length ? (sum / nums.length) : 0,
+          distribution: [1,2,3,4,5].reduce((d, s) => { d[s] = nums.filter(n => n === s).length; return d; }, {})
+        };
+      } else if (q.question_type === 'single' || q.question_type === 'multiple') {
+        const counts = {};
+        for (const a of answers) {
+          const arr = Array.isArray(a) ? a : [a];
+          for (const v of arr) counts[v] = (counts[v] || 0) + 1;
+        }
+        stats.questions[q.id] = { type: q.question_type, count: answers.length, counts };
+      } else if (q.question_type === 'text') {
+        stats.questions[q.id] = { type: 'text', count: answers.length, samples: answers };
+      }
+    }
+    return stats;
   }
 };
 
 // تعريف DB عالمياً
-window.DB = { Pilgrims, Announcements, Camps, Groups, Buses, SysUsers, Requests, Staff, Settings };
+window.DB = { Pilgrims, Announcements, Camps, Groups, Buses, SysUsers, Requests, Staff, Settings, Surveys };
 window.dispatchEvent(new Event('db-ready'));
 console.log('✅ Supabase متصل بنجاح');
