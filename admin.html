@@ -553,6 +553,223 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       .sh-actions{flex-direction:column}
       .sh-search{max-width:100%}
     }
+
+    /* ===== Survey Settings Modal ===== */
+    .ssm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1001;display:flex;align-items:center;justify-content:center;padding:20px;animation:ssmFadeIn .2s ease}
+    @keyframes ssmFadeIn{from{opacity:0}to{opacity:1}}
+    .ssm-container{background:var(--surface);border-radius:var(--radius-lg);width:90vw;max-width:1000px;height:85vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);overflow:hidden}
+
+    .ssm-header{display:flex;align-items:center;gap:14px;padding:16px 22px;border-bottom:1.5px solid var(--border-light);flex-shrink:0}
+    .ssm-header .ssm-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;color:#fff}
+    .ssm-header .ssm-title{flex:1;min-width:0}
+    .ssm-header .ssm-title>div:first-child{font-size:16px;font-weight:800;color:var(--text-primary)}
+    .ssm-header .ssm-sub{font-size:11px;color:var(--text-muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .ssm-header .ssm-close{width:36px;height:36px;border-radius:50%;background:var(--surface-2);border:1.5px solid var(--border);cursor:pointer;font-size:16px;color:var(--text-secondary);transition:all .15s;font-family:inherit}
+    .ssm-header .ssm-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
+
+    .ssm-body{flex:1;display:flex;min-height:0}
+    .ssm-sidebar{width:220px;background:var(--surface-2);border-left:1.5px solid var(--border-light);padding:16px 12px;flex-shrink:0;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+    body.rtl .ssm-sidebar{border-left:none;border-right:1.5px solid var(--border-light)}
+
+    .ssm-tab-link{display:flex;align-items:center;gap:10px;padding:10px 14px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;color:var(--text-secondary);border-radius:var(--radius-sm);text-align:right;transition:all .15s;width:100%}
+    body.ltr .ssm-tab-link{text-align:left}
+    .ssm-tab-link:hover{background:var(--surface)}
+    .ssm-tab-link.active{background:var(--surface);color:var(--text-primary);box-shadow:var(--shadow-sm)}
+    .ssm-tab-link .ssm-tab-ico{font-size:16px}
+
+    .ssm-content{flex:1;overflow-y:auto;padding:22px 26px;min-width:0}
+    .ssm-pane{display:none}
+    .ssm-pane.active{display:block;animation:ssmPaneFade .2s ease}
+    @keyframes ssmPaneFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+    .ssm-pane h3{font-size:14px;font-weight:800;color:var(--text-primary);margin:0 0 14px 0;padding-bottom:10px;border-bottom:1.5px solid var(--border-light)}
+    .ssm-row{margin-bottom:16px}
+    .ssm-row>label{display:block;font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:6px}
+    .ssm-row>label .ssm-hint{font-size:10px;font-weight:500;color:var(--text-muted);margin-inline-start:6px}
+    .ssm-row input[type=text],.ssm-row textarea,.ssm-row input[type=date]{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface-2);color:var(--text-primary);transition:all .15s}
+    .ssm-row input:focus,.ssm-row textarea:focus{outline:none;border-color:var(--gold);background:var(--surface);box-shadow:0 0 0 3px rgba(200,151,26,.12)}
+    .ssm-row input[readonly]{background:var(--surface-3);color:var(--text-muted);cursor:not-allowed}
+    .ssm-row textarea{min-height:80px;resize:vertical}
+
+    .ssm-system-hint{padding:10px 14px;background:#faf3e5;border:1.5px solid #e8d0a8;border-radius:var(--radius-sm);font-size:12px;color:#7a4500;margin-bottom:16px;display:flex;align-items:flex-start;gap:8px;line-height:1.6}
+    .ssm-info-hint{padding:10px 14px;background:#eaf4ff;border:1.5px solid #b4d7f5;border-radius:var(--radius-sm);font-size:11px;color:#1a5fa8;margin-top:12px;line-height:1.6}
+
+    /* Emoji picker */
+    .emoji-picker{background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px}
+    .emoji-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-bottom:10px}
+    .emoji-cell{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--surface);border:1.5px solid transparent;border-radius:var(--radius-sm);cursor:pointer;transition:all .15s}
+    .emoji-cell:hover{background:var(--surface-3);border-color:var(--gold-light)}
+    .emoji-cell.selected{background:var(--gold-light);border-color:var(--gold);box-shadow:var(--shadow-sm);transform:scale(1.08)}
+    .emoji-custom{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);margin-top:6px}
+    .emoji-custom input{width:70px;text-align:center;font-size:18px;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;background:var(--surface)}
+
+    /* Toggle switch */
+    .tgl{position:relative;display:inline-block;width:50px;height:28px;cursor:pointer;flex-shrink:0}
+    .tgl input{opacity:0;width:0;height:0;position:absolute;pointer-events:none}
+    .tgl-bg{position:absolute;inset:0;background:#ccc;border-radius:28px;transition:background .25s}
+    .tgl-knob{position:absolute;top:3px;right:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:all .25s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+    .tgl.on .tgl-bg{background:var(--gold)}
+    .tgl.on .tgl-knob{right:25px}
+
+    /* Activation box */
+    .activation-box{display:flex;align-items:center;gap:14px;padding:16px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:16px}
+    .activation-info{flex:1}
+    .activation-title{font-size:14px;font-weight:800;color:var(--text-primary);margin-bottom:2px}
+    .activation-status{font-size:11px;color:var(--text-muted)}
+
+    /* Radio cards for repeat type */
+    .radio-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px}
+    .radio-card{padding:14px 12px;border:2px solid var(--border);border-radius:var(--radius);cursor:pointer;text-align:center;transition:all .15s;background:var(--surface)}
+    .radio-card:hover{border-color:var(--gold-light);background:var(--surface-2)}
+    .radio-card.selected{border-color:var(--gold);background:#faf3e5;box-shadow:var(--shadow-sm)}
+    .radio-card .rc-ico{font-size:22px;margin-bottom:4px}
+    .radio-card .rc-label{font-size:12px;font-weight:700;color:var(--text-primary);margin-bottom:2px}
+    .radio-card .rc-desc{font-size:10px;color:var(--text-muted);line-height:1.4}
+
+    /* Split row for dates */
+    .ssm-row-split{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+    /* Advanced options */
+    .opt-row{display:flex;align-items:flex-start;gap:14px;padding:14px;background:var(--surface-2);border:1.5px solid var(--border-light);border-radius:var(--radius-sm);margin-bottom:10px}
+    .opt-row-text{flex:1;min-width:0}
+    .opt-row-title{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:3px}
+    .opt-row-desc{font-size:11px;color:var(--text-muted);line-height:1.5}
+
+    /* Footer */
+    .ssm-footer{padding:14px 22px;border-top:1.5px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-shrink:0;background:var(--surface-2)}
+    .ssm-mod-hint{font-size:11px;color:var(--gold-dark);display:none;align-items:center;gap:6px;font-weight:700}
+    .ssm-mod-hint.visible{display:inline-flex}
+    .modified-dot{width:8px;height:8px;background:#ff9800;border-radius:50%;display:inline-block;animation:ssmPulse 1.5s infinite}
+    @keyframes ssmPulse{0%,100%{opacity:1}50%{opacity:.5}}
+    .ssm-btns{display:flex;gap:10px}
+    .ssm-btn{padding:10px 20px;border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;transition:all .15s}
+    .ssm-btn.primary{background:linear-gradient(135deg,var(--brown),var(--gold));color:#fff;box-shadow:var(--shadow-sm)}
+    .ssm-btn.primary:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+    .ssm-btn.secondary{background:var(--surface);color:var(--text-secondary);border:1.5px solid var(--border)}
+    .ssm-btn.secondary:hover{border-color:var(--gold)}
+
+    /* Mobile */
+    @media (max-width:768px){
+      .ssm-overlay{padding:0}
+      .ssm-container{width:100vw;height:100vh;max-width:100vw;border-radius:0}
+      .ssm-body{flex-direction:column}
+      .ssm-sidebar{width:100%;flex-direction:row;overflow-x:auto;padding:10px;gap:4px;border:none;border-bottom:1.5px solid var(--border-light)}
+      body.rtl .ssm-sidebar{border-right:none;border-bottom:1.5px solid var(--border-light)}
+      .ssm-tab-link{flex-shrink:0;white-space:nowrap;padding:8px 12px;font-size:12px}
+      .ssm-content{padding:16px 18px}
+      .emoji-grid{grid-template-columns:repeat(6,1fr)}
+      .radio-cards{grid-template-columns:1fr}
+      .ssm-row-split{grid-template-columns:1fr}
+    }
+
+    /* ===== Questions Manager Modal ===== */
+    .qm-container{background:var(--surface);border-radius:var(--radius-lg);width:95vw;max-width:1200px;height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);overflow:hidden;position:relative}
+    .qm-toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 22px;background:var(--surface-2);border-bottom:1.5px solid var(--border-light);flex-shrink:0}
+    .qm-dropdown{position:relative}
+    .qm-dropdown-menu{position:absolute;top:calc(100% + 4px);right:0;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:6px;min-width:240px;z-index:10}
+    body.ltr .qm-dropdown-menu{right:auto;left:0}
+    .qm-dropdown-menu button{display:flex;align-items:flex-start;gap:10px;width:100%;padding:9px 12px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:13px;text-align:right;border-radius:var(--radius-sm);transition:background .15s;color:var(--text-primary)}
+    body.ltr .qm-dropdown-menu button{text-align:left}
+    .qm-dropdown-menu button:hover{background:var(--surface-2)}
+    .qm-dropdown-menu button .qm-dm-ico{font-size:18px;flex-shrink:0;line-height:1.2}
+    .qm-dropdown-menu button .qm-dm-desc{font-size:10px;color:var(--text-muted);font-weight:500;margin-top:2px}
+    .qm-dropdown-menu button div{text-align:right}
+    body.ltr .qm-dropdown-menu button div{text-align:left}
+
+    .qm-tb-btn{padding:9px 16px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;background:var(--surface);color:var(--text-primary);transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+    .qm-tb-btn:hover{border-color:var(--gold)}
+    .qm-tb-btn.primary{background:linear-gradient(135deg,var(--brown),var(--gold));color:#fff;border-color:transparent;box-shadow:var(--shadow-sm)}
+    .qm-tb-btn.primary:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+
+    .qm-search{flex:1;min-width:180px;max-width:280px;padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface)}
+    .qm-search:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(200,151,26,.12)}
+    .qm-cat-filter{padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface);color:var(--text-primary)}
+
+    .qm-filter-notice{padding:8px 22px;background:#fff8e5;border-bottom:1px solid #f0e0b0;font-size:11px;color:#7a4500;display:none}
+    .qm-filter-notice.visible{display:block}
+
+    .qm-body{flex:1;display:flex;min-height:0;position:relative;overflow:hidden}
+    .qm-list-pane{flex:1;overflow-y:auto;padding:18px 22px;min-width:0}
+
+    #qm-questions-list{display:flex;flex-direction:column;gap:10px}
+
+    .qm-question-card{display:flex;gap:12px;align-items:center;background:var(--surface);border:1.5px solid var(--border-light);border-radius:var(--radius);padding:14px 16px;transition:all .15s}
+    .qm-question-card:hover{border-color:var(--gold-light);box-shadow:var(--shadow-sm)}
+    .qm-question-card.qm-ghost{opacity:.3}
+    .qm-handle{font-size:18px;color:var(--text-muted);cursor:grab;user-select:none;flex-shrink:0;padding:4px;line-height:1;transition:color .15s}
+    .qm-handle:hover{color:var(--gold)}
+    .qm-handle:active{cursor:grabbing}
+    .qm-handle.disabled{opacity:.25;cursor:not-allowed}
+    .qm-q-number{flex-shrink:0;width:28px;height:28px;background:var(--surface-3);color:var(--text-secondary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+    .qm-q-body{flex:1;min-width:0}
+    .qm-q-text{font-size:13px;font-weight:600;color:var(--text-primary);line-height:1.5;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .qm-q-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+    .qm-type-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;white-space:nowrap}
+    .qm-type-badge.type-rating{background:#faf3e5;color:#7a4500;border:1px solid #e8d0a8}
+    .qm-type-badge.type-single{background:#e8f0fd;color:#0a3a8e;border:1px solid #a8c4e8}
+    .qm-type-badge.type-multiple{background:#f0e8f8;color:#5a2a8a;border:1px solid #c4a8d8}
+    .qm-type-badge.type-text{background:#e3f8eb;color:#0a6e3a;border:1px solid #8cd4a8}
+    .qm-req-badge{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#fde8e8;color:#b71c1c;border:1px solid #f0a8a8}
+    .qm-opt-badge{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:var(--surface-3);color:var(--text-muted);border:1px solid var(--border)}
+    .qm-cat-badge{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#e8f4f0;color:#1a6e4a;border:1px solid #a8d8c4}
+    .qm-opts-count{font-size:10px;color:var(--text-muted);font-weight:600}
+    .qm-q-actions{display:flex;gap:4px;flex-shrink:0}
+    .qm-q-actions button{width:32px;height:32px;border:1.5px solid var(--border);background:var(--surface);border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text-secondary);transition:all .15s;display:inline-flex;align-items:center;justify-content:center}
+    .qm-q-actions button:hover{border-color:var(--gold);color:var(--text-primary);background:var(--surface-2)}
+    .qm-q-actions button.delete:hover{border-color:#c00;color:#c00;background:#fff0f0}
+
+    .qm-empty{padding:60px 20px;text-align:center;color:var(--text-muted)}
+    .qm-empty .qme-ico{font-size:48px;margin-bottom:14px;opacity:.5}
+    .qm-empty .qme-title{font-size:16px;font-weight:700;color:var(--text-secondary);margin-bottom:6px}
+    .qm-empty .qme-desc{font-size:13px}
+
+    /* Side panel */
+    .qm-side-panel{position:absolute;top:0;right:0;bottom:0;width:450px;background:var(--surface);border-left:1.5px solid var(--border-light);box-shadow:-8px 0 20px rgba(0,0,0,.1);display:flex;flex-direction:column;animation:qmSlideInRtl .25s ease;z-index:5}
+    body.ltr .qm-side-panel{right:auto;left:0;border-left:none;border-right:1.5px solid var(--border-light);box-shadow:8px 0 20px rgba(0,0,0,.1);animation:qmSlideIn .25s ease}
+    @keyframes qmSlideIn{from{transform:translateX(-20px);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes qmSlideInRtl{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+    .qm-editor-header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1.5px solid var(--border-light);flex-shrink:0}
+    .qm-editor-title{flex:1;font-size:15px;font-weight:800;color:var(--text-primary)}
+    .qm-editor-body{flex:1;overflow-y:auto;padding:18px;min-width:0}
+    .qm-editor-footer{padding:12px 18px;border-top:1.5px solid var(--border-light);display:flex;justify-content:flex-end;gap:10px;background:var(--surface-2);flex-shrink:0}
+
+    .qe-type-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .qe-type-card{padding:10px 8px;border:2px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;text-align:center;transition:all .15s;background:var(--surface)}
+    .qe-type-card:hover{border-color:var(--gold-light);background:var(--surface-2)}
+    .qe-type-card.selected{border-color:var(--gold);background:#faf3e5}
+    .qe-type-card .qetc-ico{font-size:20px;margin-bottom:3px}
+    .qe-type-card .qetc-lbl{font-size:11px;font-weight:700;color:var(--text-primary)}
+
+    .qm-options-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+    .qm-option-item{display:flex;gap:6px;align-items:center}
+    .qm-option-item input{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;background:var(--surface-2)}
+    .qm-option-item input:focus{outline:none;border-color:var(--gold);background:var(--surface)}
+    .qm-opt-remove{width:30px;height:30px;border:1.5px solid var(--border);background:var(--surface);border-radius:var(--radius-sm);cursor:pointer;font-size:15px;color:#c00;transition:all .15s;flex-shrink:0;font-family:inherit;line-height:1}
+    .qm-opt-remove:hover{background:#fff0f0;border-color:#c00}
+    .qm-opt-add{padding:8px 14px;border:1.5px dashed var(--border);background:var(--surface-2);border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:12px;color:var(--text-secondary);font-weight:600;width:100%;text-align:center}
+    .qm-opt-add:hover{border-color:var(--gold);color:var(--text-primary)}
+
+    .qm-preview-section{margin-top:20px;padding-top:18px;border-top:1.5px dashed var(--border)}
+    .qm-preview-section h4{font-size:11px;font-weight:800;color:var(--gold-dark);margin:0 0 10px 0;text-transform:uppercase;letter-spacing:.8px}
+    .qm-preview{padding:14px;background:var(--surface-2);border-radius:var(--radius);border:1.5px solid var(--border-light)}
+    .qm-preview-q{font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:10px;line-height:1.5}
+    .qm-req-star{color:#c00;margin-inline-start:4px}
+    .qm-preview-stars{display:flex;gap:4px;font-size:26px;color:var(--gold)}
+    .qm-preview-opt{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;color:var(--text-primary)}
+    .qm-preview-opt input{width:16px;height:16px;cursor:default}
+    .qm-preview-text-area{width:100%;min-height:60px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;background:var(--surface);resize:vertical}
+
+    /* Questions Manager Responsive */
+    @media (max-width:768px){
+      .qm-container{width:100vw;height:100vh;max-width:100vw;border-radius:0}
+      .qm-side-panel{width:100%;left:0;right:0;border:none}
+      .qm-toolbar{padding:12px;gap:6px}
+      .qm-list-pane{padding:12px}
+      .qm-tb-btn{padding:8px 12px;font-size:12px}
+      .qm-search{min-width:140px}
+      .qe-type-grid{grid-template-columns:1fr 1fr}
+    }
   </style>
 </head>
 <body>
@@ -1341,6 +1558,16 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   <!-- ===== النوافذ المنبثقة ===== -->
   <div id="modal-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this){if(window._uaModifiedRows&&window._uaModifiedRows.size>0)closeUAModal();else closeModals()}">
     <div class="modal-box" id="modal-content"></div>
+  </div>
+
+  <!-- ===== Modal إعدادات الاستبيان ===== -->
+  <div id="survey-settings-modal" class="ssm-overlay" style="display:none" onclick="if(event.target===this) closeSurveySettings()">
+    <div class="ssm-container" id="ssm-container"></div>
+  </div>
+
+  <!-- ===== Modal إدارة الأسئلة ===== -->
+  <div id="questions-manager-modal" class="ssm-overlay" style="display:none" onclick="if(event.target===this) closeQuestionsManager()">
+    <div class="qm-container" id="qm-container"></div>
   </div>
 
   <!-- لوحة البيانات -->
@@ -8352,6 +8579,7 @@ async function renderSurveys() {
     ]);
     window._surveysCache = surveys;
     window._surveysResponseCounts = counts;
+    await autoManageScheduledSurveys();
     renderSurveysStats();
     renderSurveysGrid();
     updateSurveysBadge();
@@ -8481,8 +8709,6 @@ async function loadQuestionCountsForCards() {
 }
 
 // ===== placeholders للمراحل القادمة =====
-function openSurveySettings(id) { showToast('إعدادات الاستبيان — المرحلة 2B قادمة', 'info'); }
-function openQuestionsManager(id) { showToast('إدارة الأسئلة — المرحلة 2C قادمة', 'info'); }
 function previewSurvey(id) { showToast('المعاينة — المرحلة 2D قادمة', 'info'); }
 function openCreateSurvey() { showToast('إنشاء استبيان — المرحلة 2D قادمة', 'info'); }
 function importSurveyJSON() { showToast('الاستيراد — المرحلة 2D قادمة', 'info'); }
@@ -8492,6 +8718,951 @@ function openSurveyMoreMenu(ev, id) {
   const survey = (window._surveysCache || []).find(s => s.id === id);
   const isSystem = isSystemSurvey(survey);
   showToast(isSystem ? 'هذا استبيان نظامي — النسخ والتصدير قادمان في المرحلة 2D' : 'قائمة المزيد — المرحلة 2D قادمة', 'info');
+}
+
+// ======================================================================
+// ===== نظام الاستبيانات — المرحلة 2B: نافذة إعدادات الاستبيان =====
+// ======================================================================
+
+const EMOJI_PICKER_LIST = ['📋','📝','📊','📈','📉','✅','💬','❓','❗','⭐','🌟','💡','🔔','🎯','📅','🕋','🕌','🏕️','🌙','🌄','🏨','🚌','💉','📞','🎪','🏢','🚸','🩺','🔍','👥'];
+
+window._ssmCurrentId = null;
+window._ssmCurrentData = null;
+window._ssmModified = false;
+
+// ===== تفعيل/إيقاف تلقائي للاستبيانات المجدولة =====
+async function autoManageScheduledSurveys() {
+  const surveys = window._surveysCache || [];
+  const today = new Date().toISOString().slice(0, 10);
+  const toActivate = [];
+  const toDeactivate = [];
+  for (const s of surveys) {
+    if (s.auto_activate && !s.active && s.start_date && s.start_date <= today && (!s.end_date || s.end_date >= today)) {
+      toActivate.push(s);
+    } else if (s.active && s.end_date && s.end_date < today) {
+      toDeactivate.push(s);
+    }
+  }
+  for (const s of toActivate) {
+    try {
+      await window.DB.Surveys.update(s.id, { active: true });
+      s.active = true;
+      showToast(`تم تفعيل استبيان "${s.title}" تلقائياً`, 'info', 4000);
+    } catch (e) {}
+  }
+  for (const s of toDeactivate) {
+    try {
+      await window.DB.Surveys.update(s.id, { active: false });
+      s.active = false;
+      showToast(`تم إيقاف استبيان "${s.title}" — انتهت فترة التفعيل`, 'info', 4000);
+    } catch (e) {}
+  }
+}
+
+// ===== فتح نافذة الإعدادات =====
+async function openSurveySettings(id) {
+  const survey = (window._surveysCache || []).find(s => s.id === id);
+  if (!survey) { showToast('لم يُعثر على الاستبيان', 'error'); return; }
+  window._ssmCurrentId = id;
+  window._ssmCurrentData = { ...survey };
+  window._ssmModified = false;
+
+  const container = document.getElementById('ssm-container');
+  container.innerHTML = buildSSMHTML(survey);
+  document.getElementById('survey-settings-modal').style.display = 'flex';
+  switchSurveySettingsTab('general');
+  setTimeout(attachSSMListeners, 50);
+}
+
+function buildSSMHTML(s) {
+  const isSystem = isSystemSurvey(s);
+  const iconClass = isSystem ? ('ic-' + s.code) : 'ic-custom';
+  return `
+    <div class="ssm-header">
+      <div class="ssm-icon sc-icon-circle ${iconClass}">${s.icon || '📋'}</div>
+      <div class="ssm-title">
+        <div>إعدادات الاستبيان</div>
+        <div class="ssm-sub">${escapeHTML(s.title)}</div>
+      </div>
+      <button class="ssm-close" onclick="closeSurveySettings()" title="إغلاق">✕</button>
+    </div>
+    <div class="ssm-body">
+      <div class="ssm-sidebar">
+        <button class="ssm-tab-link" data-ssm-tab="general" onclick="switchSurveySettingsTab('general')"><span class="ssm-tab-ico">📝</span> عام</button>
+        <button class="ssm-tab-link" data-ssm-tab="schedule" onclick="switchSurveySettingsTab('schedule')"><span class="ssm-tab-ico">📅</span> الجدولة</button>
+        <button class="ssm-tab-link" data-ssm-tab="messages" onclick="switchSurveySettingsTab('messages')"><span class="ssm-tab-ico">💬</span> الرسائل</button>
+        <button class="ssm-tab-link" data-ssm-tab="advanced" onclick="switchSurveySettingsTab('advanced')"><span class="ssm-tab-ico">⚙️</span> خيارات متقدمة</button>
+      </div>
+      <div class="ssm-content">
+        ${buildSSMPaneGeneral(s, isSystem)}
+        ${buildSSMPaneSchedule(s)}
+        ${buildSSMPaneMessages(s)}
+        ${buildSSMPaneAdvanced(s)}
+      </div>
+    </div>
+    <div class="ssm-footer">
+      <span class="ssm-mod-hint" id="ssm-mod-hint"><span class="modified-dot"></span> تعديلات غير محفوظة</span>
+      <div class="ssm-btns">
+        <button class="ssm-btn secondary" onclick="closeSurveySettings()">إلغاء</button>
+        <button class="ssm-btn primary" onclick="saveSurveySettings()">💾 حفظ</button>
+      </div>
+    </div>`;
+}
+
+function buildSSMPaneGeneral(s, isSystem) {
+  return `
+    <div class="ssm-pane" data-ssm-pane="general">
+      ${isSystem ? `<div class="ssm-system-hint"><span>🔒</span><span>هذا استبيان نظامي — لا يمكن حذفه، لكن جميع الإعدادات قابلة للتعديل. الكود (code) مُقفل للقراءة فقط.</span></div>` : ''}
+      <h3>المعلومات الأساسية</h3>
+      <div class="ssm-row">
+        <label>الكود (code) <span class="ssm-hint">للتعرف الداخلي</span></label>
+        <input type="text" id="ssm-code" value="${escapeHTML(s.code)}" ${isSystem ? 'readonly' : ''}>
+      </div>
+      <div class="ssm-row">
+        <label>العنوان</label>
+        <input type="text" id="ssm-title" value="${escapeHTML(s.title || '')}">
+      </div>
+      <div class="ssm-row">
+        <label>الوصف</label>
+        <textarea id="ssm-description" rows="3">${escapeHTML(s.description || '')}</textarea>
+      </div>
+      <div class="ssm-row">
+        <label>الأيقونة</label>
+        ${buildEmojiPickerHTML(s.icon || '📋')}
+      </div>
+    </div>`;
+}
+
+function buildEmojiPickerHTML(selected) {
+  const cells = EMOJI_PICKER_LIST.map(e =>
+    `<div class="emoji-cell${e === selected ? ' selected' : ''}" data-emoji="${e}" onclick="selectEmoji('${e}')">${e}</div>`
+  ).join('');
+  const isCustom = selected && !EMOJI_PICKER_LIST.includes(selected);
+  return `
+    <div class="emoji-picker">
+      <div class="emoji-grid">${cells}</div>
+      <div class="emoji-custom">
+        <span>أو أدخل emoji مخصّص:</span>
+        <input type="text" id="ssm-icon-custom" maxlength="4" value="${isCustom ? selected : ''}" oninput="onEmojiCustomInput(this.value)">
+      </div>
+      <input type="hidden" id="ssm-icon" value="${selected || '📋'}">
+    </div>`;
+}
+
+function selectEmoji(e) {
+  document.getElementById('ssm-icon').value = e;
+  const customInput = document.getElementById('ssm-icon-custom');
+  if (customInput) customInput.value = '';
+  document.querySelectorAll('.emoji-cell').forEach(c => c.classList.toggle('selected', c.dataset.emoji === e));
+  markSurveyModified();
+}
+
+function onEmojiCustomInput(val) {
+  if (val) {
+    document.getElementById('ssm-icon').value = val;
+    document.querySelectorAll('.emoji-cell').forEach(c => c.classList.remove('selected'));
+    markSurveyModified();
+  }
+}
+
+function buildSSMPaneSchedule(s) {
+  const repeat = s.repeat_type || 'once';
+  return `
+    <div class="ssm-pane" data-ssm-pane="schedule">
+      <h3>حالة التفعيل</h3>
+      <div class="activation-box">
+        <div class="activation-info">
+          <div class="activation-title">تفعيل الاستبيان</div>
+          <div class="activation-status" id="ssm-activation-status">${s.active ? '✅ الاستبيان مفعّل حالياً' : '⏸️ الاستبيان متوقف'}</div>
+        </div>
+        <span class="tgl ${s.active ? 'on' : ''}" onclick="toggleSSMActive(this)">
+          <input type="checkbox" ${s.active ? 'checked' : ''} id="ssm-active">
+          <span class="tgl-bg"></span><span class="tgl-knob"></span>
+        </span>
+      </div>
+
+      <h3 style="margin-top:22px">نوع التكرار</h3>
+      <div class="radio-cards">
+        <div class="radio-card ${repeat === 'once' ? 'selected' : ''}" onclick="selectRepeat('once')" data-repeat="once">
+          <div class="rc-ico">1️⃣</div>
+          <div class="rc-label">مرة واحدة</div>
+          <div class="rc-desc">إجابة واحدة لكل حاج</div>
+        </div>
+        <div class="radio-card ${repeat === 'daily' ? 'selected' : ''}" onclick="selectRepeat('daily')" data-repeat="daily">
+          <div class="rc-ico">📆</div>
+          <div class="rc-label">يومي</div>
+          <div class="rc-desc">إجابة جديدة كل يوم</div>
+        </div>
+        <div class="radio-card ${repeat === 'weekly' ? 'selected' : ''}" onclick="selectRepeat('weekly')" data-repeat="weekly">
+          <div class="rc-ico">🗓️</div>
+          <div class="rc-label">أسبوعي</div>
+          <div class="rc-desc">إجابة جديدة كل أسبوع</div>
+        </div>
+      </div>
+      <input type="hidden" id="ssm-repeat-type" value="${repeat}">
+
+      <h3 style="margin-top:22px">فترة التفعيل</h3>
+      <div class="ssm-row-split">
+        <div class="ssm-row"><label>تاريخ البداية</label><input type="date" id="ssm-start-date" value="${s.start_date || ''}"></div>
+        <div class="ssm-row"><label>تاريخ النهاية</label><input type="date" id="ssm-end-date" value="${s.end_date || ''}"></div>
+      </div>
+
+      <div class="opt-row">
+        <div class="opt-row-text">
+          <div class="opt-row-title">تفعيل تلقائي في تاريخ البداية</div>
+          <div class="opt-row-desc">سيتم تفعيل الاستبيان تلقائياً عند وصول تاريخ البداية (يتطلب زيارة الصفحة)</div>
+        </div>
+        <span class="tgl ${s.auto_activate ? 'on' : ''}" onclick="toggleSSMField(this,'ssm-auto-activate')">
+          <input type="checkbox" ${s.auto_activate ? 'checked' : ''} id="ssm-auto-activate">
+          <span class="tgl-bg"></span><span class="tgl-knob"></span>
+        </span>
+      </div>
+    </div>`;
+}
+
+function toggleSSMActive(el) {
+  const input = document.getElementById('ssm-active');
+  input.checked = !input.checked;
+  el.classList.toggle('on', input.checked);
+  const statusEl = document.getElementById('ssm-activation-status');
+  if (statusEl) statusEl.textContent = input.checked ? '✅ الاستبيان مفعّل حالياً' : '⏸️ الاستبيان متوقف';
+  markSurveyModified();
+}
+
+function toggleSSMField(el, inputId) {
+  const input = document.getElementById(inputId);
+  input.checked = !input.checked;
+  el.classList.toggle('on', input.checked);
+  markSurveyModified();
+}
+
+function selectRepeat(val) {
+  document.getElementById('ssm-repeat-type').value = val;
+  document.querySelectorAll('[data-repeat]').forEach(c => c.classList.toggle('selected', c.dataset.repeat === val));
+  markSurveyModified();
+}
+
+function buildSSMPaneMessages(s) {
+  return `
+    <div class="ssm-pane" data-ssm-pane="messages">
+      <h3>رسائل الاستبيان</h3>
+      <div class="ssm-row">
+        <label>رسالة الترحيب <span class="ssm-hint">سيشاهدها الحاج قبل بدء الاستبيان</span></label>
+        <textarea id="ssm-welcome" rows="3" placeholder="مرحباً بك، نرجو أن تمنحنا دقائق قليلة لتقييم خدماتنا...">${escapeHTML(s.welcome_message || '')}</textarea>
+      </div>
+      <div class="ssm-row">
+        <label>رسالة الشكر <span class="ssm-hint">ستظهر للحاج بعد إرسال إجاباته</span></label>
+        <textarea id="ssm-thanks" rows="3" placeholder="شكراً لك على مشاركة رأيك، آراؤك تساعدنا على التحسين...">${escapeHTML(s.thanks_message || '')}</textarea>
+      </div>
+      <div class="ssm-info-hint">ℹ️ كلا الحقلين اختياري — إذا تُركا فارغَين سيُستخدم النص الافتراضي للنظام</div>
+    </div>`;
+}
+
+function buildSSMPaneAdvanced(s) {
+  const showProgress = s.show_progress !== false;
+  return `
+    <div class="ssm-pane" data-ssm-pane="advanced">
+      <h3>خيارات متقدمة</h3>
+      <div class="opt-row">
+        <div class="opt-row-text">
+          <div class="opt-row-title">إجابات مجهولة</div>
+          <div class="opt-row-desc">لا يُحفظ اسم الحاج ولا رقم الحجز مع الإجابة — تقرير مجمّع فقط</div>
+        </div>
+        <span class="tgl ${s.anonymous ? 'on' : ''}" onclick="toggleSSMField(this,'ssm-anonymous')">
+          <input type="checkbox" ${s.anonymous ? 'checked' : ''} id="ssm-anonymous">
+          <span class="tgl-bg"></span><span class="tgl-knob"></span>
+        </span>
+      </div>
+      <div class="opt-row">
+        <div class="opt-row-text">
+          <div class="opt-row-title">إظهار شريط التقدم</div>
+          <div class="opt-row-desc">يظهر للحاج مؤشر يوضح موقعه في الاستبيان (السؤال X من Y)</div>
+        </div>
+        <span class="tgl ${showProgress ? 'on' : ''}" onclick="toggleSSMField(this,'ssm-show-progress')">
+          <input type="checkbox" ${showProgress ? 'checked' : ''} id="ssm-show-progress">
+          <span class="tgl-bg"></span><span class="tgl-knob"></span>
+        </span>
+      </div>
+      <div class="opt-row">
+        <div class="opt-row-text">
+          <div class="opt-row-title">السماح بتعديل الإجابة</div>
+          <div class="opt-row-desc">يستطيع الحاج الرجوع لاستبيانه وتعديل إجاباته (لا ينطبق على الإجابات المجهولة)</div>
+        </div>
+        <span class="tgl ${s.allow_edit ? 'on' : ''}" onclick="toggleSSMField(this,'ssm-allow-edit')">
+          <input type="checkbox" ${s.allow_edit ? 'checked' : ''} id="ssm-allow-edit">
+          <span class="tgl-bg"></span><span class="tgl-knob"></span>
+        </span>
+      </div>
+    </div>`;
+}
+
+function switchSurveySettingsTab(tabName) {
+  document.querySelectorAll('.ssm-tab-link').forEach(b => b.classList.toggle('active', b.dataset.ssmTab === tabName));
+  document.querySelectorAll('.ssm-pane').forEach(p => p.classList.toggle('active', p.dataset.ssmPane === tabName));
+}
+
+function markSurveyModified() {
+  window._ssmModified = true;
+  const hint = document.getElementById('ssm-mod-hint');
+  if (hint) hint.classList.add('visible');
+}
+
+function attachSSMListeners() {
+  document.querySelectorAll('.ssm-content input[type=text], .ssm-content input[type=date], .ssm-content textarea').forEach(el => {
+    el.addEventListener('input', markSurveyModified);
+    el.addEventListener('change', markSurveyModified);
+  });
+}
+
+async function closeSurveySettings(force) {
+  if (!force && window._ssmModified) {
+    const ok = await showConfirm('هناك تعديلات غير محفوظة. هل تريد الإغلاق بدون حفظ؟', 'تأكيد الإغلاق', 'إغلاق بدون حفظ', '#c00', '⚠️');
+    if (!ok) return;
+  }
+  document.getElementById('survey-settings-modal').style.display = 'none';
+  window._ssmCurrentId = null;
+  window._ssmCurrentData = null;
+  window._ssmModified = false;
+}
+
+async function saveSurveySettings() {
+  const id = window._ssmCurrentId;
+  if (!id) return;
+  const original = window._ssmCurrentData || {};
+
+  const data = {
+    title: document.getElementById('ssm-title').value.trim(),
+    description: document.getElementById('ssm-description').value.trim(),
+    icon: document.getElementById('ssm-icon').value.trim() || '📋',
+    active: document.getElementById('ssm-active').checked,
+    repeat_type: document.getElementById('ssm-repeat-type').value,
+    start_date: document.getElementById('ssm-start-date').value || null,
+    end_date: document.getElementById('ssm-end-date').value || null,
+    auto_activate: document.getElementById('ssm-auto-activate').checked,
+    welcome_message: document.getElementById('ssm-welcome').value.trim(),
+    thanks_message: document.getElementById('ssm-thanks').value.trim(),
+    anonymous: document.getElementById('ssm-anonymous').checked,
+    show_progress: document.getElementById('ssm-show-progress').checked,
+    allow_edit: document.getElementById('ssm-allow-edit').checked
+  };
+
+  // Validation: title required
+  if (!data.title) {
+    showToast('العنوان مطلوب', 'error');
+    switchSurveySettingsTab('general');
+    return;
+  }
+  // Validation: end_date must be >= start_date
+  if (data.start_date && data.end_date && data.end_date < data.start_date) {
+    showToast('تاريخ النهاية لا يمكن أن يسبق تاريخ البداية', 'error');
+    switchSurveySettingsTab('schedule');
+    return;
+  }
+
+  // Warning for system survey title change
+  if (isSystemSurvey(original) && data.title !== original.title) {
+    const ok = await showConfirm('أنت تُغيّر عنوان استبيان نظامي. هل تريد المتابعة؟', 'تنبيه', 'نعم، احفظ', '#c8971a', '⚠️');
+    if (!ok) return;
+  }
+
+  try {
+    await window.DB.Surveys.update(id, data);
+
+    // Update cache
+    const surveys = window._surveysCache || [];
+    const idx = surveys.findIndex(s => s.id === id);
+    if (idx !== -1) surveys[idx] = { ...surveys[idx], ...data };
+
+    // Re-render single card + stats + badge
+    renderSurveyCard(id);
+    renderSurveysStats();
+    updateSurveysBadge();
+
+    // Warning if activated without questions
+    if (data.active) {
+      try {
+        const qs = await window.DB.Surveys.getQuestions(id);
+        if (!qs.length) {
+          showToast('⚠️ الاستبيان مفعّل لكن بدون أسئلة — الحاج لن يرى شيئاً', 'warning', 6000);
+        }
+      } catch (e) {}
+    }
+
+    showToast('تم حفظ الإعدادات ✅', 'success');
+    closeSurveySettings(true);
+  } catch (e) {
+    showToast('خطأ في الحفظ: ' + (e.message || e), 'error');
+  }
+}
+
+function renderSurveyCard(id) {
+  const surveys = window._surveysCache || [];
+  const s = surveys.find(x => x.id === id);
+  if (!s) return;
+  const counts = window._surveysResponseCounts || {};
+  const totalPilgrims = (typeof ALL_DATA !== 'undefined' && ALL_DATA.length) ? ALL_DATA.length : 0;
+  const grid = document.getElementById('surveys-grid');
+  if (!grid) return;
+  const existing = grid.querySelector(`.survey-card[data-id="${id}"]`);
+  if (!existing) return;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = buildSurveyCardHTML(s, counts[s.id] || 0, totalPilgrims);
+  existing.replaceWith(tmp.firstElementChild);
+  // refresh question count
+  window.DB.Surveys.getQuestions(id).then(qs => {
+    const el = document.getElementById('sc-q-' + id);
+    if (el) el.textContent = qs.length;
+  }).catch(() => {});
+}
+
+// ======================================================================
+// ===== نظام الاستبيانات — المرحلة 2C: إدارة الأسئلة =====
+// ======================================================================
+
+const QUESTION_TEMPLATES = {
+  rating:  { label:'⭐ تقييم نجوم',               question_text:'ما تقييمك لـ [الخدمة]؟',     question_type:'rating',   options:null, required:true },
+  yesno:   { label:'👍 نعم / لا',                   question_text:'سؤال نعم/لا',                question_type:'single',   options:['نعم','لا'], required:true },
+  quality: { label:'📊 ممتاز/جيد/متوسط/ضعيف',      question_text:'كيف تقيّم [الخدمة]؟',        question_type:'single',   options:['ممتاز','جيد','متوسط','ضعيف'], required:true },
+  open:    { label:'📝 سؤال مفتوح',                question_text:'سؤالك المفتوح هنا',           question_type:'text',     options:null, required:false },
+  choice:  { label:'✅ اختيار من قائمة',            question_text:'اختر إجابة واحدة',             question_type:'single',   options:['خيار 1','خيار 2','خيار 3','خيار 4'], required:true },
+  multi:   { label:'☑️ اختيار متعدد',               question_text:'يمكنك اختيار أكثر من إجابة',  question_type:'multiple', options:['خيار 1','خيار 2','خيار 3','خيار 4'], required:false }
+};
+
+const QUESTION_TYPE_LABELS = {
+  rating: '⭐ تقييم نجوم',
+  single: '🔘 اختيار واحد',
+  multiple: '☑️ اختيار متعدد',
+  text: '📝 نص حر'
+};
+
+window._qmSurveyId = null;
+window._qmSurvey = null;
+window._qmQuestions = [];
+window._qmEditingId = null;
+window._qmEditingType = null;
+window._qmEditingOrigType = null;
+window._qmFilter = '';
+window._qmCategoryFilter = '';
+window._qmSortable = null;
+window._qmDropdownHandler = null;
+
+async function openQuestionsManager(id) {
+  const survey = (window._surveysCache || []).find(s => s.id === id);
+  if (!survey) { showToast('لم يُعثر على الاستبيان', 'error'); return; }
+  window._qmSurveyId = id;
+  window._qmSurvey = survey;
+  window._qmFilter = '';
+  window._qmCategoryFilter = '';
+  window._qmEditingId = null;
+  const container = document.getElementById('qm-container');
+  container.innerHTML = buildQMHTML(survey);
+  document.getElementById('questions-manager-modal').style.display = 'flex';
+  await loadQuestions(id);
+  window._qmDropdownHandler = (e) => {
+    if (!e.target.closest('.qm-dropdown')) {
+      document.querySelectorAll('.qm-dropdown-menu').forEach(m => m.style.display = 'none');
+    }
+  };
+  document.addEventListener('click', window._qmDropdownHandler);
+}
+
+function closeQuestionsManager() {
+  document.getElementById('questions-manager-modal').style.display = 'none';
+  if (window._qmSortable) { window._qmSortable.destroy(); window._qmSortable = null; }
+  if (window._qmDropdownHandler) {
+    document.removeEventListener('click', window._qmDropdownHandler);
+    window._qmDropdownHandler = null;
+  }
+  window._qmSurveyId = null;
+  window._qmSurvey = null;
+  window._qmQuestions = [];
+  window._qmEditingId = null;
+  window._qmEditingType = null;
+  window._qmEditingOrigType = null;
+  window._qmFilter = '';
+  window._qmCategoryFilter = '';
+}
+
+function buildQMHTML(s) {
+  const isSystem = isSystemSurvey(s);
+  const iconClass = isSystem ? ('ic-' + s.code) : 'ic-custom';
+  const tplButtons = Object.entries(QUESTION_TEMPLATES).map(([k, t]) =>
+    `<button onclick="applyTemplate('${k}')"><span>${t.label}</span></button>`
+  ).join('');
+  return `
+    <div class="ssm-header">
+      <div class="ssm-icon sc-icon-circle ${iconClass}">${s.icon || '📋'}</div>
+      <div class="ssm-title">
+        <div>إدارة الأسئلة</div>
+        <div class="ssm-sub">${escapeHTML(s.title)} • <span id="qm-count">0</span> سؤال</div>
+      </div>
+      <button class="ssm-close" onclick="closeQuestionsManager()" title="إغلاق">✕</button>
+    </div>
+    <div class="qm-toolbar">
+      <div class="qm-dropdown">
+        <button class="qm-tb-btn primary" onclick="toggleQMMenu('add')">➕ إضافة سؤال ▾</button>
+        <div class="qm-dropdown-menu" id="qm-add-menu" style="display:none">
+          <button onclick="addQuestionOfType('rating')"><span class="qm-dm-ico">⭐</span><div><div>تقييم نجوم</div><div class="qm-dm-desc">5 نجوم من 1 إلى 5</div></div></button>
+          <button onclick="addQuestionOfType('single')"><span class="qm-dm-ico">🔘</span><div><div>اختيار واحد</div><div class="qm-dm-desc">radio — إجابة واحدة</div></div></button>
+          <button onclick="addQuestionOfType('multiple')"><span class="qm-dm-ico">☑️</span><div><div>اختيار متعدد</div><div class="qm-dm-desc">checkboxes — أكثر من إجابة</div></div></button>
+          <button onclick="addQuestionOfType('text')"><span class="qm-dm-ico">📝</span><div><div>نص حر</div><div class="qm-dm-desc">textarea — إجابة مفتوحة</div></div></button>
+        </div>
+      </div>
+      <div class="qm-dropdown">
+        <button class="qm-tb-btn" onclick="toggleQMMenu('tpl')">📋 من قالب جاهز ▾</button>
+        <div class="qm-dropdown-menu" id="qm-tpl-menu" style="display:none">${tplButtons}</div>
+      </div>
+      <input class="qm-search" type="text" placeholder="🔍 بحث في الأسئلة..." oninput="qmFilterChange(this.value)">
+      <select class="qm-cat-filter" id="qm-cat-select" onchange="qmCategoryFilterChange(this.value)">
+        <option value="">كل الفئات</option>
+      </select>
+    </div>
+    <div class="qm-filter-notice" id="qm-filter-notice">⚠️ الترتيب بالسحب يعمل فقط بدون فلترة</div>
+    <div class="qm-body">
+      <div class="qm-list-pane">
+        <div id="qm-questions-list"></div>
+      </div>
+      <div class="qm-side-panel" id="qm-side-panel" style="display:none"></div>
+    </div>`;
+}
+
+async function loadQuestions(id) {
+  try {
+    const qs = await window.DB.Surveys.getQuestions(id);
+    window._qmQuestions = qs;
+    renderQuestionsList();
+    updateCategoryFilter();
+    updateQMCount();
+  } catch (e) {
+    showToast('خطأ في تحميل الأسئلة: ' + e.message, 'error');
+  }
+}
+
+function getVisibleQuestions() {
+  let list = window._qmQuestions || [];
+  const q = (window._qmFilter || '').toLowerCase();
+  const cat = window._qmCategoryFilter || '';
+  if (q) list = list.filter(x => (x.question_text || '').toLowerCase().includes(q));
+  if (cat) list = list.filter(x => (x.category || '') === cat);
+  return list;
+}
+
+function renderQuestionsList() {
+  const listEl = document.getElementById('qm-questions-list');
+  if (!listEl) return;
+  const visible = getVisibleQuestions();
+  if (!visible.length) {
+    const hasFilter = !!(window._qmFilter || window._qmCategoryFilter);
+    listEl.innerHTML = `
+      <div class="qm-empty">
+        <div class="qme-ico">${hasFilter ? '🔍' : '📝'}</div>
+        <div class="qme-title">${hasFilter ? 'لا توجد نتائج' : 'لا توجد أسئلة بعد'}</div>
+        <div class="qme-desc">${hasFilter ? 'جرّب كلمة بحث أخرى أو غيّر الفلتر' : 'ابدأ بإضافة سؤال من الأعلى'}</div>
+      </div>`;
+    return;
+  }
+  listEl.innerHTML = visible.map((q, i) => renderQuestionCard(q, i)).join('');
+  const noticeEl = document.getElementById('qm-filter-notice');
+  const hasFilter = !!(window._qmFilter || window._qmCategoryFilter);
+  if (noticeEl) noticeEl.classList.toggle('visible', hasFilter);
+  initSortable();
+}
+
+function renderQuestionCard(q, i) {
+  const typeLabel = QUESTION_TYPE_LABELS[q.question_type] || q.question_type;
+  const optsCount = (q.question_type === 'single' || q.question_type === 'multiple') && Array.isArray(q.options) ? q.options.length : 0;
+  const hasFilter = !!(window._qmFilter || window._qmCategoryFilter);
+  return `
+    <div class="qm-question-card" data-id="${q.id}">
+      <div class="qm-handle ${hasFilter ? 'disabled' : ''}" title="${hasFilter ? 'السحب غير متاح مع الفلترة' : 'اسحب لإعادة الترتيب'}">⋮⋮</div>
+      <div class="qm-q-number">${i + 1}</div>
+      <div class="qm-q-body">
+        <div class="qm-q-text">${escapeHTML(q.question_text)}</div>
+        <div class="qm-q-meta">
+          <span class="qm-type-badge type-${q.question_type}">${typeLabel}</span>
+          <span class="${q.required ? 'qm-req-badge' : 'qm-opt-badge'}">${q.required ? 'إلزامي' : 'اختياري'}</span>
+          ${q.category ? `<span class="qm-cat-badge">${escapeHTML(q.category)}</span>` : ''}
+          ${optsCount ? `<span class="qm-opts-count">${optsCount} خيارات</span>` : ''}
+        </div>
+      </div>
+      <div class="qm-q-actions">
+        <button onclick="openQuestionEditor(${q.id})" title="تعديل">✏️</button>
+        <button class="delete" onclick="deleteQuestionConfirm(${q.id})" title="حذف">🗑️</button>
+      </div>
+    </div>`;
+}
+
+function updateCategoryFilter() {
+  const sel = document.getElementById('qm-cat-select');
+  if (!sel) return;
+  const cats = Array.from(new Set((window._qmQuestions || []).map(q => q.category).filter(Boolean)));
+  const current = window._qmCategoryFilter;
+  sel.innerHTML = '<option value="">كل الفئات</option>' + cats.map(c =>
+    `<option value="${escapeHTML(c)}" ${c === current ? 'selected' : ''}>${escapeHTML(c)}</option>`
+  ).join('');
+}
+
+function updateQMCount() {
+  const el = document.getElementById('qm-count');
+  if (el) el.textContent = (window._qmQuestions || []).length;
+}
+
+function qmFilterChange(val) {
+  window._qmFilter = val || '';
+  renderQuestionsList();
+}
+
+function qmCategoryFilterChange(val) {
+  window._qmCategoryFilter = val || '';
+  renderQuestionsList();
+}
+
+function toggleQMMenu(which) {
+  const menu = document.getElementById(which === 'add' ? 'qm-add-menu' : 'qm-tpl-menu');
+  const other = document.getElementById(which === 'add' ? 'qm-tpl-menu' : 'qm-add-menu');
+  if (other) other.style.display = 'none';
+  if (menu) menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+
+function closeQMDropdowns() {
+  document.querySelectorAll('.qm-dropdown-menu').forEach(m => m.style.display = 'none');
+}
+
+// ===== Editor =====
+
+function addQuestionOfType(type) {
+  closeQMDropdowns();
+  openQuestionEditor(null, {
+    question_text: '',
+    question_type: type,
+    options: (type === 'single' || type === 'multiple') ? ['', ''] : null,
+    required: true,
+    category: ''
+  });
+}
+
+function applyTemplate(tplId) {
+  closeQMDropdowns();
+  const t = QUESTION_TEMPLATES[tplId];
+  if (!t) return;
+  openQuestionEditor(null, {
+    question_text: t.question_text,
+    question_type: t.question_type,
+    options: t.options ? [...t.options] : null,
+    required: t.required,
+    category: ''
+  });
+}
+
+function openQuestionEditor(id, prefill) {
+  const isNew = id === null || id === undefined;
+  let data;
+  if (isNew) {
+    data = prefill || { question_text:'', question_type:'rating', options:null, required:true, category:'' };
+    window._qmEditingId = null;
+    window._qmEditingOrigType = null;
+  } else {
+    const q = (window._qmQuestions || []).find(x => x.id === id);
+    if (!q) return;
+    data = {
+      question_text: q.question_text || '',
+      question_type: q.question_type || 'rating',
+      options: Array.isArray(q.options) ? [...q.options] : null,
+      required: q.required,
+      category: q.category || ''
+    };
+    window._qmEditingId = id;
+    window._qmEditingOrigType = q.question_type;
+  }
+  window._qmEditingType = data.question_type;
+  const panel = document.getElementById('qm-side-panel');
+  panel.innerHTML = buildEditorHTML(isNew, data);
+  panel.style.display = 'flex';
+  setTimeout(renderQuestionPreview, 10);
+}
+
+function buildEditorHTML(isNew, data) {
+  const cats = Array.from(new Set((window._qmQuestions || []).map(q => q.category).filter(Boolean)));
+  const needsOptions = data.question_type === 'single' || data.question_type === 'multiple';
+  const optsArr = Array.isArray(data.options) && data.options.length ? data.options : ['', ''];
+  return `
+    <div class="qm-editor-header">
+      <div class="qm-editor-title">${isNew ? '➕ سؤال جديد' : '✏️ تعديل سؤال'}</div>
+      <button class="ssm-close" onclick="closeQuestionEditor()">✕</button>
+    </div>
+    <div class="qm-editor-body">
+      <div class="ssm-row">
+        <label>نص السؤال <span style="color:#c00">*</span></label>
+        <textarea id="qe-text" rows="3" placeholder="اكتب السؤال هنا..." oninput="renderQuestionPreview()">${escapeHTML(data.question_text)}</textarea>
+      </div>
+      <div class="ssm-row">
+        <label>نوع السؤال</label>
+        <div class="qe-type-grid">
+          <div class="qe-type-card ${data.question_type==='rating'?'selected':''}" data-qt="rating" onclick="switchQEType('rating')"><div class="qetc-ico">⭐</div><div class="qetc-lbl">تقييم نجوم</div></div>
+          <div class="qe-type-card ${data.question_type==='single'?'selected':''}" data-qt="single" onclick="switchQEType('single')"><div class="qetc-ico">🔘</div><div class="qetc-lbl">اختيار واحد</div></div>
+          <div class="qe-type-card ${data.question_type==='multiple'?'selected':''}" data-qt="multiple" onclick="switchQEType('multiple')"><div class="qetc-ico">☑️</div><div class="qetc-lbl">اختيار متعدد</div></div>
+          <div class="qe-type-card ${data.question_type==='text'?'selected':''}" data-qt="text" onclick="switchQEType('text')"><div class="qetc-ico">📝</div><div class="qetc-lbl">نص حر</div></div>
+        </div>
+      </div>
+      <div class="ssm-row" id="qe-options-row" style="${needsOptions?'':'display:none'}">
+        <label>الخيارات <span style="color:#c00">*</span> <span class="ssm-hint">الحد الأدنى: خياران</span></label>
+        <div class="qm-options-list" id="qe-options-list">
+          ${optsArr.map((opt, i) => qmOptionItem(opt, i)).join('')}
+        </div>
+        <button type="button" class="qm-opt-add" onclick="addOption()">➕ إضافة خيار</button>
+      </div>
+      <div class="ssm-row">
+        <label>الفئة (اختيارية)</label>
+        <input type="text" id="qe-category" list="qe-categories-list" placeholder="مثل: housing, food, transport" value="${escapeHTML(data.category)}" oninput="renderQuestionPreview()">
+        <datalist id="qe-categories-list">
+          ${cats.map(c => `<option value="${escapeHTML(c)}">`).join('')}
+        </datalist>
+      </div>
+      <div class="opt-row">
+        <div class="opt-row-text">
+          <div class="opt-row-title">إلزامي</div>
+          <div class="opt-row-desc">الحاج لا يستطيع تخطي هذا السؤال</div>
+        </div>
+        <span class="tgl ${data.required?'on':''}" onclick="toggleSSMField(this,'qe-required')">
+          <input type="checkbox" ${data.required?'checked':''} id="qe-required" onchange="renderQuestionPreview()">
+          <span class="tgl-bg"></span><span class="tgl-knob"></span>
+        </span>
+      </div>
+      <div class="qm-preview-section">
+        <h4>🔍 معاينة حية</h4>
+        <div class="qm-preview" id="qe-preview"></div>
+      </div>
+    </div>
+    <div class="qm-editor-footer">
+      <button class="ssm-btn secondary" onclick="closeQuestionEditor()">إلغاء</button>
+      <button class="ssm-btn primary" onclick="saveQuestion()">💾 حفظ</button>
+    </div>`;
+}
+
+function qmOptionItem(value, idx) {
+  return `<div class="qm-option-item" data-idx="${idx}">
+    <input type="text" placeholder="خيار ${idx + 1}" value="${escapeHTML(value || '')}" oninput="renderQuestionPreview()">
+    <button class="qm-opt-remove" onclick="removeOption(${idx})" title="حذف">×</button>
+  </div>`;
+}
+
+function switchQEType(type) {
+  window._qmEditingType = type;
+  document.querySelectorAll('.qe-type-card').forEach(c => c.classList.toggle('selected', c.dataset.qt === type));
+  const needsOpts = type === 'single' || type === 'multiple';
+  const optsRow = document.getElementById('qe-options-row');
+  if (optsRow) optsRow.style.display = needsOpts ? '' : 'none';
+  if (needsOpts) {
+    const listEl = document.getElementById('qe-options-list');
+    if (listEl && !listEl.children.length) {
+      listEl.innerHTML = qmOptionItem('', 0) + qmOptionItem('', 1);
+    }
+  }
+  renderQuestionPreview();
+}
+
+function addOption() {
+  const listEl = document.getElementById('qe-options-list');
+  if (!listEl) return;
+  const idx = listEl.children.length;
+  listEl.insertAdjacentHTML('beforeend', qmOptionItem('', idx));
+  renderQuestionPreview();
+}
+
+function removeOption(idx) {
+  const listEl = document.getElementById('qe-options-list');
+  if (!listEl) return;
+  const children = Array.from(listEl.children);
+  if (children.length <= 2) {
+    showToast('الحد الأدنى خياران', 'warning');
+    return;
+  }
+  const item = children[idx];
+  if (item) item.remove();
+  Array.from(listEl.children).forEach((el, i) => {
+    el.dataset.idx = i;
+    const btn = el.querySelector('.qm-opt-remove');
+    if (btn) btn.setAttribute('onclick', `removeOption(${i})`);
+    const inp = el.querySelector('input');
+    if (inp) inp.placeholder = `خيار ${i + 1}`;
+  });
+  renderQuestionPreview();
+}
+
+function getCurrentEditorOptions() {
+  const inputs = document.querySelectorAll('#qe-options-list input');
+  return Array.from(inputs).map(i => i.value);
+}
+
+function renderQuestionPreview() {
+  const previewEl = document.getElementById('qe-preview');
+  if (!previewEl) return;
+  const rawText = (document.getElementById('qe-text')?.value || '').trim();
+  const text = rawText || 'اكتب نص السؤال...';
+  const type = window._qmEditingType;
+  const required = document.getElementById('qe-required')?.checked;
+  const opts = getCurrentEditorOptions().filter(o => o.trim());
+
+  let inputHTML = '';
+  if (type === 'rating') {
+    inputHTML = '<div class="qm-preview-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>';
+  } else if (type === 'single') {
+    inputHTML = opts.length
+      ? opts.map(o => `<label class="qm-preview-opt"><input type="radio" disabled> ${escapeHTML(o)}</label>`).join('')
+      : '<div style="font-size:12px;color:var(--text-muted)">— أضف خيارات —</div>';
+  } else if (type === 'multiple') {
+    inputHTML = opts.length
+      ? opts.map(o => `<label class="qm-preview-opt"><input type="checkbox" disabled> ${escapeHTML(o)}</label>`).join('')
+      : '<div style="font-size:12px;color:var(--text-muted)">— أضف خيارات —</div>';
+  } else if (type === 'text') {
+    inputHTML = '<textarea class="qm-preview-text-area" placeholder="إجابة الحاج..." disabled></textarea>';
+  }
+
+  previewEl.innerHTML = `
+    <div class="qm-preview-q">${escapeHTML(text)}${required ? '<span class="qm-req-star">*</span>' : ''}</div>
+    ${inputHTML}`;
+}
+
+function closeQuestionEditor() {
+  const panel = document.getElementById('qm-side-panel');
+  if (panel) { panel.style.display = 'none'; panel.innerHTML = ''; }
+  window._qmEditingId = null;
+  window._qmEditingType = null;
+  window._qmEditingOrigType = null;
+}
+
+async function saveQuestion() {
+  const text = (document.getElementById('qe-text')?.value || '').trim();
+  const type = window._qmEditingType;
+  const required = document.getElementById('qe-required')?.checked;
+  const category = (document.getElementById('qe-category')?.value || '').trim();
+
+  if (!text) { showToast('نص السؤال مطلوب', 'error'); return; }
+  if (!type) { showToast('اختر نوع السؤال', 'error'); return; }
+
+  let options = null;
+  if (type === 'single' || type === 'multiple') {
+    options = getCurrentEditorOptions().map(o => o.trim()).filter(Boolean);
+    if (options.length < 2) { showToast('يجب توفير خيارين على الأقل', 'error'); return; }
+  }
+
+  const editingId = window._qmEditingId;
+  const isEditing = editingId !== null;
+
+  if (isEditing && window._qmEditingOrigType && type !== window._qmEditingOrigType) {
+    try {
+      const count = await countAnswersForQuestion(window._qmSurveyId, editingId);
+      if (count > 0) {
+        const ok = await showConfirm(
+          `هذا السؤال لديه ${count} إجابة مسجلة. تغيير نوعه قد يجعل الإجابات السابقة غير قابلة للقراءة بشكل صحيح. هل أنت متأكد من المتابعة؟`,
+          'تحذير', 'نعم، تابع', '#c8971a', '⚠️'
+        );
+        if (!ok) return;
+      }
+    } catch (e) {}
+  }
+
+  const payload = {
+    question_text: text,
+    question_type: type,
+    options: options,
+    required: !!required,
+    category: category || null
+  };
+
+  try {
+    if (isEditing) {
+      await window.DB.Surveys.updateQuestion(editingId, payload);
+      const idx = (window._qmQuestions || []).findIndex(x => x.id === editingId);
+      if (idx !== -1) window._qmQuestions[idx] = { ...window._qmQuestions[idx], ...payload };
+    } else {
+      const maxOrder = (window._qmQuestions || []).reduce((m, q) => Math.max(m, q.display_order || 0), 0);
+      payload.display_order = maxOrder + 1;
+      const newQ = await window.DB.Surveys.addQuestion(window._qmSurveyId, payload);
+      window._qmQuestions.push(newQ);
+    }
+    renderQuestionsList();
+    updateCategoryFilter();
+    updateQMCount();
+    refreshSurveyCardCount(window._qmSurveyId);
+    showToast(isEditing ? 'تم حفظ التعديلات ✅' : 'تمت إضافة السؤال ✅', 'success');
+    closeQuestionEditor();
+  } catch (e) {
+    showToast('خطأ في الحفظ: ' + (e.message || e), 'error');
+  }
+}
+
+async function deleteQuestionConfirm(id) {
+  const ok = await showConfirm('هل تريد حذف هذا السؤال؟ لا يمكن التراجع.', 'تأكيد الحذف', 'نعم، احذف', '#c00', '🗑️');
+  if (!ok) return;
+  try {
+    await window.DB.Surveys.deleteQuestion(id);
+    window._qmQuestions = (window._qmQuestions || []).filter(x => x.id !== id);
+    renderQuestionsList();
+    updateCategoryFilter();
+    updateQMCount();
+    refreshSurveyCardCount(window._qmSurveyId);
+    showToast('تم الحذف ✓', 'success');
+    if (window._qmEditingId === id) closeQuestionEditor();
+  } catch (e) {
+    showToast('خطأ في الحذف: ' + (e.message || e), 'error');
+  }
+}
+
+function initSortable() {
+  const listEl = document.getElementById('qm-questions-list');
+  if (window._qmSortable) { window._qmSortable.destroy(); window._qmSortable = null; }
+  if (!listEl) return;
+  const hasFilter = !!(window._qmFilter || window._qmCategoryFilter);
+  if (hasFilter) return;
+  if (typeof Sortable === 'undefined') return;
+  window._qmSortable = Sortable.create(listEl, {
+    handle: '.qm-handle',
+    animation: 150,
+    ghostClass: 'qm-ghost',
+    onEnd: reorderQuestions
+  });
+}
+
+async function reorderQuestions() {
+  const listEl = document.getElementById('qm-questions-list');
+  if (!listEl) return;
+  const cards = Array.from(listEl.querySelectorAll('.qm-question-card'));
+  const updates = [];
+  cards.forEach((card, index) => {
+    const id = parseInt(card.dataset.id);
+    const q = (window._qmQuestions || []).find(x => x.id === id);
+    if (q && q.display_order !== index + 1) {
+      q.display_order = index + 1;
+      updates.push(window.DB.Surveys.updateQuestion(id, { display_order: index + 1 }));
+    }
+  });
+  (window._qmQuestions || []).sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+  cards.forEach((card, index) => {
+    const numEl = card.querySelector('.qm-q-number');
+    if (numEl) numEl.textContent = index + 1;
+  });
+  if (updates.length) {
+    try {
+      await Promise.all(updates);
+      showToast('تم إعادة الترتيب ✓', 'success', 2000);
+    } catch (e) {
+      showToast('خطأ في حفظ الترتيب', 'error');
+      loadQuestions(window._qmSurveyId);
+    }
+  }
+}
+
+async function countAnswersForQuestion(surveyId, questionId) {
+  try {
+    const responses = await window.DB.Surveys.getResponses(surveyId);
+    return responses.filter(r => r.answers && r.answers[questionId] !== undefined && r.answers[questionId] !== null && r.answers[questionId] !== '').length;
+  } catch (e) { return 0; }
+}
+
+function refreshSurveyCardCount(surveyId) {
+  const el = document.getElementById('sc-q-' + surveyId);
+  if (el) el.textContent = (window._qmQuestions || []).length;
 }
 
 
