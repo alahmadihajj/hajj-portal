@@ -52,3 +52,118 @@ No build tooling. No tests. No package.json. To run locally, serve the folder st
 - Vercel: https://hajj-portal.vercel.app
 - Supabase: https://txdvqedfhzwgejbtplyr.supabase.co
 - سوبر أدمن: 1057653261 / A@a0508777228
+
+## ميزات مستقبلية مطلوبة
+
+### إدارة الفئات (Categories Management) — ذو أولوية متوسطة
+- واجهة مستقلة (صفحة أو modal) لعرض/تعديل/حذف الفئات
+- زر في toolbar "إدارة الأسئلة" أو تبويب منفصل
+- الفئات الـ 15 الافتراضية محمية بقفل 🔒 — لا تُحذف ولا تُعدّل
+- الفئات المخصصة:
+  * ✏️ تعديل الاسم → يحدّث كل الأسئلة المرتبطة تلقائياً
+  * 🗑️ حذف فارغ (0 سؤال) → مباشر
+  * 🗑️ حذف مع أسئلة → خيار نقلها لفئة أخرى قبل الحذف
+- عرض عدد الأسئلة المرتبطة بكل فئة
+
+### تحسين بصري: محاذاة سهم select — أولوية منخفضة
+- السهم في حقل الفئة (qe-category-select) وحقل فلتر الفئة (qm-cat-filter) يظهر في أعلى يسار الحقل بدل المنتصف العمودي
+- لا يؤثر على الوظائف — جمالي فقط
+- المتصفح: يحتاج اختبار عبر Chrome/Firefox/Safari
+- محاولات سابقة: `top 50%`، `center`، `background-size` explicit
+- الحل المحتمل: custom wrapper div مع `::after` pseudo-element لرسم السهم يدوياً بدل `background-image`
+
+### نظام المطور العالمي (Master Developer Access) — أولوية عالية عند توسّع المبيعات
+
+**السياق:**
+المشروع مبني للبيع لشركات حج متعددة. كل شركة ستحصل على نسخة مستقلة بقاعدة بياناتها الخاصة. المطور (أحمد الثاقفي) يحتاج الوصول لكل النسخ لـ:
+- الدعم الفني عن بُعد
+- إرسال قوالب استبيانات جاهزة
+- إصلاح الأخطاء
+- التحديثات
+- استيراد/تصدير/حذف الاستبيانات
+
+**الحل المطلوب مستقبلاً:**
+
+1. إنشاء جدول في كل قاعدة بيانات:
+```sql
+CREATE TABLE developer_access (
+  id bigint generated always as identity primary key,
+  developer_id text UNIQUE NOT NULL,
+  developer_name text,
+  granted_at timestamptz DEFAULT now(),
+  granted_by text,
+  is_active boolean DEFAULT true,
+  last_access timestamptz,
+  notes text
+);
+```
+
+2. إضافة حساب المطور الثابت عند تثبيت كل نسخة:
+```sql
+INSERT INTO developer_access (developer_id, developer_name, granted_by)
+VALUES ('DEV_AHMAD_THAGAFI_2026', 'أحمد الثاقفي - المطور الأساسي', 'system_install');
+```
+
+3. في `admin.html`، استبدال الفحص الحالي (`isDeveloperMode` بـ 1057653261 أو `?dev=1`) بفحص ديناميكي من جدول `developer_access`:
+```javascript
+async function isDeveloperMode() {
+  const currentUser = getCurrentUser();
+  if (!currentUser) return false;
+  const { data } = await supabase
+    .from('developer_access')
+    .select('is_active')
+    .eq('developer_id', currentUser.developer_id)
+    .single();
+  if (data?.is_active) {
+    await supabase.from('developer_access')
+      .update({ last_access: new Date().toISOString() })
+      .eq('developer_id', currentUser.developer_id);
+    return true;
+  }
+  return false;
+}
+```
+
+4. إنشاء صفحة منفصلة `developer.html` — لوحة تحكم المطور تعرض:
+- كل الشركات المرتبطة
+- إحصائيات كل شركة
+- سجل وصول المطور
+- أدوات متقدمة (تنفيذ SQL، استيراد جماعي، إلخ)
+
+5. آليات الأمان:
+- إمكانية إلغاء صلاحية المطور من قبل صاحب الشركة (`is_active = false`)
+- سجل كامل لكل عمليات المطور
+- إشعار للسوبر أدمن عند دخول المطور
+
+**وقت التنفيذ المتوقع:** 3-4 ساعات عند أول عميل جديد بعد الأحمدي.
+
+**حتى ذلك الحين:** استخدم الحل الحالي (ربط بحساب `1057653261` + `?dev=1`) — مُطبَّق فعلياً في `admin.html` → `isDeveloperMode()`.
+
+### ✅ شعار الشركة الديناميكي — تم التنفيذ (v12.6)
+- المصدر الوحيد: `dev_settings.logo` (Supabase Settings، يضبطه السوبر أدمن)
+- يُعرض في: شاشة تسجيل الدخول (admin + pilgrim)، header الأدمن، شريط السوبر أدمن، بوابة الحاج، كل التقارير السبع
+- Fallback: شعار افتراضي 🕋 في دائرة gradient بنّي/ذهبي
+- Legacy: `hajj_portal_logo` يُقرأ كـ fallback ثانوي في index.html للتوافق
+- حُذفت الصور base64 الضخمة من admin.html (السطور 849 و 997 كانتا ~60KB مضمّنة)
+- Helpers: `_buildLogoHTML(size, options)` للـ UI، `_buildPrintLogoHTML(size)` للتقارير
+
+### تثبيت المنتج عند البيع لعميل جديد — أولوية عالية
+عند البيع لشركة حج جديدة:
+1. إنشاء قاعدة بيانات Supabase جديدة
+2. تنفيذ كل SQL scripts (surveys_setup.sql, surveys_phase2b.sql, setup.sql, إلخ)
+3. تسجيل دخول كسوبر أدمن
+4. الذهاب إلى: إعدادات النظام (سوبر أدمن)
+5. إدخال **اسم الشركة** (مهم جداً — يظهر في كل مكان)
+6. إدخال رقم الترخيص
+7. رفع شعار الشركة
+
+**اسم الشركة هو المصدر الوحيد** (`dev_settings.companyName`) ويُعرض في:
+- شاشة تسجيل الدخول
+- عنوان الصفحة
+- هيدر الأدمن وبوابة الحاج
+- كل التقارير والإقرارات
+
+(الحقول القديمة `pp-company` في "الهوية البصرية" و `cfg-company` في "إعدادات عامة" حُذفت — راجع تاريخ git commit v12.4)
+
+### ملاحظة للمستقبل
+هذا القسم سيُضاف له ميزات أخرى تُطلب أثناء التطوير. يجب مراجعته دائماً عند اكتمال مراحل العمل الحالية لبدء تنفيذها.
