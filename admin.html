@@ -556,6 +556,26 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 
     .dev-mode-badge{padding:8px 16px;background:#fff3e0;border:1.5px solid #ffb74d;border-radius:8px;color:#e65100;font-size:12px;font-weight:700;margin-bottom:14px;align-items:center;gap:8px}
 
+    .schedule-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-top:6px}
+    .schedule-upcoming{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+    .schedule-active{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}
+    .schedule-ended{background:#e5e7eb;color:#4b5563;border:1px solid #d1d5db}
+
+    /* حقول التاريخ والوقت الموحّدة في مودال إعدادات الاستبيان */
+    .ssm-row input[type="date"],
+    .ssm-row input[type="time"]{padding:10px 12px;border:1.5px solid #e0d0a8;border-radius:10px;font-family:inherit;font-size:14px;color:#3d2000;background:#fff;height:44px;box-sizing:border-box;transition:border-color .15s,box-shadow .15s;text-align:right;direction:ltr}
+    .ssm-row input[type="date"]:focus,
+    .ssm-row input[type="time"]:focus{outline:none;border-color:#c8971a;box-shadow:0 0 0 3px rgba(200,151,26,.15)}
+    .ssm-row input[type="date"]:disabled,
+    .ssm-row input[type="time"]:disabled{background:#f5f5f5;color:#999;cursor:not-allowed;opacity:.7}
+    .datetime-group{display:flex;gap:10px;align-items:stretch}
+    .datetime-group input[type="date"]{flex:1;min-width:0}
+    .datetime-group input[type="time"]{width:130px;flex-shrink:0}
+    @media (max-width:480px){
+      .datetime-group{flex-direction:column;gap:8px}
+      .datetime-group input[type="time"]{width:100%}
+    }
+
     /* ===== Survey Settings Modal ===== */
     .ssm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1001;display:flex;align-items:center;justify-content:center;padding:20px;animation:ssmFadeIn .2s ease}
     @keyframes ssmFadeIn{from{opacity:0}to{opacity:1}}
@@ -837,6 +857,90 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
     @media (max-width:768px){
       .cs-container{width:100vw;max-width:100vw;border-radius:0;max-height:100vh}
       .prv-container{width:100vw;height:100vh;max-width:100vw;border-radius:0}
+    }
+
+    /* ===== Survey Results Modal (Phase 4) ===== */
+    .results-container{background:var(--surface);border-radius:var(--radius-lg);width:95vw;max-width:1100px;height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);overflow:hidden}
+    .results-header{padding:16px 22px 0;border-bottom:1.5px solid var(--border-light);background:var(--surface);flex-shrink:0}
+    .results-survey-info{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+    .results-emoji{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(135deg,var(--brown),var(--gold));color:#fff;flex-shrink:0;box-shadow:var(--shadow-sm)}
+    .results-survey-info h2{font-size:18px;font-weight:800;color:var(--text-primary);margin:0 0 4px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .results-meta{font-size:12px;color:var(--text-muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+    .results-close{width:36px;height:36px;border-radius:50%;background:var(--surface-2);border:1.5px solid var(--border);cursor:pointer;font-size:16px;color:var(--text-secondary);transition:all .15s;font-family:inherit;flex-shrink:0}
+    .results-close:hover{background:var(--red);color:#fff;border-color:var(--red)}
+    .results-tabs{display:flex;gap:8px}
+    .results-tab{padding:10px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;color:var(--text-muted);border-bottom:3px solid transparent;margin-bottom:-1.5px;transition:all .15s}
+    .results-tab:hover{color:var(--text-secondary)}
+    .results-tab.active{color:var(--gold-dark);border-bottom-color:var(--gold)}
+    .results-body{flex:1;overflow-y:auto;padding:20px 22px;background:var(--surface-2)}
+    .results-footer{padding:12px 22px;border-top:1.5px solid var(--border-light);background:var(--surface);flex-shrink:0;display:flex;justify-content:flex-end}
+    .btn-export{padding:10px 18px;background:linear-gradient(135deg,var(--brown),var(--gold));color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;box-shadow:var(--shadow-sm);transition:transform .1s}
+    .btn-export:active{transform:scale(.97)}
+    .btn-export:disabled{opacity:.6;cursor:not-allowed}
+
+    /* Question analysis cards */
+    .question-analysis{background:var(--surface);border:1.5px solid var(--border-light);border-radius:var(--radius);padding:18px;margin-bottom:14px}
+    .qa-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px dashed var(--border-light)}
+    .qa-number{background:var(--gold);color:#fff;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+    .qa-title{flex:1;font-size:14px;font-weight:700;color:var(--text-primary);line-height:1.5}
+    .qa-type-badge{font-size:10px;padding:3px 8px;border-radius:10px;border:1px solid var(--border);white-space:nowrap;font-weight:600}
+    .qa-type-badge.rating{background:#faf3e5;color:#7a4500;border-color:#e8d0a8}
+    .qa-type-badge.single{background:#e8f0fd;color:#0a3a8e;border-color:#a8c4e8}
+    .qa-type-badge.multiple{background:#f0e8f8;color:#5a2a8a;border-color:#c4a8d8}
+    .qa-type-badge.text{background:#e3f8eb;color:#0a6e3a;border-color:#8cd4a8}
+
+    .rating-summary{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+    .rating-avg{text-align:center;padding:0 10px}
+    .rating-avg .big-number{font-size:42px;font-weight:900;color:#fbbf24;line-height:1}
+    .rating-avg .stars-display{font-size:18px;color:#fbbf24;margin:4px 0 2px}
+    .rating-avg .total-votes{font-size:11px;color:var(--text-muted)}
+    .rating-bars{display:flex;flex-direction:column;gap:6px}
+    .rating-bar-row{display:flex;align-items:center;gap:8px;font-size:12px}
+    .rb-label{width:36px;color:var(--text-secondary);font-weight:600;flex-shrink:0}
+    .rb-bar{flex:1;height:16px;background:var(--surface-3);border-radius:8px;overflow:hidden;border:1px solid var(--border-light)}
+    .rb-fill{height:100%;background:linear-gradient(90deg,#fbbf24,#f59e0b);transition:width .4s}
+    .rb-count{width:90px;text-align:left;font-size:11px;color:var(--text-secondary);flex-shrink:0}
+
+    .options-analysis{display:flex;flex-direction:column;gap:8px}
+    .option-analysis-row{display:flex;align-items:center;gap:10px;font-size:13px}
+    .oa-label{flex:1;color:var(--text-primary);font-weight:500;overflow:hidden;text-overflow:ellipsis}
+    .oa-bar{width:200px;height:18px;background:var(--surface-3);border-radius:9px;overflow:hidden;border:1px solid var(--border-light);flex-shrink:0}
+    .oa-fill{height:100%;background:linear-gradient(90deg,#10b981,#059669);transition:width .4s}
+    .oa-bar.multi .oa-fill{background:linear-gradient(90deg,#3b82f6,#1d4ed8)}
+    .oa-count{width:90px;text-align:left;font-size:11px;color:var(--text-secondary);font-weight:600;flex-shrink:0}
+
+    .text-responses{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto}
+    .text-response-item{padding:10px 14px;background:var(--surface-2);border-right:3px solid var(--gold);border-radius:8px;font-size:13px;color:var(--text-primary);font-style:italic;line-height:1.6}
+    body.ltr .text-response-item{border-right:none;border-left:3px solid var(--gold)}
+    .more-responses{text-align:center;padding:10px;color:var(--text-muted);font-size:12px;font-style:italic}
+
+    /* Individual responses */
+    .individual-responses{display:flex;flex-direction:column;gap:12px}
+    .ir-card{background:var(--surface);border:1.5px solid var(--border-light);border-radius:var(--radius);padding:14px 16px}
+    .ir-header{display:flex;gap:12px;align-items:center;padding-bottom:10px;border-bottom:1px dashed var(--border-light);margin-bottom:10px;flex-wrap:wrap}
+    .ir-name{font-weight:800;color:var(--text-primary);font-size:13px}
+    .ir-booking{font-size:11px;color:var(--gold-dark);background:#faf3e5;padding:3px 8px;border-radius:6px;font-weight:600}
+    .ir-date{font-size:11px;color:var(--text-muted);margin-inline-start:auto}
+    .ir-answer-row{display:flex;gap:10px;padding:6px 0;font-size:12px;border-bottom:1px dashed var(--border-light)}
+    .ir-answer-row:last-child{border-bottom:none}
+    .ir-q{flex:1;color:var(--text-secondary)}
+    .ir-a{color:var(--text-primary);font-weight:700;min-width:140px;flex-shrink:0}
+
+    .results-empty{padding:60px 20px;text-align:center;color:var(--text-muted)}
+    .results-empty .re-ico{font-size:48px;margin-bottom:12px;opacity:.6}
+    .results-empty .re-title{font-size:15px;font-weight:700;color:var(--text-secondary);margin-bottom:6px}
+    .results-empty .re-desc{font-size:12px}
+    .results-loading{padding:40px;text-align:center;color:var(--text-muted);font-size:13px}
+
+    @media (max-width:768px){
+      .results-container{width:100vw;height:100vh;max-width:100vw;border-radius:0}
+      .results-body{padding:14px}
+      .results-header{padding:14px 16px 0}
+      .rating-summary{grid-template-columns:1fr;text-align:center;gap:14px}
+      .oa-bar{width:120px}
+      .oa-count{width:70px}
+      .ir-answer-row{flex-direction:column;gap:3px}
+      .ir-a{min-width:0}
     }
   </style>
 </head>
@@ -1658,6 +1762,36 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   <!-- ===== Modal معاينة الاستبيان ===== -->
   <div id="preview-survey-modal" class="ssm-overlay" style="display:none" onclick="if(event.target===this) closePreviewSurvey()">
     <div class="prv-container" id="prv-container"></div>
+  </div>
+
+  <!-- ===== Modal نتائج الاستبيان (المرحلة 4) ===== -->
+  <div id="survey-results-modal" class="ssm-overlay" style="display:none" onclick="if(event.target===this) closeSurveyResults()">
+    <div class="results-container" onclick="event.stopPropagation()">
+      <div class="results-header">
+        <div class="results-survey-info">
+          <div class="results-emoji" id="results-emoji">📋</div>
+          <div style="flex:1;min-width:0">
+            <h2 id="results-survey-title">—</h2>
+            <div class="results-meta">
+              <span id="results-count">0 إجابة</span>
+              <span>•</span>
+              <span id="results-participation">0%</span>
+              <span id="results-avg-rating-wrap" style="display:none">• ⭐ <span id="results-avg-rating">—</span></span>
+              <span id="results-last-wrap" style="display:none">• آخر إجابة: <span id="results-last-date">—</span></span>
+            </div>
+          </div>
+          <button class="results-close" onclick="closeSurveyResults()" aria-label="إغلاق">✕</button>
+        </div>
+        <div class="results-tabs">
+          <button class="results-tab active" id="results-tab-analysis" onclick="switchResultsMode('analysis')">📊 تحليل الأسئلة</button>
+          <button class="results-tab" id="results-tab-individual" onclick="switchResultsMode('individual')">👥 الإجابات الفردية</button>
+        </div>
+      </div>
+      <div class="results-body" id="results-body"></div>
+      <div class="results-footer">
+        <button class="btn-export" onclick="exportCurrentResults()">📥 تصدير Excel</button>
+      </div>
+    </div>
   </div>
 
   <!-- لوحة البيانات -->
@@ -8688,11 +8822,38 @@ function isSystemSurvey(survey) {
 }
 
 function getSurveyStatus(s) {
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
   if (!s.active) return 'inactive';
-  if (s.start_date && s.start_date > today) return 'scheduled';
-  if (s.end_date && s.end_date < today) return 'expired';
+  if (s.start_date && new Date(s.start_date) > now) return 'scheduled';
+  if (s.end_date && new Date(s.end_date) < now) return 'expired';
   return 'active';
+}
+
+function _formatScheduleInfo(s) {
+  if (!s.active) return '';
+  const start = s.start_date ? new Date(s.start_date) : null;
+  const end = s.end_date ? new Date(s.end_date) : null;
+  if (!start && !end) return '';
+  const now = new Date();
+  const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const pad = n => String(n).padStart(2, '0');
+  const fmt = d => `${d.getDate()} ${months[d.getMonth()]} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (start && now < start) {
+    return `<span class="schedule-badge schedule-upcoming">⏰ يبدأ: ${fmt(start)}</span>`;
+  }
+  if (end && now > end) {
+    return `<span class="schedule-badge schedule-ended">✓ انتهى: ${fmt(end)}</span>`;
+  }
+  if (end) {
+    const diffMs = end - now;
+    const hours = Math.ceil(diffMs / (1000 * 60 * 60));
+    if (hours <= 24) {
+      return `<span class="schedule-badge schedule-active">🔥 ينتهي خلال ${hours} ساعة</span>`;
+    }
+    const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    return `<span class="schedule-badge schedule-active">📅 ينتهي بعد ${days} يوم</span>`;
+  }
+  return '';
 }
 
 function getSurveyStatusLabel(status) {
@@ -8803,6 +8964,7 @@ function buildSurveyCardHTML(s, responseCount, totalPilgrims) {
             ${isSystem ? '<span class="sc-badge st-system">نظامي</span>' : ''}
           </div>
           ${desc ? `<div class="sc-desc">${desc}</div>` : ''}
+          ${_formatScheduleInfo(s)}
         </div>
       </div>
 
@@ -8858,8 +9020,291 @@ async function loadQuestionCountsForCards() {
   }
 }
 
-// ===== placeholder: لوحة النتائج =====
-function openSurveyResults(id) { showToast('لوحة النتائج — المرحلة 4 قادمة', 'info'); }
+// ======================================================================
+// ===== نظام الاستبيانات — المرحلة 4: لوحة النتائج =====
+// ======================================================================
+
+window._currentResultsSurvey = null;
+window._currentResultsMode = 'analysis';
+window._currentResultsData = { questions: [], responses: [] };
+
+async function openSurveyResults(id) {
+  const survey = (window._surveysCache || []).find(s => s.id === id);
+  if (!survey) { showToast('الاستبيان غير موجود', 'error'); return; }
+
+  window._currentResultsSurvey = survey;
+  window._currentResultsMode = 'analysis';
+  window._currentResultsData = { questions: [], responses: [] };
+
+  // ضمان توفر ALL_DATA (لحساب معدل المشاركة)
+  if (typeof ALL_DATA !== 'undefined' && !ALL_DATA.length) {
+    try { await loadData(); } catch (e) {}
+  }
+
+  // تحديث header فوراً (قبل جلب البيانات)
+  document.getElementById('results-emoji').textContent = survey.icon || survey.emoji || '📋';
+  document.getElementById('results-survey-title').textContent = survey.title || '—';
+  document.getElementById('results-count').textContent = '... جارٍ التحميل';
+  document.getElementById('results-participation').textContent = '...';
+  document.getElementById('results-avg-rating-wrap').style.display = 'none';
+  document.getElementById('results-last-wrap').style.display = 'none';
+  _setResultsTab('analysis');
+  document.getElementById('results-body').innerHTML = '<div class="results-loading">⏳ جارٍ تحميل النتائج...</div>';
+  document.getElementById('survey-results-modal').style.display = 'flex';
+
+  try {
+    const [questions, responses] = await Promise.all([
+      window.DB.Surveys.getQuestions(id),
+      window.DB.Surveys.getResponses(id)
+    ]);
+    window._currentResultsData = { questions, responses };
+    _updateResultsHeader();
+    _renderCurrentResultsMode();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('results-body').innerHTML = '<div class="results-empty"><div class="re-ico">⚠️</div><div class="re-title">خطأ في التحميل</div><div class="re-desc">' + (e.message || '') + '</div></div>';
+  }
+}
+
+function closeSurveyResults() {
+  document.getElementById('survey-results-modal').style.display = 'none';
+  window._currentResultsSurvey = null;
+  window._currentResultsData = { questions: [], responses: [] };
+}
+
+function _updateResultsHeader() {
+  const { questions, responses } = window._currentResultsData;
+  const totalPilgrims = (typeof ALL_DATA !== 'undefined' && ALL_DATA.length) ? ALL_DATA.length : 0;
+  const pct = totalPilgrims ? Math.round((responses.length / totalPilgrims) * 100) : 0;
+
+  document.getElementById('results-count').textContent = `${responses.length} إجابة`;
+  document.getElementById('results-participation').textContent = totalPilgrims ? `${pct}% مشاركة (${responses.length}/${totalPilgrims})` : `${responses.length} إجابة`;
+
+  // متوسط تقييم (إذا فيه أسئلة rating)
+  const ratingQs = questions.filter(q => q.question_type === 'rating');
+  if (ratingQs.length && responses.length) {
+    let sum = 0, cnt = 0;
+    for (const r of responses) {
+      if (!r.answers) continue;
+      for (const q of ratingQs) {
+        const v = Number(r.answers[q.id]);
+        if (v >= 1 && v <= 5) { sum += v; cnt++; }
+      }
+    }
+    if (cnt) {
+      document.getElementById('results-avg-rating').textContent = (sum / cnt).toFixed(1);
+      document.getElementById('results-avg-rating-wrap').style.display = '';
+    }
+  }
+
+  // آخر إجابة
+  if (responses.length) {
+    const last = new Date(responses[0].submitted_at);
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('results-last-date').textContent = `${pad(last.getDate())}/${pad(last.getMonth()+1)}/${last.getFullYear()}`;
+    document.getElementById('results-last-wrap').style.display = '';
+  }
+}
+
+function _setResultsTab(mode) {
+  document.getElementById('results-tab-analysis').classList.toggle('active', mode === 'analysis');
+  document.getElementById('results-tab-individual').classList.toggle('active', mode === 'individual');
+}
+
+function switchResultsMode(mode) {
+  window._currentResultsMode = mode;
+  _setResultsTab(mode);
+  _renderCurrentResultsMode();
+}
+
+function _renderCurrentResultsMode() {
+  const mode = window._currentResultsMode;
+  if (mode === 'individual') _renderResultsIndividual();
+  else _renderResultsAnalysis();
+}
+
+function _renderResultsAnalysis() {
+  const { questions, responses } = window._currentResultsData;
+  const body = document.getElementById('results-body');
+  if (!responses.length) {
+    body.innerHTML = '<div class="results-empty"><div class="re-ico">📭</div><div class="re-title">لا توجد إجابات بعد</div><div class="re-desc">ستظهر النتائج عندما يبدأ الحجاج بالإجابة</div></div>';
+    return;
+  }
+  if (!questions.length) {
+    body.innerHTML = '<div class="results-empty"><div class="re-ico">📝</div><div class="re-title">لا توجد أسئلة</div></div>';
+    return;
+  }
+  body.innerHTML = questions.map((q, i) => _buildQuestionAnalysisHTML(q, responses, i + 1)).join('');
+}
+
+function _buildQuestionAnalysisHTML(q, responses, idx) {
+  const type = q.question_type;
+  const qText = escapeHTML(q.question_text || '');
+  const answers = responses
+    .map(r => r.answers ? r.answers[q.id] : null)
+    .filter(a => a !== null && a !== undefined && a !== '');
+
+  const typeLabel = { rating:'⭐ تقييم', single:'🔘 اختيار واحد', multiple:'☑️ متعدد', text:'📝 نص حر' }[type] || type;
+
+  let body = '';
+  if (!answers.length) {
+    body = '<div style="text-align:center;padding:14px;color:var(--text-muted);font-size:12px">لم يُجَب بعد</div>';
+  } else if (type === 'rating') {
+    const nums = answers.map(Number).filter(n => n >= 1 && n <= 5);
+    const avg = nums.length ? (nums.reduce((s,n)=>s+n,0) / nums.length) : 0;
+    const dist = [0,0,0,0,0];
+    nums.forEach(n => { dist[n-1]++; });
+    const avgRound = Math.round(avg);
+    body = `
+      <div class="rating-summary">
+        <div class="rating-avg">
+          <div class="big-number">${avg.toFixed(1)}</div>
+          <div class="stars-display">${'★'.repeat(avgRound)}${'☆'.repeat(5-avgRound)}</div>
+          <div class="total-votes">${nums.length} تقييم</div>
+        </div>
+        <div class="rating-bars">
+          ${[5,4,3,2,1].map(star => {
+            const cnt = dist[star-1];
+            const p = nums.length ? Math.round((cnt/nums.length)*100) : 0;
+            return `<div class="rating-bar-row"><div class="rb-label">${star} ★</div><div class="rb-bar"><div class="rb-fill" style="width:${p}%"></div></div><div class="rb-count">${p}% (${cnt})</div></div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  } else if (type === 'single') {
+    const counts = {};
+    answers.forEach(a => { const k = String(a); counts[k] = (counts[k]||0) + 1; });
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    body = `<div class="options-analysis">${
+      sorted.map(([opt, cnt]) => {
+        const p = Math.round((cnt/answers.length)*100);
+        return `<div class="option-analysis-row"><div class="oa-label">${escapeHTML(opt)}</div><div class="oa-bar"><div class="oa-fill" style="width:${p}%"></div></div><div class="oa-count">${p}% (${cnt})</div></div>`;
+      }).join('')
+    }</div>`;
+  } else if (type === 'multiple') {
+    const counts = {};
+    answers.forEach(ans => {
+      if (Array.isArray(ans)) ans.forEach(v => { const k = String(v); counts[k] = (counts[k]||0) + 1; });
+    });
+    const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+    body = `<div class="options-analysis">${
+      sorted.map(([opt, cnt]) => {
+        const p = Math.round((cnt/answers.length)*100);
+        return `<div class="option-analysis-row"><div class="oa-label">${escapeHTML(opt)}</div><div class="oa-bar multi"><div class="oa-fill" style="width:${p}%"></div></div><div class="oa-count">${p}% (${cnt})</div></div>`;
+      }).join('')
+    }</div>`;
+  } else { // text
+    const MAX_SHOW = 20;
+    const shown = answers.slice(0, MAX_SHOW);
+    body = `<div class="text-responses">${
+      shown.map(a => `<div class="text-response-item">"${escapeHTML(String(a))}"</div>`).join('')
+    }${answers.length > MAX_SHOW ? `<div class="more-responses">+ ${answers.length - MAX_SHOW} إجابة أخرى</div>` : ''}</div>`;
+  }
+
+  return `
+    <div class="question-analysis">
+      <div class="qa-header">
+        <div class="qa-number">${idx}</div>
+        <div class="qa-title">${qText}</div>
+        <div class="qa-type-badge ${type}">${typeLabel}</div>
+      </div>
+      ${body}
+    </div>`;
+}
+
+function _renderResultsIndividual() {
+  const { questions, responses } = window._currentResultsData;
+  const survey = window._currentResultsSurvey || {};
+  const body = document.getElementById('results-body');
+  if (!responses.length) {
+    body.innerHTML = '<div class="results-empty"><div class="re-ico">📭</div><div class="re-title">لا توجد إجابات بعد</div></div>';
+    return;
+  }
+  const isAnon = !!survey.anonymous;
+  const pad = n => String(n).padStart(2, '0');
+
+  body.innerHTML = '<div class="individual-responses">' + responses.map(r => {
+    const d = new Date(r.submitted_at);
+    const dateStr = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const name = isAnon ? '👤 حاج (مجهول)' : `👤 ${escapeHTML(r.pilgrim_name || '—')}`;
+    const booking = !isAnon && r.pilgrim_booking ? `<div class="ir-booking">حجز: ${escapeHTML(String(r.pilgrim_booking))}</div>` : '';
+    const rows = questions.map((q, i) => {
+      const ans = r.answers ? r.answers[q.id] : null;
+      let disp = '';
+      if (ans === null || ans === undefined || ans === '') disp = '<em style="color:#bbb">لم يُجَب</em>';
+      else if (q.question_type === 'rating') {
+        const n = Number(ans);
+        disp = (n >= 1 && n <= 5) ? ('★'.repeat(n) + '☆'.repeat(5-n)) : escapeHTML(String(ans));
+      }
+      else if (Array.isArray(ans)) disp = ans.map(x => escapeHTML(String(x))).join('، ');
+      else disp = escapeHTML(String(ans));
+      return `<div class="ir-answer-row"><div class="ir-q">${i+1}. ${escapeHTML(q.question_text || '')}</div><div class="ir-a">${disp}</div></div>`;
+    }).join('');
+    return `
+      <div class="ir-card">
+        <div class="ir-header">
+          <div class="ir-name">${name}</div>
+          ${booking}
+          <div class="ir-date">${dateStr}</div>
+        </div>
+        ${rows}
+      </div>`;
+  }).join('') + '</div>';
+}
+
+async function exportCurrentResults() {
+  try {
+    const survey = window._currentResultsSurvey;
+    const { questions, responses } = window._currentResultsData;
+    if (!survey || !responses.length) {
+      showToast('لا توجد إجابات للتصدير', 'info');
+      return;
+    }
+    const isAnon = !!survey.anonymous;
+    const esc = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+    let csv = '\uFEFF'; // BOM للعربية
+
+    // Headers
+    const headers = ['التاريخ', 'الاسم', 'رقم الحجز'];
+    questions.forEach((q, i) => headers.push(`س${i+1}: ${q.question_text || ''}`));
+    csv += headers.map(esc).join(',') + '\n';
+
+    // Rows
+    const pad = n => String(n).padStart(2, '0');
+    responses.forEach(r => {
+      const d = new Date(r.submitted_at);
+      const dateStr = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      const row = [
+        dateStr,
+        isAnon ? 'مجهول' : (r.pilgrim_name || ''),
+        isAnon ? '' : (r.pilgrim_booking || '')
+      ];
+      questions.forEach(q => {
+        const ans = r.answers ? r.answers[q.id] : '';
+        let val = '';
+        if (ans === null || ans === undefined) val = '';
+        else if (Array.isArray(ans)) val = ans.join('، ');
+        else val = String(ans);
+        row.push(val);
+      });
+      csv += row.map(esc).join(',') + '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeName = String(survey.title || 'survey').replace(/[\\/:*?"<>|]/g, '_').slice(0, 50);
+    a.href = url;
+    a.download = `${safeName}_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('✅ تم تصدير الملف', 'success');
+  } catch (e) {
+    console.error(e);
+    showToast('❌ فشل التصدير: ' + (e.message || e), 'error');
+  }
+}
 
 // ======================================================================
 // ===== نظام الاستبيانات — المرحلة 2B: نافذة إعدادات الاستبيان =====
@@ -8874,22 +9319,13 @@ window._ssmModified = false;
 // ===== تفعيل/إيقاف تلقائي للاستبيانات المجدولة =====
 async function autoManageScheduledSurveys() {
   const surveys = window._surveysCache || [];
-  const today = new Date().toISOString().slice(0, 10);
-  const toActivate = [];
+  const now = new Date();
   const toDeactivate = [];
   for (const s of surveys) {
-    if (s.auto_activate && !s.active && s.start_date && s.start_date <= today && (!s.end_date || s.end_date >= today)) {
-      toActivate.push(s);
-    } else if (s.active && s.end_date && s.end_date < today) {
+    // الاستبيان المفعّل الذي انتهى وقته → إيقاف تلقائي
+    if (s.active && s.end_date && new Date(s.end_date) <= now) {
       toDeactivate.push(s);
     }
-  }
-  for (const s of toActivate) {
-    try {
-      await window.DB.Surveys.update(s.id, { active: true });
-      s.active = true;
-      showToast(`تم تفعيل استبيان "${s.title}" تلقائياً`, 'info', 4000);
-    } catch (e) {}
   }
   for (const s of toDeactivate) {
     try {
@@ -9066,21 +9502,45 @@ function buildSSMPaneSchedule(s) {
       </div>
       <input type="hidden" id="ssm-repeat-type" value="${repeat}">
 
-      <h3 style="margin-top:22px">فترة التفعيل</h3>
-      <div class="ssm-row-split">
-        <div class="ssm-row"><label>تاريخ البداية</label><input type="date" id="ssm-start-date" value="${s.start_date || ''}"></div>
-        <div class="ssm-row"><label>تاريخ النهاية</label><input type="date" id="ssm-end-date" value="${s.end_date || ''}"></div>
-      </div>
-
-      <div class="opt-row">
-        <div class="opt-row-text">
-          <div class="opt-row-title">تفعيل تلقائي في تاريخ البداية</div>
-          <div class="opt-row-desc">سيتم تفعيل الاستبيان تلقائياً عند وصول تاريخ البداية (يتطلب زيارة الصفحة)</div>
+      <div id="ssm-schedule-fields">
+        <div id="ssm-schedule-disabled-notice" style="display:none;padding:12px 14px;background:#fff3e0;border:1.5px solid #ffb74d;border-radius:8px;color:#e65100;font-size:12px;font-weight:600;margin-top:22px;line-height:1.7">
+          ⚠️ الاستبيان متوقف حالياً. فعّل الاستبيان من الأعلى لتتمكن من ضبط الجدولة.
         </div>
-        <span class="tgl ${s.auto_activate ? 'on' : ''}" onclick="toggleSSMField(this,'ssm-auto-activate')">
-          <input type="checkbox" ${s.auto_activate ? 'checked' : ''} id="ssm-auto-activate">
-          <span class="tgl-bg"></span><span class="tgl-knob"></span>
-        </span>
+
+        <h3 style="margin-top:22px">فترة التفعيل (تاريخ + ساعة)</h3>
+
+        <div class="ssm-row">
+          <label>📅 وقت بداية ظهور الاستبيان</label>
+          <div class="datetime-group">
+            <input type="date" id="ssm-start-date">
+            <input type="time" id="ssm-start-time" value="00:00">
+          </div>
+          <small class="ssm-hint">اتركه فارغاً لبدء الظهور فوراً عند التفعيل</small>
+        </div>
+
+        <div class="ssm-row">
+          <label>🏁 وقت نهاية ظهور الاستبيان</label>
+          <div class="datetime-group">
+            <input type="date" id="ssm-end-date">
+            <input type="time" id="ssm-end-time" value="23:59">
+          </div>
+          <small class="ssm-hint">اتركه فارغاً لعدم وجود انتهاء</small>
+        </div>
+
+        <div style="background:#fdf8f0;border:1px solid #f0e0b0;border-radius:8px;padding:12px;margin-top:14px;font-size:12px;color:#6b5a45;line-height:1.6">
+          💡 الاستبيان يظهر للحاج فقط في النافذة الزمنية المحددة. قبل وقت البداية أو بعد وقت النهاية، لن يراه الحاج.
+        </div>
+
+        <div class="opt-row" style="margin-top:14px">
+          <div class="opt-row-text">
+            <div class="opt-row-title">تفعيل تلقائي في تاريخ البداية</div>
+            <div class="opt-row-desc">يظل الاستبيان غير مرئي للحاج قبل تاريخ البداية حتى لو مفعَّل</div>
+          </div>
+          <span class="tgl ${s.auto_activate ? 'on' : ''}" onclick="toggleSSMField(this,'ssm-auto-activate')">
+            <input type="checkbox" ${s.auto_activate ? 'checked' : ''} id="ssm-auto-activate">
+            <span class="tgl-bg"></span><span class="tgl-knob"></span>
+          </span>
+        </div>
       </div>
     </div>`;
 }
@@ -9091,7 +9551,24 @@ function toggleSSMActive(el) {
   el.classList.toggle('on', input.checked);
   const statusEl = document.getElementById('ssm-activation-status');
   if (statusEl) statusEl.textContent = input.checked ? '✅ الاستبيان مفعّل حالياً' : '⏸️ الاستبيان متوقف';
+  _updateScheduleFieldsState(input.checked);
   markSurveyModified();
+}
+
+function _updateScheduleFieldsState(isActive) {
+  const notice = document.getElementById('ssm-schedule-disabled-notice');
+  const fields = ['ssm-start-date','ssm-start-time','ssm-end-date','ssm-end-time','ssm-auto-activate'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = !isActive;
+  });
+  // toggle widget للـ auto-activate
+  const autoToggle = document.getElementById('ssm-auto-activate')?.closest('.tgl');
+  if (autoToggle) {
+    autoToggle.style.opacity = isActive ? '1' : '.4';
+    autoToggle.style.pointerEvents = isActive ? '' : 'none';
+  }
+  if (notice) notice.style.display = isActive ? 'none' : 'flex';
 }
 
 function toggleSSMField(el, inputId) {
@@ -9173,10 +9650,36 @@ function markSurveyModified() {
 }
 
 function attachSSMListeners() {
-  document.querySelectorAll('.ssm-content input[type=text], .ssm-content input[type=date], .ssm-content textarea').forEach(el => {
+  document.querySelectorAll('.ssm-content input[type=text], .ssm-content input[type=date], .ssm-content input[type=time], .ssm-content textarea').forEach(el => {
     el.addEventListener('input', markSurveyModified);
     el.addEventListener('change', markSurveyModified);
   });
+  // تحميل قيم start_date و end_date (timestamptz) مع فصل التاريخ والوقت
+  const s = window._ssmCurrentData || {};
+  _loadScheduleFields(s);
+  // تطبيق حالة الحقول حسب active
+  _updateScheduleFieldsState(!!s.active);
+}
+
+function _loadScheduleFields(s) {
+  const pad = n => String(n).padStart(2, '0');
+  const fillDateTime = (isoStr, dateId, timeId, defaultTime) => {
+    const dateEl = document.getElementById(dateId);
+    const timeEl = document.getElementById(timeId);
+    if (!dateEl || !timeEl) return;
+    if (isoStr) {
+      const d = new Date(isoStr);
+      if (!isNaN(d)) {
+        dateEl.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+        timeEl.value = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        return;
+      }
+    }
+    dateEl.value = '';
+    timeEl.value = defaultTime;
+  };
+  fillDateTime(s.start_date, 'ssm-start-date', 'ssm-start-time', '00:00');
+  fillDateTime(s.end_date,   'ssm-end-date',   'ssm-end-time',   '23:59');
 }
 
 async function closeSurveySettings(force) {
@@ -9207,11 +9710,20 @@ async function saveSurveySettings() {
   const original = window._ssmCurrentData || {};
 
   const isSystem = isSystemSurvey(original);
+
+  // دمج التاريخ + الوقت → ISO string (timestamptz)
+  const sd = document.getElementById('ssm-start-date').value;
+  const st = document.getElementById('ssm-start-time').value || '00:00';
+  const start_date = sd ? new Date(`${sd}T${st}:00`).toISOString() : null;
+  const ed = document.getElementById('ssm-end-date').value;
+  const et = document.getElementById('ssm-end-time').value || '23:59';
+  const end_date = ed ? new Date(`${ed}T${et}:00`).toISOString() : null;
+
   const data = {
     active: document.getElementById('ssm-active').checked,
     repeat_type: document.getElementById('ssm-repeat-type').value,
-    start_date: document.getElementById('ssm-start-date').value || null,
-    end_date: document.getElementById('ssm-end-date').value || null,
+    start_date: start_date,
+    end_date: end_date,
     auto_activate: document.getElementById('ssm-auto-activate').checked,
     welcome_message: document.getElementById('ssm-welcome').value.trim(),
     thanks_message: document.getElementById('ssm-thanks').value.trim(),
@@ -9237,9 +9749,9 @@ async function saveSurveySettings() {
     switchSurveySettingsTab('general');
     return;
   }
-  // Validation: end_date must be >= start_date
-  if (data.start_date && data.end_date && data.end_date < data.start_date) {
-    showToast('تاريخ النهاية لا يمكن أن يسبق تاريخ البداية', 'error');
+  // Validation: end_date must be > start_date (مقارنة تواريخ فعلية)
+  if (data.start_date && data.end_date && new Date(data.end_date) <= new Date(data.start_date)) {
+    showToast('❌ وقت النهاية يجب أن يكون بعد وقت البداية', 'error');
     switchSurveySettingsTab('schedule');
     return;
   }
@@ -9252,19 +9764,13 @@ async function saveSurveySettings() {
 
   try {
     await window.DB.Surveys.update(id, data);
+    closeSurveySettings(true);
+    // إعادة جلب كاملة من DB — يضمن تطبيق auto_activate + عرض الحالة الفعلية
+    await renderSurveys();
 
-    // Update cache
-    const surveys = window._surveysCache || [];
-    const idx = surveys.findIndex(s => s.id === id);
-    if (idx !== -1) surveys[idx] = { ...surveys[idx], ...data };
-
-    // Re-render single card + stats + badge
-    renderSurveyCard(id);
-    renderSurveysStats();
-    updateSurveysBadge();
-
-    // Warning if activated without questions
-    if (data.active) {
+    // Warning if activated without questions (بعد إعادة الجلب للتأكد من الحالة الفعلية)
+    const updated = (window._surveysCache || []).find(s => s.id === id);
+    if (updated && updated.active) {
       try {
         const qs = await window.DB.Surveys.getQuestions(id);
         if (!qs.length) {
@@ -9274,7 +9780,6 @@ async function saveSurveySettings() {
     }
 
     showToast('تم حفظ الإعدادات ✅', 'success');
-    closeSurveySettings(true);
   } catch (e) {
     showToast('خطأ في الحفظ: ' + (e.message || e), 'error');
   }
@@ -10016,12 +10521,9 @@ async function saveNewSurvey() {
   };
   try {
     const created = await window.DB.Surveys.create(data);
-    (window._surveysCache || []).push(created);
     closeCreateSurvey();
-    renderSurveysStats();
-    renderSurveysGrid();
-    updateSurveysBadge();
-    loadQuestionCountsForCards();
+    // إعادة جلب كاملة من DB — يضمن ظهور كل الحقول (emoji، حالات، إلخ) فوراً
+    await renderSurveys();
     showToast('تم إنشاء الاستبيان ✅', 'success');
     const addQs = await showConfirm('هل تريد إضافة أسئلة الآن؟', 'استبيان جديد', 'نعم، إضافة أسئلة', '#c8971a', '📝');
     if (addQs) openQuestionsManager(created.id);
@@ -10084,12 +10586,8 @@ async function confirmDuplicate() {
       const newQ = stripIds(q, ['id', 'survey_id']);
       await window.DB.Surveys.addQuestion(created.id, newQ);
     }
-    (window._surveysCache || []).push(created);
     closeDupModal();
-    renderSurveysStats();
-    renderSurveysGrid();
-    updateSurveysBadge();
-    loadQuestionCountsForCards();
+    await renderSurveys();
     showToast('تم النسخ ✅', 'success');
   } catch (e) {
     showToast('خطأ في النسخ: ' + (e.message || e), 'error');
@@ -10112,11 +10610,7 @@ async function deleteSurvey(id) {
   if (!ok) return;
   try {
     await window.DB.Surveys.delete(id);
-    window._surveysCache = (window._surveysCache || []).filter(x => x.id !== id);
-    delete (window._surveysResponseCounts || {})[id];
-    renderSurveysStats();
-    renderSurveysGrid();
-    updateSurveysBadge();
+    await renderSurveys();
     showToast('تم الحذف ✓', 'success');
   } catch (e) {
     showToast('خطأ في الحذف: ' + (e.message || e), 'error');
@@ -10228,12 +10722,8 @@ async function confirmImport() {
       const qData = stripIds(q, ['id', 'survey_id']);
       await window.DB.Surveys.addQuestion(newSurvey.id, qData);
     }
-    (window._surveysCache || []).push(newSurvey);
     closeImportSurvey();
-    renderSurveysStats();
-    renderSurveysGrid();
-    updateSurveysBadge();
-    loadQuestionCountsForCards();
+    await renderSurveys();
     showToast('تم الاستيراد ✅', 'success');
   } catch (e) {
     showToast('خطأ في الاستيراد: ' + (e.message || e), 'error');

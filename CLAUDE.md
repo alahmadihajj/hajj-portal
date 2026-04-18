@@ -167,3 +167,126 @@ async function isDeveloperMode() {
 
 ### ملاحظة للمستقبل
 هذا القسم سيُضاف له ميزات أخرى تُطلب أثناء التطوير. يجب مراجعته دائماً عند اكتمال مراحل العمل الحالية لبدء تنفيذها.
+
+## المرحلة 3 — بوابة الحاج (نظام الاستبيانات)
+
+### 3A ✅ مكتمل (v13.0)
+- حُذف محتوى `sec-survey` القديم (placeholder ثابت) مع الاحتفاظ بـ id نفسه (حفاظاً على admin toggle)
+- قسم ديناميكي يقرأ من `DB.Surveys.getActive()` + فلترة حسب إجابات الحاج
+- فلترة ذكية حسب `repeat_type`:
+  * `once`: إذا سبقت الإجابة → استبعاد
+  * `daily`: إذا أجاب اليوم → استبعاد
+  * `weekly`: إذا أجاب خلال آخر 7 أيام → استبعاد
+  * قيمة غير معروفة → متاح (دفاع آمن)
+- `window._currentPilgrim` يُحفظ في `doLogin` بعد جلب بيانات الحاج — ضروري لربط الإجابات
+- `startSurvey(id)` حالياً placeholder (console.log + alert) — التنفيذ الكامل في 3C
+- إضافة `Surveys.getResponsesByPilgrim(pilgrimId)` في `supabase.js`
+- الأداء: `Promise.all` لعدّ أسئلة الاستبيانات المتاحة بالتوازي
+- استدعاء `loadAvailableSurveys()` بعد 300ms من `showResult` (بعد ظهور نتيجة الحاج)
+
+**حقل الأيقونة:** الكود يدعم `survey.icon` (الاسم الفعلي في schema) مع fallback لـ `survey.emoji` احتياطياً.
+
+### 3B ✅ مكتمل (v13.1)
+- نافذة منبثقة احترافية تظهر فور ظهور قسم الاستبيانات (بعد +500ms)
+- ترحيب بأول اسم الحاج (من `pilgrim.name` split بالمسافات)
+- عنوان فرعي ديناميكي: مفرد/جمع حسب عدد الاستبيانات
+- قائمة مختصرة بكل استبيان (emoji + title + ❓ عدد الأسئلة + ⏱️ وقت تقديري)
+- زران: "ابدأ الآن" (يفتح أول استبيان) و "لاحقاً" (إغلاق)
+- Animations: fadeIn للـ overlay، scaleIn للحاوية، bellRing لأيقونة 🔔
+- Responsive: تكيّف مع الشاشات ≤ 480px
+- النقر خارج المحتوى = إغلاق، زر ✕ علوي للإغلاق المباشر
+- `document.body.style.overflow = 'hidden'` عند الإظهار لمنع scroll الخلفية
+- `window._surveysPopupShown` flag: يمنع إعادة الإظهار في نفس الجلسة
+- `window._availableSurveys` يحفظ القائمة لاستخدام 3C
+
+## ميزة: جدولة الاستبيانات مع دعم الساعة (v13.2)
+
+### المنطق الهرمي
+- **المفتاح الرئيسي:** `active` (boolean)
+  - `OFF` → الاستبيان مغلق كلياً (لا يظهر للحاج، حقول الجدولة معطّلة مع رسالة توضيحية)
+  - `ON` → الخصائص التابعة تعمل: `auto_activate`, `start_date`, `end_date`
+
+### ما الجديد
+- ✅ دعم الساعة (مثال: 10:00 صباحاً) — تحويل `start_date`/`end_date` إلى `timestamptz` في DB
+- ✅ Migration منفصل: `surveys_timestamp_migration.sql`
+- ✅ واجهة: حقلي تاريخ + وقت منفصلين في tab الجدولة
+- ✅ ديناميكية: toggle `active` يُفعّل/يُعطّل حقول الجدولة فوراً + رسالة توضيحية
+- ✅ Badges ملونة في البطاقة: `⏰ يبدأ` / `🔥 ينتهي خلال` / `✓ انتهى`
+- ✅ Auto-disable تلقائي: الاستبيان يُعطَّل عند تجاوز `end_date` (مع toast)
+- ✅ فلترة index.html: الحاج لا يرى استبياناً خارج النافذة الزمنية
+- ✅ `supabase.js → Surveys.getActive()` يفلتر بالتواريخ تلقائياً
+
+### النمط الموحّد للتحديث
+جميع دوال التعديل (`saveNewSurvey`, `saveSurveySettings`, `confirmDuplicate`, `deleteSurvey`, `confirmImport`) الآن تستخدم:
+```js
+await window.DB.Surveys.X(...)
+closeModal()
+await renderSurveys()  // إعادة جلب كاملة من DB
+showToast('✅ ...')
+```
+هذا يضمن انعكاس التغييرات فوراً (مثل `auto_activate` الذي يُفعَّل تلقائياً عبر `autoManageScheduledSurveys`).
+
+### Bugfix في v13.2
+- Emoji الاستبيان الجديد يظهر فوراً (لا F5)
+- Auto-activate يُفعّل الاستبيان وبطاقته تعكس الحالة فوراً
+
+### 3C ✅ مكتمل (v13.3)
+- مودال عرض/إجابة الاستبيان — تصميم احترافي كامل في index.html
+- 3 مراحل: welcome (ترحيب + emoji + وصف) → questions (سؤال واحد في الشاشة) → thanks (شكر + رسالة مخصّصة)
+- 4 أنواع أسئلة (مطابقة الـ schema):
+  * `rating` — 5 نجوم تفاعلية (ثابت، لا `max_rating`)
+  * `single` — radio options، **مع UX خاص لنعم/لا** عند `options=['نعم','لا']` (أزرار ✅❌ ملوّنة)
+  * `multiple` — checkbox options
+  * `text` — textarea بلا حد (لا `max_length`)
+- Progress bar يحترم `survey.show_progress` (يُخفى إذا false)
+- Navigation: سابق/تالي مع validation للأسئلة الإلزامية (required=true)
+- Payload إلى `survey_responses`:
+  ```js
+  { survey_id, pilgrim_id, pilgrim_booking, pilgrim_name, response_date, answers }
+  ```
+- **خصوصية:** `survey.anonymous=true` → `pilgrim_name/booking` null، لكن `pilgrim_id` يبقى دائماً (لحماية التكرار)
+- **allow_edit=true:** بدون تأكيد عند الإغلاق (الحاج يستطيع الرجوع)
+- معالجة الأخطاء: إرسال فاشل → زر "🔄 إعادة المحاولة" + toast خطأ + الاحتفاظ بالإجابات
+- بعد الإرسال الناجح: إعادة تحميل `loadAvailableSurveys` → الاستبيان المُجاب يختفي من القائمة
+- z-index 10001 (فوق `surveys-popup-overlay`)
+- Animations: fadeIn + scaleIn للمودال، qFadeIn لكل سؤال
+- Responsive كامل (max-width ≤ 480px)
+
+## المرحلة 4 — لوحة النتائج للأدمن (v14.0)
+
+### قرار معماري
+Modal واحد بوضعَين داخليَّين بدل tab منفصل — يتناسق مع باقي أزرار البطاقة (⚙️ ⓘ 📝 👁️). يُفتح عبر زر 📊 في البطاقة.
+
+### البنية: 3 مستويات داخل Modal واحد
+- **Header ثابت:** emoji + العنوان + KPIs سريعة (عدد الإجابات، نسبة المشاركة، متوسط التقييم، تاريخ آخر إجابة) + زر ✕
+- **Tabs داخلية:**
+  - `📊 تحليل الأسئلة` (default): bar charts لكل سؤال حسب النوع
+  - `👥 الإجابات الفردية`: بطاقة لكل إجابة مع احترام `anonymous`
+- **Footer ثابت:** `📥 تصدير Excel`
+
+### تحليل الأسئلة حسب النوع
+- **rating:** متوسط كبير + نجوم + bar chart عمودي (5★ إلى 1★) بألوان صفراء متدرّجة
+- **single:** options مرتّبة DESC + bars خضراء (%)
+- **multiple:** options مرتّبة DESC + bars زرقاء (%)
+- **text:** قائمة الردود (max 20) + "+X إجابة أخرى" — قابل للتمرير
+
+### ميزات تقنية
+- Cache: `window._currentResultsData` يحفظ `{questions, responses}` — تبديل الـ tabs بدون إعادة جلب
+- إذا `ALL_DATA` فارغ → `loadData()` تلقائياً لضمان دقة نسبة المشاركة
+- KPI متوسط التقييم: يحسب فقط إذا فيه أسئلة `rating` وإجابات
+- تاريخ آخر إجابة: من أول response (مرتّبة DESC)
+
+### تصدير CSV
+- `\uFEFF` BOM للعربية (يفتح في Excel مباشرة)
+- Headers: التاريخ / الاسم / رقم الحجز / كل سؤال
+- Rows: تنسيق تاريخ DD/MM/YYYY HH:mm
+- احترام `anonymous`: "مجهول" بدل الاسم، وخانة الحجز فارغة
+- اسم الملف: `{surveyTitle}_{YYYY-MM-DD}.csv` مع تنظيف الأحرف غير المسموحة
+
+### الحالات الحرجة المعالجة
+- لا إجابات → empty state بـ 📭
+- لا أسئلة → empty state بـ 📝
+- سؤال بلا إجابات → "لم يُجَب بعد" داخل البطاقة
+- خطأ في الجلب → رسالة مع تفاصيل
+- Rating بقيمة غير صحيحة (خارج 1-5) → تُعرض كنص خام
+- Textarea طويل → نمط quote مع border جانبي ذهبي
