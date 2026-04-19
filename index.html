@@ -1239,27 +1239,44 @@ async function translatePageDynamic(targetLang) {
     return;
   }
 
-  const selectors = [
-    '.announcement-content',
-    '.announcement-title',
-    '#r-company-content',
-    '#r-vaccines-content',
-    '#r-sheikh-content',
-    '.survey-card-title',
-    '.survey-card-desc',
-    '#r-whatsapp-content'
-  ];
+  // الحاويات الديناميكية التي قد تحتوي نصوصاً عربية تحتاج ترجمة
+  const containers = document.querySelectorAll(
+    '.announcement-card, .announcement-content, .announcement-title, ' +
+    '#r-company-content, #r-vaccines-content, #r-sheikh-content, ' +
+    '#r-whatsapp-content, .survey-card-title, .survey-card-desc'
+  );
 
-  for (const selector of selectors) {
-    const elements = document.querySelectorAll(selector);
-    for (const el of elements) {
-      if (!el.hasAttribute('data-original-text')) {
-        el.setAttribute('data-original-text', el.textContent);
+  for (const container of containers) {
+    // TreeWalker يلتقط كل عقدة نصية تحتوي عربية طولها ≥ 3
+    const walker = document.createTreeWalker(
+      container,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node) => {
+          const text = node.textContent.trim();
+          if (text.length < 3) return NodeFilter.FILTER_REJECT;
+          if (!/[\u0600-\u06FF]/.test(text)) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
       }
-      const originalText = el.getAttribute('data-original-text').trim();
-      if (originalText.length > 0 && originalText.length < 500) {
+    );
+
+    const textNodes = [];
+    let node;
+    while (node = walker.nextNode()) {
+      textNodes.push(node);
+    }
+
+    for (const textNode of textNodes) {
+      const parent = textNode.parentElement;
+      if (parent && !parent.hasAttribute('data-original-text')) {
+        parent.setAttribute('data-original-text', textNode.textContent);
+      }
+
+      const originalText = textNode.textContent.trim();
+      if (originalText.length > 2 && originalText.length < 500) {
         const translated = await translateTextMyMemory(originalText, targetLang);
-        el.textContent = translated;
+        textNode.textContent = translated;
       }
     }
   }
@@ -2530,7 +2547,7 @@ async function loadAnnouncements() {
           const t = annTypesHaj[a.type] || annTypesHaj.info;
           const text = a.body || a.text || '';
           return `
-          <div style="background:#fff;border:1.5px solid ${t.color}33;border-right:4px solid ${t.color};border-radius:12px;padding:14px 16px;margin-bottom:12px">
+          <div class="announcement-card" style="background:#fff;border:1.5px solid ${t.color}33;border-right:4px solid ${t.color};border-radius:12px;padding:14px 16px;margin-bottom:12px">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
               <span style="background:${t.bg};color:${t.color};padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700">${t.icon} ${t.label}</span>
               <span style="font-size:11px;color:#bbb">${a.date||''}</span>
