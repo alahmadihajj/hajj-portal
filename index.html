@@ -357,6 +357,27 @@ iframe.goog-te-banner-frame {
   display: none !important;
 }
 
+/* الـ widget container خارج الشاشة (ليس display:none) كي ينشئ Google الـ combo */
+#google_translate_element {
+  position: fixed !important;
+  top: -100px !important;
+  left: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+  visibility: hidden !important;
+}
+
+/* إخفاء gadget UI بدون إزالته من DOM */
+.goog-te-gadget,
+.goog-te-gadget-simple {
+  visibility: hidden !important;
+  height: 0 !important;
+}
+
 </style>
 
 <style id="portal-dynamic-style"></style>
@@ -2579,7 +2600,7 @@ if(savedId && savedBk){
 </script>
 
 <!-- Google Translate Widget (مخفي - نتحكم به برمجياً) -->
-<div id="google_translate_element" style="display:none;position:absolute;top:-9999px"></div>
+<div id="google_translate_element" style="position:fixed;top:-100px;left:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;z-index:-1"></div>
 <script type="text/javascript">
 function googleTranslateElementInit() {
   new google.translate.TranslateElement({
