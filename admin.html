@@ -462,6 +462,8 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="config.js"></script>
   <script src="supabase.js"></script>
 
@@ -877,6 +879,10 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
     .btn-export{padding:10px 18px;background:linear-gradient(135deg,var(--brown),var(--gold));color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;box-shadow:var(--shadow-sm);transition:transform .1s}
     .btn-export:active{transform:scale(.97)}
     .btn-export:disabled{opacity:.6;cursor:not-allowed}
+    .btn-export-pdf{padding:10px 18px;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;box-shadow:var(--shadow-sm);transition:transform .1s;margin-right:8px}
+    .btn-export-pdf:hover{background:#fecaca}
+    .btn-export-pdf:active{transform:scale(.97)}
+    .btn-export-pdf:disabled{opacity:.6;cursor:not-allowed}
 
     /* Question analysis cards */
     .question-analysis{background:var(--surface);border:1.5px solid var(--border-light);border-radius:var(--radius);padding:18px;margin-bottom:14px}
@@ -1789,6 +1795,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       </div>
       <div class="results-body" id="results-body"></div>
       <div class="results-footer">
+        <button class="btn-export-pdf" onclick="exportCurrentResultsPDF()">📄 تصدير PDF</button>
         <button class="btn-export" onclick="exportCurrentResults()">📥 تصدير Excel</button>
       </div>
     </div>
@@ -9300,6 +9307,62 @@ async function exportCurrentResults() {
     a.remove();
     URL.revokeObjectURL(url);
     showToast('✅ تم تصدير الملف', 'success');
+  } catch (e) {
+    console.error(e);
+    showToast('❌ فشل التصدير: ' + (e.message || e), 'error');
+  }
+}
+
+async function exportCurrentResultsPDF() {
+  try {
+    const survey = window._currentResultsSurvey;
+    const data = window._currentResultsData;
+    if (!survey || !data || !data.responses || !data.responses.length) {
+      showToast('لا توجد إجابات للتصدير', 'info');
+      return;
+    }
+    if (typeof html2canvas === 'undefined' || !window.jspdf) {
+      showToast('❌ مكتبات PDF لم تُحمّل — أعد التحميل', 'error');
+      return;
+    }
+    const element = document.getElementById('results-body');
+    if (!element) { showToast('❌ لم يُعثر على محتوى النتائج', 'error'); return; }
+
+    showToast('⏳ جاري تجهيز PDF...', 'info');
+
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+    const pdfWidth  = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    const imgWidth  = pdfWidth - margin * 2;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const imgData = canvas.toDataURL('image/png');
+
+    let heightLeft = imgHeight;
+    let position = margin;
+    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+    heightLeft -= (pdfHeight - margin * 2);
+
+    while (heightLeft > 0) {
+      pdf.addPage();
+      position = margin - (imgHeight - heightLeft);
+      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+      heightLeft -= (pdfHeight - margin * 2);
+    }
+
+    const safeName = String(survey.title || 'survey').replace(/[\\/:*?"<>|]/g, '_').slice(0, 50);
+    pdf.save(`${safeName}_${new Date().toISOString().slice(0,10)}.pdf`);
+    showToast('✅ تم تصدير PDF', 'success');
   } catch (e) {
     console.error(e);
     showToast('❌ فشل التصدير: ' + (e.message || e), 'error');
