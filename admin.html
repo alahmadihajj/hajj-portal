@@ -9349,6 +9349,39 @@ async function exportCurrentResultsPDF() {
     });
     const avgRating = _ratingCount > 0 ? (_ratingSum / _ratingCount).toFixed(1) : null;
 
+    // تقييم لكل سؤال (للنتائج الرئيسية والخلاصة)
+    const qRatings = [];
+    (data.questions || []).forEach(q => {
+      if (q.question_type === 'rating') {
+        let s = 0, c = 0;
+        (data.responses || []).forEach(r => {
+          const a = r.answers && r.answers[q.id];
+          if (a != null) {
+            const v = parseInt(a);
+            if (!isNaN(v)) { s += v; c++; }
+          }
+        });
+        if (c > 0) qRatings.push({ q, avg: s / c, count: c });
+      }
+    });
+    const topRated   = [...qRatings].sort((a, b) => b.avg - a.avg).slice(0, 3);
+    const worstRated = [...qRatings].filter(x => x.avg < 4).sort((a, b) => a.avg - b.avg).slice(0, 3);
+
+    // نسبة الإكمال
+    let _fullyCompleted = 0;
+    (data.responses || []).forEach(r => {
+      let ans = 0;
+      (data.questions || []).forEach(q => {
+        const v = r.answers && r.answers[q.id];
+        if (v != null && v !== '' && !(Array.isArray(v) && v.length === 0)) ans++;
+      });
+      if (ans === (data.questions || []).length && ans > 0) _fullyCompleted++;
+    });
+    const completionRate = totalResponses > 0 ? Math.round((_fullyCompleted / totalResponses) * 100) : 0;
+
+    // Escape HTML آمن للاستخدام في innerHTML
+    const _esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
     const surveyTitle = survey.title || 'استبيان';
     const today       = new Date();
     const dateStr     = today.toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' });
@@ -9389,13 +9422,131 @@ async function exportCurrentResultsPDF() {
     `;
     document.body.appendChild(coverEl);
 
+    // ===== صفحة 2: النتائج الرئيسية =====
+    const _qCard = (rank, question, avg, tone) => {
+      const colors = tone === 'good'
+        ? { bg:'#f0fdf4', border:'#10b981', rankColor:'#047857', valColor:'#047857' }
+        : { bg:'#fef2f2', border:'#ef4444', rankColor:'#991b1b', valColor:'#991b1b' };
+      return `
+        <div style="display:flex;align-items:center;gap:12px;background:${colors.bg};border-right:4px solid ${colors.border};padding:12px 14px;border-radius:10px;margin-bottom:8px">
+          <div style="font-weight:800;color:${colors.rankColor};min-width:22px">${rank}.</div>
+          <div style="flex:1;font-size:13px;color:#3d2000;line-height:1.5">${_esc(question)}</div>
+          <div style="font-size:17px;font-weight:800;color:${colors.valColor};white-space:nowrap">⭐ ${avg.toFixed(1)}</div>
+        </div>`;
+    };
+
+    const _kpiCard = (val, label, bg, border, color) => `
+      <div style="background:${bg};border:1px solid ${border};border-radius:12px;padding:18px;text-align:center">
+        <div style="font-size:28px;font-weight:800;color:${color};line-height:1">${val}</div>
+        <div style="font-size:12px;color:#666;margin-top:6px">${label}</div>
+      </div>`;
+
+    const resultsEl = document.createElement('div');
+    resultsEl.setAttribute('dir', 'rtl');
+    resultsEl.style.cssText = 'position:fixed;top:-9999px;left:0;width:800px;min-height:1120px;background:#fff;padding:60px 50px;font-family:inherit;color:#3d2000;box-sizing:border-box';
+    resultsEl.innerHTML = `
+      <div style="border-bottom:2px solid #c8971a;padding-bottom:14px;margin-bottom:28px">
+        <div style="font-size:12px;color:#999">${_esc(surveyTitle)}</div>
+        <div style="font-size:26px;font-weight:800;margin-top:6px">📊 النتائج الرئيسية</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:26px">
+        ${_kpiCard(totalResponses, 'عدد المستجيبين', '#fef2f2', '#fecaca', '#991b1b')}
+        ${_kpiCard(totalQuestions, 'عدد الأسئلة',   '#fefce8', '#fde68a', '#a67d10')}
+        ${avgRating ? _kpiCard('⭐ ' + avgRating, 'متوسط التقييم', '#f0fdf4', '#bbf7d0', '#047857') : ''}
+        ${_kpiCard(completionRate + '%', 'نسبة الإكمال',  '#eff6ff', '#bfdbfe', '#1d4ed8')}
+      </div>
+
+      ${topRated.length > 0 ? `
+        <div style="margin-bottom:24px">
+          <div style="font-size:15px;font-weight:800;margin-bottom:12px;color:#047857">🏆 أعلى تقييماً</div>
+          ${topRated.map((x, i) => _qCard(i + 1, x.q.question_text || '', x.avg, 'good')).join('')}
+        </div>
+      ` : ''}
+
+      ${worstRated.length > 0 ? `
+        <div style="margin-bottom:24px">
+          <div style="font-size:15px;font-weight:800;margin-bottom:12px;color:#991b1b">📉 بحاجة لتحسين</div>
+          ${worstRated.map((x, i) => _qCard(i + 1, x.q.question_text || '', x.avg, 'bad')).join('')}
+        </div>
+      ` : ''}
+
+      ${qRatings.length === 0 ? `
+        <div style="background:#f9fafb;border:1px dashed #d1d5db;border-radius:12px;padding:24px;text-align:center;color:#6b7280;font-size:14px">
+          لا توجد أسئلة تقييم في هذا الاستبيان لعرض ترتيب الأداء.
+        </div>
+      ` : ''}
+    `;
+    document.body.appendChild(resultsEl);
+
+    // ===== الصفحة الأخيرة: الخلاصة والتوصيات =====
+    const _recs = [];
+    if (avgRating !== null) {
+      const a = parseFloat(avgRating);
+      if (a >= 4.5)      _recs.push('أداء ممتاز — الحفاظ على مستوى الجودة الحالي ومواصلة قياس رضا المستجيبين دورياً.');
+      else if (a >= 4)   _recs.push('أداء جيد جداً — مراجعة النقاط الأقل تقييماً وتعزيزها للوصول للامتياز.');
+      else if (a >= 3)   _recs.push('أداء متوسط — يتطلّب مراجعة العمليات وتحسين المحاور الحرجة.');
+      else               _recs.push('أداء يحتاج تدخّلاً فورياً — مراجعة شاملة للأسئلة الأقل تقييماً ووضع خطة تصحيحية.');
+      if (worstRated.length > 0) {
+        const names = worstRated.map(x => '«' + String(x.q.question_text || '').slice(0, 45) + '»').join('، ');
+        _recs.push('التركيز بشكل خاص على المحاور التالية: ' + names + '.');
+      }
+    } else {
+      _recs.push('لا توجد أسئلة تقييم لقياس الأداء الكمي — يُنصح بإضافة أسئلة تقييم (1–5) لقياس الرضا في الاستبيانات القادمة.');
+    }
+    if (completionRate < 80 && totalResponses > 0) {
+      _recs.push('نسبة إكمال الاستبيان (' + completionRate + '%) منخفضة — يُنصح بتبسيط الأسئلة أو تقليل عددها لرفع معدّل الإكمال.');
+    }
+    _recs.push('تكرار الاستبيان دورياً (شهرياً أو بعد كل موسم) لمتابعة التحسّن عبر الزمن.');
+
+    const _sumLines = [
+      'أُجري استبيان «' + _esc(surveyTitle) + '» وشارك فيه ' + totalResponses + ' مستجيباً.',
+      'اشتمل الاستبيان على ' + totalQuestions + ' ' + (totalQuestions === 1 ? 'سؤال' : 'أسئلة') + ' بنسبة إكمال ' + completionRate + '%.'
+    ];
+    if (avgRating !== null) _sumLines.push('بلغ متوسط التقييم العام ' + avgRating + ' من 5.');
+
+    const conclusionsEl = document.createElement('div');
+    conclusionsEl.setAttribute('dir', 'rtl');
+    conclusionsEl.style.cssText = 'position:fixed;top:-9999px;left:0;width:800px;min-height:1120px;background:#fff;padding:60px 50px;font-family:inherit;color:#3d2000;box-sizing:border-box;display:flex;flex-direction:column';
+    conclusionsEl.innerHTML = `
+      <div style="border-bottom:2px solid #c8971a;padding-bottom:14px;margin-bottom:28px">
+        <div style="font-size:12px;color:#999">${_esc(surveyTitle)}</div>
+        <div style="font-size:26px;font-weight:800;margin-top:6px">📝 الخلاصة والتوصيات</div>
+      </div>
+
+      <div style="background:#fffbf0;border:1px solid #f0e0b0;border-radius:12px;padding:20px;margin-bottom:22px">
+        <div style="font-size:15px;font-weight:800;color:#7a4500;margin-bottom:10px">📋 ملخّص النتائج</div>
+        ${_sumLines.map(s => '<div style="font-size:14px;line-height:1.9;color:#444;margin-bottom:4px">• ' + s + '</div>').join('')}
+      </div>
+
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:20px;margin-bottom:22px">
+        <div style="font-size:15px;font-weight:800;color:#047857;margin-bottom:12px">💡 التوصيات</div>
+        ${_recs.map((r, i) => `
+          <div style="display:flex;gap:10px;font-size:14px;line-height:1.8;color:#3d2000;margin-bottom:8px">
+            <div style="font-weight:800;color:#047857;min-width:18px">${i + 1}.</div>
+            <div style="flex:1">${_esc(r)}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="flex:1"></div>
+
+      <div style="text-align:center;padding-top:24px;border-top:1px solid #eee">
+        <div style="font-size:13px;color:#3d2000;font-weight:700">شكراً لكل من شارك في هذا الاستبيان 🙏</div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px">📋 بوابة الحاج — نظام إدارة الاستبيانات</div>
+      </div>
+    `;
+    document.body.appendChild(conclusionsEl);
+
     try {
       const canvasOpts = { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false };
-      const coverCanvas = await html2canvas(coverEl, canvasOpts);
-      const bodyCanvas  = await html2canvas(bodyEl, Object.assign({}, canvasOpts, {
+      const coverCanvas      = await html2canvas(coverEl, canvasOpts);
+      const resultsCanvas    = await html2canvas(resultsEl, canvasOpts);
+      const bodyCanvas       = await html2canvas(bodyEl, Object.assign({}, canvasOpts, {
         windowWidth:  bodyEl.scrollWidth,
         windowHeight: bodyEl.scrollHeight
       }));
+      const conclusionsCanvas = await html2canvas(conclusionsEl, canvasOpts);
 
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
@@ -9409,7 +9560,13 @@ async function exportCurrentResultsPDF() {
       const coverH = Math.min((coverCanvas.height * imgWidth) / coverCanvas.width, pdfHeight - margin * 2);
       pdf.addImage(coverImg, 'PNG', margin, margin, imgWidth, coverH);
 
-      // --- صفحات 2+: التحليل ---
+      // --- صفحة 2: النتائج الرئيسية ---
+      pdf.addPage();
+      const resultsImg = resultsCanvas.toDataURL('image/png');
+      const resultsH = Math.min((resultsCanvas.height * imgWidth) / resultsCanvas.width, pdfHeight - margin * 2);
+      pdf.addImage(resultsImg, 'PNG', margin, margin, imgWidth, resultsH);
+
+      // --- صفحات 3+: التحليل التفصيلي ---
       const bodyImg = bodyCanvas.toDataURL('image/png');
       const bodyH = (bodyCanvas.height * imgWidth) / bodyCanvas.width;
       let heightLeft = bodyH;
@@ -9423,6 +9580,12 @@ async function exportCurrentResultsPDF() {
         pdf.addImage(bodyImg, 'PNG', margin, position, imgWidth, bodyH);
         heightLeft -= (pdfHeight - margin * 2);
       }
+
+      // --- الصفحة الأخيرة: الخلاصة والتوصيات ---
+      pdf.addPage();
+      const conclusionsImg = conclusionsCanvas.toDataURL('image/png');
+      const conclusionsH = Math.min((conclusionsCanvas.height * imgWidth) / conclusionsCanvas.width, pdfHeight - margin * 2);
+      pdf.addImage(conclusionsImg, 'PNG', margin, margin, imgWidth, conclusionsH);
 
       // --- أرقام الصفحات (Latin — آمن عبر jsPDF) ---
       const totalPages = pdf.internal.getNumberOfPages();
@@ -9438,6 +9601,8 @@ async function exportCurrentResultsPDF() {
       showToast('✅ تم تصدير PDF', 'success');
     } finally {
       coverEl.remove();
+      resultsEl.remove();
+      conclusionsEl.remove();
     }
   } catch (e) {
     console.error(e);
