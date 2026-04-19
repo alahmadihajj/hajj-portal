@@ -16,7 +16,8 @@
       "Bash(awk 'NR>=9316 && NR<=9371' admin.html)",
       "Bash(rm .claude/pdf_fn.js)",
       "Bash(awk 'NR>=10011 && NR<=10101' admin.html)",
-      "Bash(rm .claude/fn.js)"
+      "Bash(rm .claude/fn.js)",
+      "Bash(git *)"
     ]
   }
 }
