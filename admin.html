@@ -4326,36 +4326,77 @@ async function saveCampAssign(pilgrimId, location) {
   const campVal = document.getElementById('camp-sel-'+pilgrimId).value;
   const bedVal = document.getElementById('bed-sel-'+pilgrimId).value;
   if(!bedVal) return showToast('اختر رقم السرير أولاً', 'warning');
-  
-  // التحقق من تكرار السرير
-  const duplicate = ALL_DATA.find(p => 
-    String(p['_supabase_id']) !== String(pilgrimId) && 
-    p[fieldKey] === campVal && 
-    p[bedKey] === bedVal
-  );
-  if(duplicate) return showToast('هذا السرير محجوز مسبقاً للحاج: ' + (duplicate['اسم الحاج']||''), 'error', 6000);
-  
-  // التحقق من جنس الحاج ونوع المخيم
+
   const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
-  if(pilgrim && camps) {
-    const camp = camps.find(c=>(c.camp_num||c.name)===campVal);
-    if(camp && camp.camp_type) {
-      const g = pilgrim['الجنس']||'';
-      const isFemale = g==='أنثى'||g==='أنثي'||g==='female'||g==='انثى';
-      if(camp.camp_type==='نساء' && !isFemale) return showToast('لا يمكن تسكين ' + g + ' في مخيم نساء', 'error');
-      if(camp.camp_type==='رجال' && isFemale) return showToast('لا يمكن تسكين ' + g + ' في مخيم رجال', 'error');
-    }
+  const camp    = camps ? camps.find(c=>(c.camp_num||c.name)===campVal) : null;
+  const loc     = location === 'منى' ? 'mina' : 'arafat';
+
+  // قاعدة 3 (Double-booking) — مقارنة بعد تطبيع لتجنّب صيغ مختلفة
+  const normBed = _normalizeBedId(bedVal, campVal);
+  const duplicate = ALL_DATA.find(p =>
+    String(p['_supabase_id']) !== String(pilgrimId) &&
+    p[fieldKey] === campVal &&
+    p[bedKey] &&
+    _normalizeBedId(p[bedKey], campVal) === normBed
+  );
+  if(duplicate) return showToast('السرير محجوز للحاج: ' + (duplicate['اسم الحاج']||''), 'error', 6000);
+
+  // قاعدة 1 (Gender) — error صلب عبر showActionModal
+  if(pilgrim && camp && camp.camp_type && !_campMatchesGenderGlobal(camp.camp_type, _genderOf(pilgrim))){
+    await showActionModal({
+      type:'error',
+      title:'جنس غير مطابق — لا يمكن التسكين',
+      description:'قاعدة شرعية صلبة: لا يُسكَّن حاج في مخيم من جنس مختلف.',
+      items:[
+        { icon:'👤', label:'الحاج:',  value:pilgrim['اسم الحاج']||'—' },
+        { icon:'🏕️', label:'المخيم:', value:campVal+' ('+camp.camp_type+')' },
+        { icon:'⚠️', label:'الموقع:', value:location }
+      ],
+      actions:[{label:'فهمت', value:null, variant:'primary', color:'danger'}]
+    });
+    return;
   }
-  
+
+  // قاعدة 2 (Capacity) — toast
+  const cap = parseInt(camp?.capacity)||0;
+  const occupied = ALL_DATA.filter(p=>p[fieldKey]===campVal && String(p['_supabase_id'])!==String(pilgrimId) && p[bedKey]).length;
+  if(cap > 0 && occupied >= cap) return showToast('المخيم ' + campVal + ' ممتلئ — السعة: ' + cap, 'error');
+
+  // قاعدة 8 (Booking Split) — تحذير إذا النقل يفصل الحاج عن مجموعته
+  const splitCheck = _checkSingleMoveSplit(pilgrimId, campVal, loc);
+  if(splitCheck.willSplit){
+    const campsList = {};
+    splitCheck.inOtherCamps.forEach(m => {
+      const c = m[fieldKey];
+      campsList[c] = (campsList[c]||0) + 1;
+    });
+    const inCampsSummary = Object.entries(campsList).map(([c,n]) => n+' في '+c).join('، ');
+    const decision = await showActionModal({
+      type:'warning',
+      title:'تفكيك مجموعة الحجز',
+      description:'الحاج '+(pilgrim?.['اسم الحاج']||'')+' من مجموعة حجز تحتوي '+splitCheck.groupSize+' أفراد. هذا التغيير سيفصله عن مجموعته.',
+      items:[
+        { icon:'📋', label:'رقم الحجز:',            value:'#'+splitCheck.bookingKey },
+        { icon:'🏕️', label:'الآخرون في:',          value:inCampsSummary || '—' },
+        { icon:'❓', label:'غير مُسكَّنين:',        value:splitCheck.unassigned.length+' حاج' },
+        { icon:'➡️', label:'سينتقل إلى:',           value:campVal+' ('+location+')' }
+      ],
+      actions:[
+        { label:'متابعة الفصل', value:'split', emoji:'⚠️', variant:'primary', color:'warning' },
+        { label:'إلغاء',         value:null,    emoji:'❌', variant:'cancel' }
+      ]
+    });
+    if(decision !== 'split') return;
+  }
+
+  // قواعد 4 + 5 (bed/seat sync + normalization) عبر helper موحّد
+  const idx = ALL_DATA.findIndex(p=>String(p['_supabase_id'])===String(pilgrimId));
+  const pilgrimRec = idx >= 0 ? ALL_DATA[idx] : null;
   const updates = {};
-  updates[fieldKey] = campVal;
-  updates[bedKey] = bedVal;
-  if(location==='منى') { updates.mina_seat = bedVal; }
-  else { updates.arafat_seat = bedVal; }
+  _applyBedAssignment(updates, pilgrimRec, loc, campVal, bedVal);
+
   try {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
-    const idx = ALL_DATA.findIndex(p=>String(p['_supabase_id'])===String(pilgrimId));
-    if(idx>=0) { ALL_DATA[idx][fieldKey]=campVal; ALL_DATA[idx][bedKey]=bedVal; }
     const row = document.getElementById('camp-row-'+pilgrimId);
     if(row) { row.style.background='#e8f8e8'; setTimeout(()=>row.style.background='',2000); }
     showToast('تم حفظ التسكين بنجاح', 'success');
@@ -4385,7 +4426,7 @@ async function removeCampAssign(pilgrimId, location) {
     if(idx>=0) { ALL_DATA[idx][fieldKey]=''; ALL_DATA[idx][bedKey]=''; }
     document.getElementById('camp-row-'+pilgrimId).style.opacity='0.3';
     setTimeout(()=>{ showCampPilgrims(window._campViewData.campNum, location); },500);
-  } catch(e) { alert('خطأ: '+e.message); }
+  } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
 
 function _getLogo() {
@@ -4587,7 +4628,7 @@ async function saveCamp(id) {
   // التحقق من عدم تكرار رقم المخيم في نفس الموقع
   const allCamps = await getCamps();
   const duplicate = allCamps.find(c => (c.camp_num||c.name) === campNum && c.location === location && c.id != id);
-  if(duplicate) return alert('رقم المخيم ' + campNum + ' موجود مسبقاً في موقع ' + location);
+  if(duplicate) return showToast('رقم المخيم ' + campNum + ' موجود مسبقاً في موقع ' + location, 'warning');
   const obj = { camp_num: campNum, name: campNum, location, camp_type: campType, capacity: document.getElementById('m-camp-capacity').value.trim(), notes: document.getElementById('m-camp-notes').value.trim() };
   try {
     if(id) { await window.DB.Camps.update(parseInt(id), obj); }
