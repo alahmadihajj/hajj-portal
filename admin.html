@@ -875,8 +875,13 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 .pt-btn.pt-active{color:var(--brown);border-bottom-color:var(--gold);font-weight:700}
 .pt-btn:hover:not(.pt-active){color:var(--brown-mid)}
 /* Toast Notifications */
-#toast-container { position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:99999; display:flex; flex-direction:column; gap:10px; pointer-events:none; max-width:calc(100vw - 40px); }
-.toast { padding:14px 24px; border-radius:12px; font-size:14px; font-weight:600; font-family:inherit; color:#fff; animation:toastIn 0.3s cubic-bezier(.2,.8,.2,1); display:flex; align-items:center; gap:10px; min-width:260px; max-width:480px; justify-content:center; pointer-events:all; }
+#toast-container { position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:99999; display:flex; flex-direction:column; align-items:center; gap:10px; pointer-events:none; width:auto; max-width:calc(100vw - 24px); }
+.toast { padding:14px 24px; border-radius:12px; font-size:14px; font-weight:600; font-family:inherit; color:#fff; animation:toastIn 0.3s cubic-bezier(.2,.8,.2,1); display:flex; align-items:center; gap:10px; min-width:260px; max-width:480px; justify-content:center; pointer-events:all; box-sizing:border-box; }
+@media (max-width:480px){
+  #toast-container { top:12px; max-width:calc(100vw - 16px); }
+  .toast { min-width:0; width:100%; padding:12px 16px; font-size:13.5px; }
+  .toast-ic { font-size:16px; }
+}
 .toast-success { background:#2e7d32; box-shadow:0 4px 12px rgba(46,125,50,.28), 0 8px 30px rgba(0,0,0,.15); }
 .toast-error   { background:#c00;    box-shadow:0 4px 12px rgba(200,0,0,.28),  0 8px 30px rgba(0,0,0,.15); }
 .toast-warning { background:#c07000; box-shadow:0 4px 12px rgba(192,112,0,.28),0 8px 30px rgba(0,0,0,.15); }
@@ -3123,7 +3128,7 @@ function copyAssemblyMsg() {
   const txt = document.getElementById('assembly-msg-text');
   txt.select();
   document.execCommand('copy');
-  showToast('✅ تم نسخ الرسالة', 'success');
+  showToast('تم نسخ الرسالة', 'success');
 }
 
 async function renderAssembly() {
@@ -3282,7 +3287,7 @@ async function saveAssembly(id) {
   try {
     if(id) { await _apFetch('PATCH', obj, id); }
     else { await _apFetch('POST', obj); }
-    closeModals(); renderAssembly(); showToast('تم الحفظ بنجاح ✅', 'success');
+    closeModals(); renderAssembly(); showToast('تم الحفظ بنجاح', 'success');
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
 
@@ -3654,7 +3659,7 @@ async function quickNusukUpdate(pilgrimId, status, selectEl) {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), { nusuk_card_status: status });
     const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
     if(r) r['حالة بطاقة نسك'] = status;
-    showToast('✅ تم تحديث الحالة', 'success');
+    showToast('تم تحديث الحالة', 'success');
     renderNusukTable(window._nusukFilter);
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
@@ -4019,7 +4024,7 @@ async function saveCampAssign(pilgrimId, location) {
     p[fieldKey] === campVal && 
     p[bedKey] === bedVal
   );
-  if(duplicate) return showToast('⚠️ هذا السرير محجوز مسبقاً للحاج: ' + (duplicate['اسم الحاج']||''), 'error', 6000);
+  if(duplicate) return showToast('هذا السرير محجوز مسبقاً للحاج: ' + (duplicate['اسم الحاج']||''), 'error', 6000);
   
   // التحقق من جنس الحاج ونوع المخيم
   const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
@@ -4681,7 +4686,7 @@ async function applyGPBulk() {
       done++;
     }catch(e){}
   }
-  showToast('تم تفويج '+done+' حاج ✅','success');
+  showToast('تم تفويج '+done+' حاج','success');
   renderGroups();
   _renderGPTable();
 }
@@ -4921,7 +4926,7 @@ async function applyUGBulk() {
       done++;
     }catch(e){}
   }
-  showToast('تم تفويج '+done+' حاج ✅','success');
+  showToast('تم تفويج '+done+' حاج','success');
   renderGroups();
   _renderUGTable();
 }
@@ -4942,7 +4947,7 @@ async function saveUGRow(pid) {
     window._ugModified.delete(String(pid));
     _renderUGTable();
     renderGroups();
-    showToast('تم التفويج ✅','success');
+    showToast('تم التفويج','success');
   } catch(e){showToast('خطأ: '+e.message,'error');}
 }
 
@@ -5667,7 +5672,7 @@ async function savePilgrimPortalSettings() {
     await saveVisibilitySettings();
     const msg = document.getElementById('settings-msg');
     if(msg) { msg.style.display='block'; setTimeout(()=>msg.style.display='none', 3000); }
-    showToast('تم حفظ إعدادات البوابة ✅','success');
+    showToast('تم حفظ إعدادات البوابة','success');
   } catch(e) { showToast('خطأ في الحفظ: '+e.message,'error'); }
 }
 
@@ -5918,7 +5923,7 @@ async function supRegister(id, action) {
     await window.DB.Pilgrims.update(parseInt(id), {[field]:value});
     const p = window._supPilgrims.find(x=>String(x.id)===String(id));
     if(p) p[field]=value;
-    showToast('تم التسجيل ✅', 'success');
+    showToast('تم التسجيل', 'success');
     updateSupStats(); renderSupTable(); supModalSearch();
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
@@ -6011,7 +6016,7 @@ async function confirmSignature() {
     if(p) Object.assign(p, updates);
 
     closeSigModal();
-    showToast('✅ تم تسجيل الاستلام بالتوقيع', 'success');
+    showToast('تم تسجيل الاستلام بالتوقيع', 'success');
     updateSupStats(); renderSupTable();
   } catch(e) { showToast('خطأ في الحفظ: '+e.message, 'error'); }
 }
@@ -6111,7 +6116,7 @@ async function supRegister(id, action) {
     await window.DB.Pilgrims.update(parseInt(id), { [field]: value });
     const p = window._supPilgrims.find(x=>String(x.id)===String(id));
     if(p) p[field] = value;
-    showToast('تم التسجيل بنجاح ✅', 'success');
+    showToast('تم التسجيل بنجاح', 'success');
     updateSupStats();
     renderSupTable();
     supModalSearch();
@@ -6389,7 +6394,7 @@ async function executeImport() {
       updateProgress('تحديث: ' + (row['اسم الحاج']||''));
     }
 
-    showToast('✅ تم الاستيراد بنجاح — ' + total + ' سجل', 'success');
+    showToast('تم الاستيراد بنجاح — ' + total + ' سجل', 'success');
     await loadData();
   loadSavedTheme(); // بعد تحميل بيانات المستخدم
     resetImport();
@@ -6649,7 +6654,7 @@ async function saveTheme() {
       user.theme = themeStr; // تحديث الذاكرة
     }
     applyThemeToPage(theme);
-    showToast('تم حفظ الثيم لحسابك ✅','success');
+    showToast('تم حفظ الثيم لحسابك','success');
   } catch(e) { showToast('خطأ في الحفظ: '+e.message,'error'); }
 }
 
@@ -6840,7 +6845,7 @@ async function saveContentSettings() {
     await window.DB.Settings.set('whatsapp_number', wn);
     const msg = document.getElementById('content-msg');
     if(msg) { msg.style.display='block'; setTimeout(()=>msg.style.display='none', 3000); }
-    showToast('تم حفظ المحتويات ✅','success');
+    showToast('تم حفظ المحتويات','success');
   } catch(e) { showToast('خطأ في الحفظ: '+e.message,'error'); }
 }
 
@@ -6974,7 +6979,7 @@ async function saveDevSettings() {
     // تطبيق الشعار واسم الشركة فوراً
     _applyDevLogo();
     _applyCompanyName(companyName);
-    showToast('✅ تم حفظ إعدادات النظام', 'success');
+    showToast('تم حفظ إعدادات النظام', 'success');
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
 
@@ -7437,7 +7442,7 @@ async function saveAnn(id) {
   if(!body) return showToast('أدخل نص التعميم', 'warning');
   const annType = document.getElementById('m-a-type').value;
   const annCity = document.getElementById('m-a-city').value;
-  if(annType === 'assembly' && !annCity) return showToast('⚠️ يجب اختيار المدينة لتعميمات نقاط التجمع', 'warning');
+  if(annType === 'assembly' && !annCity) return showToast('يجب اختيار المدينة لتعميمات نقاط التجمع', 'warning');
   // تحقق من حالة نقطة التجمع
   if(annType === 'assembly') {
     const apId = parseInt(document.getElementById('m-a-assembly')?.value);
@@ -7721,11 +7726,11 @@ function updateMinaBeds() {
     const isFemale = g==='أنثى'||g==='أنثي'||g==='female'||g==='انثى';
     if(camp.camp_type==='نساء' && !isFemale) {
       campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
-      return showToast('⚠️ مخيم ' + campNum + ' مخصص للنساء — الحاج من الذكور', 'error');
+      return showToast('مخيم ' + campNum + ' مخصص للنساء — الحاج من الذكور', 'error');
     }
     if(camp.camp_type==='رجال' && isFemale) {
       campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
-      return showToast('⚠️ مخيم ' + campNum + ' مخصص للرجال — الحاجة من الإناث', 'error');
+      return showToast('مخيم ' + campNum + ' مخصص للرجال — الحاجة من الإناث', 'error');
     }
   }
 
@@ -7733,7 +7738,7 @@ function updateMinaBeds() {
   const cap = parseInt(camp.capacity)||0;
   if(cap > 0 && bookedMinaBeds.filter(b=>b.startsWith(campNum+'-')).length >= cap) {
     campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
-    return showToast('⚠️ مخيم منى ' + campNum + ' ممتلئ', 'error');
+    return showToast('مخيم منى ' + campNum + ' ممتلئ', 'error');
   }
 
   const campId = camp.camp_num||camp.name;
@@ -7760,11 +7765,11 @@ function updateArafatBeds() {
     const isFemale = g==='أنثى'||g==='أنثي'||g==='female'||g==='انثى';
     if(camp.camp_type==='نساء' && !isFemale) {
       campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
-      return showToast('⚠️ مخيم ' + campNum + ' مخصص للنساء — الحاج من الذكور', 'error');
+      return showToast('مخيم ' + campNum + ' مخصص للنساء — الحاج من الذكور', 'error');
     }
     if(camp.camp_type==='رجال' && isFemale) {
       campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
-      return showToast('⚠️ مخيم ' + campNum + ' مخصص للرجال — الحاجة من الإناث', 'error');
+      return showToast('مخيم ' + campNum + ' مخصص للرجال — الحاجة من الإناث', 'error');
     }
   }
 
@@ -7772,7 +7777,7 @@ function updateArafatBeds() {
   const cap = parseInt(camp.capacity)||0;
   if(cap > 0 && bookedArafatBeds.filter(b=>b.startsWith(campNum+'-')).length >= cap) {
     campSel.value=''; bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
-    return showToast('⚠️ مخيم عرفات ' + campNum + ' ممتلئ', 'error');
+    return showToast('مخيم عرفات ' + campNum + ' ممتلئ', 'error');
   }
 
   const campId = camp.camp_num||camp.name;
@@ -7807,7 +7812,7 @@ async function saveNusukStatus(pilgrimId) {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), { nusuk_card_status: status });
     const r = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
     if(r) r['حالة بطاقة نسك'] = status;
-    showToast('✅ تم تحديث حالة البطاقة', 'success');
+    showToast('تم تحديث حالة البطاقة', 'success');
     closeModals(); render();
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
@@ -7854,7 +7859,7 @@ async function confirmSupAck(pilgrimId) {
     });
     const r = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
     if(r) r['حالة بطاقة نسك'] = 'موجودة لدى المشرف';
-    showToast('✅ تم تسجيل استلام المشرف', 'success');
+    showToast('تم تسجيل استلام المشرف', 'success');
     closeModals(); render();
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
@@ -7913,7 +7918,7 @@ async function confirmPilgrimAck(pilgrimId) {
     });
     const r = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
     if(r) r['حالة بطاقة نسك'] = 'مسلّمة للحاج';
-    showToast('✅ تم تسجيل استلام الحاج', 'success');
+    showToast('تم تسجيل استلام الحاج', 'success');
     closeModals(); render();
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
@@ -7987,25 +7992,54 @@ async function savePilgrimAssign(pilgrimId) {
     if(cap > 0 && occupied >= cap) return showToast('مخيم عرفات ' + arafatCampVal + ' ممتلئ — السعة: ' + cap + ' | المُسكَّنون: ' + occupied, 'error');
   }
 
-  // بناء updates وتحديث الذاكرة — helper يضمن تطبيع + مزامنة bed+seat
+  // 1) Snapshot قبل أي تعديل + بناء candidate بلا mutation
   const idx = ALL_DATA.findIndex(r => String(r['_supabase_id']) === String(pilgrimId));
   const pilgrimRec = idx >= 0 ? ALL_DATA[idx] : null;
-  const updates = {
+  const supervisorName  = document.getElementById('pa-supervisor-name')?.value.trim()  || '';
+  const supervisorPhone = document.getElementById('pa-supervisor-phone')?.value.trim() || '';
+  const candidate = {
     group_num: document.getElementById('pa-group').value,
-    bus_num: document.getElementById('pa-bus').value,
-    supervisor_name: document.getElementById('pa-supervisor-name')?.value.trim()||'',
-    supervisor_phone: document.getElementById('pa-supervisor-phone')?.value.trim()||'',
+    bus_num:   document.getElementById('pa-bus').value,
   };
-  _applyBedAssignment(updates, pilgrimRec, 'mina',   minaCampVal,   minaBedVal);
-  _applyBedAssignment(updates, pilgrimRec, 'arafat', arafatCampVal, arafatBedVal);
+  _applyBedAssignment(candidate, null, 'mina',   minaCampVal,   minaBedVal);
+  _applyBedAssignment(candidate, null, 'arafat', arafatCampVal, arafatBedVal);
+
+  const before = pilgrimRec ? {
+    mina_camp:   pilgrimRec.mina_camp,   mina_bed:   pilgrimRec.mina_bed,   mina_seat:   pilgrimRec.mina_seat,
+    arafat_camp: pilgrimRec.arafat_camp, arafat_bed: pilgrimRec.arafat_bed, arafat_seat: pilgrimRec.arafat_seat,
+    group_num: pilgrimRec['رقم فوج التفويج الخاص بك'],
+    bus_num:   pilgrimRec['رقم الحافلة الخاصة بك']
+  } : {};
+  const updates = {};
+  Object.keys(candidate).forEach(k => {
+    if(_fieldChanged(before[k], candidate[k])) updates[k] = candidate[k];
+  });
+  // المشرف دائماً يُكتب (readonly في UI لكن يتزامن تلقائياً من الحافلة)
+  updates.supervisor_name  = supervisorName;
+  updates.supervisor_phone = supervisorPhone;
+  console.log(`[savePilgrimAssign] ${Object.keys(updates).length - 2}/${Object.keys(candidate).length} حقول سرير/تسكين تغيّرت (+ المشرف دائماً)`);
+
+  // 2) إذا لا شيء تغيّر سوى المشرف بقيم مطابقة: تخطّى DB
+  const supUnchanged = !_fieldChanged(pilgrimRec?.['اسم المشرف الخاص بالحاج'], supervisorName)
+                    && !_fieldChanged(pilgrimRec?.['رقم جوال المشرف'],         supervisorPhone);
+  const nothingChanged = Object.keys(updates).length === 2 && supUnchanged;
+  if(nothingChanged){
+    showToast('لم يتم تغيير شيء', 'info');
+    closeModals();
+    return;
+  }
+
   try {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
-    // تحديث البيانات المحلية لحقول خارج نطاق السرير
+    // 3) تحديث الذاكرة المحلية من updates فقط
     if(pilgrimRec){
-      pilgrimRec['رقم فوج التفويج الخاص بك'] = updates.group_num;
-      pilgrimRec['رقم الحافلة الخاصة بك']    = updates.bus_num;
-      pilgrimRec['اسم المشرف الخاص بالحاج'] = updates.supervisor_name;
-      pilgrimRec['رقم جوال المشرف']         = updates.supervisor_phone;
+      Object.keys(updates).forEach(k => {
+        if(k === 'group_num')         pilgrimRec['رقم فوج التفويج الخاص بك'] = updates[k];
+        else if(k === 'bus_num')      pilgrimRec['رقم الحافلة الخاصة بك']    = updates[k];
+        else if(k === 'supervisor_name')  pilgrimRec['اسم المشرف الخاص بالحاج'] = updates[k];
+        else if(k === 'supervisor_phone') pilgrimRec['رقم جوال المشرف']         = updates[k];
+        else pilgrimRec[k] = updates[k];
+      });
     }
     closeModals();
     showToast('تم التسكين بنجاح', 'success');
@@ -8102,7 +8136,7 @@ async function applyCVBulk() {
       done++;
     }catch(e){ console.error(e); }
   }
-  showToast('تم نقل '+done+' حاج إلى المخيم '+campNum+' ✅','success');
+  showToast('تم نقل '+done+' حاج إلى المخيم '+campNum,'success');
   renderCamps();
   showCampPilgrims(campNum, location);
 }
@@ -8265,7 +8299,7 @@ async function linkPilgrim(anchorId, targetId) {
       const idx = ALL_DATA.findIndex(p=>String(p['_supabase_id'])===String(id));
       if(idx>=0) ALL_DATA[idx]['booking_ref'] = ref;
     });
-    showToast('تم ربط الحجاج ✅','success');
+    showToast('تم ربط الحجاج','success');
     // تحديث النافذة
     showBookingGroup(anchor['رقم الحجز']||'', anchorId, window._bookingCtx);
   } catch(e){ showToast('خطأ: '+e.message,'error'); }
@@ -8278,7 +8312,7 @@ async function unlinkPilgrim(targetId, bookingNum, anchorId) {
     await window.DB.Pilgrims.update(parseInt(targetId), { booking_ref: null });
     const idx = ALL_DATA.findIndex(p=>String(p['_supabase_id'])===String(targetId));
     if(idx>=0) ALL_DATA[idx]['booking_ref'] = '';
-    showToast('تم فك الربط ✅','success');
+    showToast('تم فك الربط','success');
     showBookingGroup(bookingNum, anchorId, window._bookingCtx);
   } catch(e){ showToast('خطأ: '+e.message,'error'); }
 }
@@ -8648,6 +8682,16 @@ function _applyBedAssignment(updates, pilgrimRecord, loc, campVal, bedRaw){
   return { bedNorm };
 }
 
+/**
+ * مقارنة موحّدة لاكتشاف التغيير الفعلي:
+ * null/undefined/فراغ/whitespace-only → تُعامل كمتساوية
+ * @returns {boolean} true فقط إذا تغيّرت القيمة فعلاً
+ */
+function _fieldChanged(before, after){
+  const norm = v => (v === null || v === undefined) ? '' : String(v).trim();
+  return norm(before) !== norm(after);
+}
+
 // أداة اختبار regression لـ _normalizeBedId — شغّلها في console: _testNormalizer()
 window._testNormalizer = function(){
   const STYLE = {
@@ -8721,7 +8765,7 @@ function qeBeds(loc) {
       campSel.value='';
       bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
       bedSel.disabled = true;
-      if(typeof showToast==='function') showToast('⚠️ مخيم '+campNum+' مخصص لـ '+camp.camp_type+' — الجنس غير مطابق','error');
+      if(typeof showToast==='function') showToast('مخيم '+campNum+' مخصص لـ '+camp.camp_type+' — الجنس غير مطابق','error');
       return;
     }
   }
@@ -8746,7 +8790,7 @@ function qeBeds(loc) {
   if(availCount===0 && !currentBedNorm){
     html = '<option value="">لا توجد أسرّة متاحة</option>';
     bedSel.disabled = true;
-    if(typeof showToast==='function') showToast('⚠️ مخيم '+campNum+' ممتلئ','error');
+    if(typeof showToast==='function') showToast('مخيم '+campNum+' ممتلئ','error');
   } else {
     bedSel.disabled = false;
   }
@@ -8764,30 +8808,53 @@ async function saveQuickEdit(pid) {
   const busNum       = document.getElementById('qe-bus')?.value         || null;
   const idx = ALL_DATA.findIndex(p => String(p['_supabase_id']) === String(pid));
   const pilgrim = idx >= 0 ? ALL_DATA[idx] : null;
+
+  // 1) بناء القيم المُرشّحة دون mutation للذاكرة (pilgrim=null في helper)
+  const candidate = {};
+  _applyBedAssignment(candidate, null, 'mina',   minaCamp,   minaBedRaw);
+  _applyBedAssignment(candidate, null, 'arafat', arafatCamp, arafatBedRaw);
+  if(groupNum !== null) candidate.group_num = groupNum || null;
+  if(busNum   !== null) candidate.bus_num   = busNum   || null;
+
+  // 2) مقارنة بالقيم الأصلية وبناء patch
+  const before = pilgrim ? {
+    mina_camp:   pilgrim.mina_camp,   mina_bed:   pilgrim.mina_bed,   mina_seat:   pilgrim.mina_seat,
+    arafat_camp: pilgrim.arafat_camp, arafat_bed: pilgrim.arafat_bed, arafat_seat: pilgrim.arafat_seat,
+    group_num: pilgrim['رقم فوج التفويج الخاص بك'],
+    bus_num:   pilgrim['رقم الحافلة الخاصة بك']
+  } : {};
   const updates = {};
-  // تسكين منى وعرفات عبر helper موحّد (يضمن مزامنة bed+seat+normalize)
-  _applyBedAssignment(updates, pilgrim, 'mina',   minaCamp,   minaBedRaw);
-  _applyBedAssignment(updates, pilgrim, 'arafat', arafatCamp, arafatBedRaw);
-  // الحقول غير المتعلّقة بالسرير
-  if(groupNum !== null) updates.group_num = groupNum || null;
-  if(busNum   !== null) updates.bus_num   = busNum   || null;
+  Object.keys(candidate).forEach(k => {
+    if(_fieldChanged(before[k], candidate[k])) updates[k] = candidate[k];
+  });
+  console.log(`[saveQuickEdit] ${Object.keys(updates).length}/${Object.keys(candidate).length} حقول تغيّرت`);
+
+  // 3) إذا لا تغييرات: توست ثم عودة دون استدعاء DB
+  if(Object.keys(updates).length === 0){
+    showToast('لم يتم تغيير شيء', 'info');
+    if(window._quickEditOpenedFrom === 'booking-group'){ _returnToBookingGroupFromQE(); return; }
+    const bookingNum = window._qeData?.bookingNum;
+    const qectx = window._bookingCtx || 'camp';
+    if(bookingNum || pid) showBookingGroup(bookingNum, pid, qectx); else closeModals();
+    return;
+  }
+
+  // 4) الحفظ + تحديث الذاكرة من updates
   try {
     await window.DB.Pilgrims.update(parseInt(pid), updates);
     if(pilgrim){
-      if(groupNum !== null) pilgrim['رقم فوج التفويج الخاص بك'] = groupNum;
-      if(busNum   !== null) pilgrim['رقم الحافلة الخاصة بك']   = busNum;
+      Object.keys(updates).forEach(k => {
+        if(k === 'group_num')       pilgrim['رقم فوج التفويج الخاص بك'] = updates[k];
+        else if(k === 'bus_num')    pilgrim['رقم الحافلة الخاصة بك']    = updates[k];
+        else                        pilgrim[k] = updates[k];
+      });
     }
     showToast('تم التسكين بنجاح', 'success');
     renderCamps();
-    if(window._quickEditOpenedFrom === 'booking-group'){
-      _returnToBookingGroupFromQE();
-      return;
-    }
-    // دائماً يعود للمرتبطين
+    if(window._quickEditOpenedFrom === 'booking-group'){ _returnToBookingGroupFromQE(); return; }
     const bookingNum = window._qeData?.bookingNum;
-    const qectx = window._bookingCtx||'camp';
-    if(bookingNum||pid) showBookingGroup(bookingNum, pid, qectx);
-    else closeModals();
+    const qectx = window._bookingCtx || 'camp';
+    if(bookingNum || pid) showBookingGroup(bookingNum, pid, qectx); else closeModals();
   } catch(e){ showToast('خطأ: '+e.message,'error'); }
 }
 
@@ -9154,7 +9221,7 @@ async function applyUABulk() {
       done++;
     }catch(e){ console.error(e); }
   }
-  showToast('تم تسكين '+done+' حاج في المخيم '+campNum+' ✅','success');
+  showToast('تم تسكين '+done+' حاج في المخيم '+campNum,'success');
   renderCamps();
   renderUATable();
   checkUABulkCamp();
@@ -9411,12 +9478,12 @@ function updateUABeds(pilgrimId) {
     if(camp.camp_type==='نساء' && !isFemale) {
       campSel.value='';
       bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
-      return showToast('⚠️ مخيم ' + campNum + ' مخصص للنساء — الحاج من الذكور', 'error');
+      return showToast('مخيم ' + campNum + ' مخصص للنساء — الحاج من الذكور', 'error');
     }
     if(camp.camp_type==='رجال' && isFemale) {
       campSel.value='';
       bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
-      return showToast('⚠️ مخيم ' + campNum + ' مخصص للرجال — الحاجة من الإناث', 'error');
+      return showToast('مخيم ' + campNum + ' مخصص للرجال — الحاجة من الإناث', 'error');
     }
   }
 
@@ -9436,7 +9503,7 @@ function updateUABeds(pilgrimId) {
   if(cap > 0 && allBooked.length >= cap) {
     campSel.value='';
     bedSel.innerHTML='<option value="">اختر المخيم أولاً</option>';
-    return showToast('⚠️ مخيم ' + campNum + ' ممتلئ — السعة: ' + cap + ' | المُسكَّنون: ' + allBooked.length, 'error');
+    return showToast('مخيم ' + campNum + ' ممتلئ — السعة: ' + cap + ' | المُسكَّنون: ' + allBooked.length, 'error');
   }
 
   // بناء قائمة الأسرة المتاحة
@@ -9475,24 +9542,39 @@ async function saveUnassignedPilgrim(pilgrimId) {
     }
   }
 
-  // التسكين عبر helper موحّد (يطبِّع ويُزامن bed+seat)
+  // 1) بناء candidate دون mutation ثم مقارنة بالأصل
   const idx = ALL_DATA.findIndex(p => String(p['_supabase_id']) === String(pilgrimId));
   const pilgrimRec = idx >= 0 ? ALL_DATA[idx] : null;
-  const updates = {};
   const loc = location === 'منى' ? 'mina' : 'arafat';
-  _applyBedAssignment(updates, pilgrimRec, loc, campVal, bedVal);
+  const seatKey = loc + '_seat';
+  const candidate = {};
+  _applyBedAssignment(candidate, null, loc, campVal, bedVal);
+
+  const before = pilgrimRec ? {
+    [fieldKey]: pilgrimRec[fieldKey],
+    [bedKey]:   pilgrimRec[bedKey],
+    [seatKey]:  pilgrimRec[seatKey]
+  } : {};
+  const updates = {};
+  Object.keys(candidate).forEach(k => {
+    if(_fieldChanged(before[k], candidate[k])) updates[k] = candidate[k];
+  });
+  console.log(`[saveUnassignedPilgrim] ${Object.keys(updates).length}/${Object.keys(candidate).length} حقول تغيّرت`);
+
+  if(Object.keys(updates).length === 0){
+    showToast('لم يتم تغيير شيء', 'info');
+    return;
+  }
 
   try {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
     // إزالة الصف من قائمة التعديلات غير المحفوظة
     if(window._uaModifiedRows) window._uaModifiedRows.delete(String(pilgrimId));
-    // تمييز الحاج المحفوظ في البيانات المحلية (بالقيمة المُطبَّعة من updates)
+    // تحديث ALL_DATA وقائمة الموقع من updates (قيم مُطبَّعة)
+    if(pilgrimRec) Object.keys(updates).forEach(k => { pilgrimRec[k] = updates[k]; });
     const saved = window._unassignedData.pilgrims.find(p=>String(p['_supabase_id'])===String(pilgrimId));
-    if(saved) {
-      saved[fieldKey] = campVal;
-      saved[bedKey]   = updates[bedKey] ?? bedVal;
-      const seatKey = location === 'منى' ? 'mina_seat' : 'arafat_seat';
-      saved[seatKey] = updates[seatKey] ?? bedVal;
+    if(saved){
+      Object.keys(updates).forEach(k => { saved[k] = updates[k]; });
       saved['__saved'] = true;
     }
     showToast('تم تسكين الحاج بنجاح', 'success');
@@ -10237,10 +10319,10 @@ async function exportCurrentResults() {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    showToast('✅ تم تصدير الملف', 'success');
+    showToast('تم تصدير الملف', 'success');
   } catch (e) {
     console.error(e);
-    showToast('❌ فشل التصدير: ' + (e.message || e), 'error');
+    showToast('فشل التصدير: ' + (e.message || e), 'error');
   }
 }
 
@@ -10253,11 +10335,11 @@ async function exportCurrentResultsPDF() {
       return;
     }
     if (typeof html2canvas === 'undefined' || !window.jspdf) {
-      showToast('❌ مكتبات PDF لم تُحمّل — أعد التحميل', 'error');
+      showToast('مكتبات PDF لم تُحمّل — أعد التحميل', 'error');
       return;
     }
     const bodyEl = document.getElementById('results-body');
-    if (!bodyEl) { showToast('❌ لم يُعثر على محتوى النتائج', 'error'); return; }
+    if (!bodyEl) { showToast('لم يُعثر على محتوى النتائج', 'error'); return; }
 
     showToast('⏳ جاري تجهيز PDF...', 'info');
 
@@ -10529,7 +10611,7 @@ async function exportCurrentResultsPDF() {
 
       const safeName = String(survey.title || 'survey').replace(/[\\/:*?"<>|]/g, '_').slice(0, 50);
       pdf.save(`${safeName}_${new Date().toISOString().slice(0,10)}.pdf`);
-      showToast('✅ تم تصدير PDF', 'success');
+      showToast('تم تصدير PDF', 'success');
     } finally {
       coverEl.remove();
       resultsEl.remove();
@@ -10537,7 +10619,7 @@ async function exportCurrentResultsPDF() {
     }
   } catch (e) {
     console.error(e);
-    showToast('❌ فشل التصدير: ' + (e.message || e), 'error');
+    showToast('فشل التصدير: ' + (e.message || e), 'error');
   }
 }
 
@@ -11103,12 +11185,12 @@ async function saveSurveySettings() {
       try {
         const qs = await window.DB.Surveys.getQuestions(id);
         if (!qs.length) {
-          showToast('⚠️ الاستبيان مفعّل لكن بدون أسئلة — الحاج لن يرى شيئاً', 'warning', 6000);
+          showToast('الاستبيان مفعّل لكن بدون أسئلة — الحاج لن يرى شيئاً', 'warning', 6000);
         }
       } catch (e) {}
     }
 
-    showToast('تم حفظ الإعدادات ✅', 'success');
+    showToast('تم حفظ الإعدادات', 'success');
   } catch (e) {
     showToast('خطأ في الحفظ: ' + (e.message || e), 'error');
   }
@@ -11853,7 +11935,7 @@ async function saveNewSurvey() {
     closeCreateSurvey();
     // إعادة جلب كاملة من DB — يضمن ظهور كل الحقول (emoji، حالات، إلخ) فوراً
     await renderSurveys();
-    showToast('تم إنشاء الاستبيان ✅', 'success');
+    showToast('تم إنشاء الاستبيان', 'success');
     const addQs = await showConfirm('هل تريد إضافة أسئلة الآن؟', 'استبيان جديد', 'نعم، إضافة أسئلة', '#c8971a', '📝');
     if (addQs) openQuestionsManager(created.id);
   } catch (e) {
@@ -11917,7 +11999,7 @@ async function confirmDuplicate() {
     }
     closeDupModal();
     await renderSurveys();
-    showToast('تم النسخ ✅', 'success');
+    showToast('تم النسخ', 'success');
   } catch (e) {
     showToast('خطأ في النسخ: ' + (e.message || e), 'error');
   }
@@ -12053,7 +12135,7 @@ async function confirmImport() {
     }
     closeImportSurvey();
     await renderSurveys();
-    showToast('تم الاستيراد ✅', 'success');
+    showToast('تم الاستيراد', 'success');
   } catch (e) {
     showToast('خطأ في الاستيراد: ' + (e.message || e), 'error');
   }
@@ -12229,6 +12311,17 @@ if (document.readyState === 'loading') {
 } else {
   _applyDevLogo();
   _applyCompanyName('');
+}
+
+// اختبار تلقائي في DEV mode فقط — يكشف regression في _normalizeBedId عند التحميل المحلي
+if(location.hostname === 'localhost' || location.hostname === '127.0.0.1'){
+  setTimeout(() => {
+    if(typeof window._testNormalizer === 'function'){
+      console.log('%c🧪 تشغيل اختبارات التطبيع التلقائية (DEV mode)...',
+        'background:#1a5fa8;color:#fff;padding:6px 12px;border-radius:6px;font-weight:bold');
+      window._testNormalizer();
+    }
+  }, 1500);
 }
 
 </script>
