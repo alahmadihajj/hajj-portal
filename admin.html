@@ -2515,8 +2515,16 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
         <select id="f-type" onchange="applyFilters()">
           <option value="">الكل</option><option>حاج رئيسي</option><option>مرافق</option>
         </select>
+        <label>الجنس:</label>
+        <select id="f-gender" onchange="applyFilters()">
+          <option value="">الكل</option>
+          <option value="M">👨 ذكر</option>
+          <option value="F">👩 أنثى</option>
+        </select>
         <label>الجنسية:</label>
         <select id="f-nat" onchange="applyFilters()"></select>
+        <label>المدينة:</label>
+        <select id="f-city" onchange="applyFilters()"></select>
         <label>المتغيرات:</label>
         <select id="f-changelog" onchange="applyFilters()">
           <option value="">الكل</option>
@@ -2685,10 +2693,26 @@ const PAGE_SIZE = 25;
 let filtered = [...ALL_DATA];
 let currentPage = 1;
 
-// Populate nationality filter
-const nats = [...new Set(ALL_DATA.map(r => r['الجنسية']))].sort();
-const natSel = document.getElementById('f-nat');
-natSel.innerHTML = '<option value="">كل الجنسيات</option>' + nats.map(n => `<option>${n}</option>`).join('');
+/**
+ * يملأ خيارات فلتر الجنسية والمدينة من ALL_DATA — يُستدعى بعد loadData.
+ * يحترم الاختيار الحالي إذا كانت القيمة لا تزال موجودة في الخيارات الجديدة.
+ */
+function _populateFilterOptions(){
+  const natSel = document.getElementById('f-nat');
+  if(natSel){
+    const nats = [...new Set(ALL_DATA.map(r => r['الجنسية']).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar'));
+    const curr = natSel.value;
+    natSel.innerHTML = '<option value="">كل الجنسيات</option>' + nats.map(n => `<option>${n}</option>`).join('');
+    if(curr && nats.includes(curr)) natSel.value = curr;
+  }
+  const citySel = document.getElementById('f-city');
+  if(citySel){
+    const cities = [...new Set(ALL_DATA.map(r => r['المدينة']).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar'));
+    const curr = citySel.value;
+    citySel.innerHTML = '<option value="">كل المدن</option>' + cities.map(c => `<option>${c}</option>`).join('');
+    if(curr && cities.includes(curr)) citySel.value = curr;
+  }
+}
 
 function updateStats(data) {
   animateCounter('s-total', data.length);
@@ -2762,6 +2786,7 @@ async function loadData() {
     });
     buildThead();
     initTableDrag();
+    _populateFilterOptions();
     applyFilters();
     _loadSystemGroups();
     console.log('✅ تم تحميل', ALL_DATA.length, 'حاج من Supabase');
@@ -2774,15 +2799,19 @@ async function loadData() {
 function applyFilters() {
   const search = document.getElementById('f-search').value.toLowerCase();
   const status = document.getElementById('f-status').value;
-  const pay = document.getElementById('f-pay').value;
-  const type = document.getElementById('f-type').value;
-  const nat = document.getElementById('f-nat').value;
+  const pay    = document.getElementById('f-pay').value;
+  const type   = document.getElementById('f-type').value;
+  const gender = document.getElementById('f-gender')?.value || '';
+  const nat    = document.getElementById('f-nat').value;
+  const city   = document.getElementById('f-city')?.value || '';
   filtered = ALL_DATA.filter(r => {
     if (search && !String(r['اسم الحاج']).toLowerCase().includes(search) && !String(r['رقم الهوية']).includes(search) && !String(r['رقم الحجز']).includes(search)) return false;
     if (status && r['حالة الحجز'] !== status) return false;
     if (pay && r['حالة الدفع'] !== pay) return false;
     if (type && r['نوع الحاج'] !== type) return false;
+    if (gender && _genderOf(r) !== gender) return false;
     if (nat && r['الجنسية'] !== nat) return false;
+    if (city && r['المدينة'] !== city) return false;
     const cl = document.getElementById('f-changelog').value;
     if (cl === 'has' && !r['change_log']) return false;
     if (cl === 'none' && r['change_log']) return false;
@@ -2798,7 +2827,9 @@ function resetFilters() {
   document.getElementById('f-status').value = '';
   document.getElementById('f-pay').value = '';
   document.getElementById('f-type').value = '';
+  const gEl = document.getElementById('f-gender'); if(gEl) gEl.value = '';
   document.getElementById('f-nat').value = '';
+  const cEl = document.getElementById('f-city'); if(cEl) cEl.value = '';
   document.getElementById('f-changelog').value = '';
   hiddenCols = new Set(TABLE_COLS.filter(c=>!c.fixed&&!c.def).map(c=>c.id));
   saveHiddenCols();
@@ -2823,7 +2854,7 @@ function toggleFiltersPanel(){
 function updateActiveFiltersCount(){
   const badge = document.getElementById('active-filters-count');
   if(!badge) return;
-  const ids = ['f-search','f-status','f-pay','f-type','f-nat','f-changelog'];
+  const ids = ['f-search','f-status','f-pay','f-type','f-gender','f-nat','f-city','f-changelog'];
   let n = 0;
   ids.forEach(id=>{
     const el = document.getElementById(id);
