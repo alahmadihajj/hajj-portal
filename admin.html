@@ -7992,6 +7992,22 @@ async function savePilgrimAssign(pilgrimId) {
     if(cap > 0 && occupied >= cap) return showToast('مخيم عرفات ' + arafatCampVal + ' ممتلئ — السعة: ' + cap + ' | المُسكَّنون: ' + occupied, 'error');
   }
 
+  // Validation: camp و bed يجب أن يكونا متزامنَين في كل موقع
+  const minaCampSet2   = !!(minaCampVal   && String(minaCampVal).trim());
+  const minaBedSet2    = !!(minaBedVal    && String(minaBedVal).trim());
+  const arafatCampSet2 = !!(arafatCampVal && String(arafatCampVal).trim());
+  const arafatBedSet2  = !!(arafatBedVal  && String(arafatBedVal).trim());
+  if(minaCampSet2 !== minaBedSet2){
+    return showToast(minaCampSet2
+      ? 'يرجى اختيار السرير في مخيم منى'
+      : 'يرجى اختيار مخيم منى قبل السرير', 'warning');
+  }
+  if(arafatCampSet2 !== arafatBedSet2){
+    return showToast(arafatCampSet2
+      ? 'يرجى اختيار السرير في مخيم عرفات'
+      : 'يرجى اختيار مخيم عرفات قبل السرير', 'warning');
+  }
+
   // 1) Snapshot قبل أي تعديل + بناء candidate بلا mutation
   const idx = ALL_DATA.findIndex(r => String(r['_supabase_id']) === String(pilgrimId));
   const pilgrimRec = idx >= 0 ? ALL_DATA[idx] : null;
@@ -8003,6 +8019,16 @@ async function savePilgrimAssign(pilgrimId) {
   };
   _applyBedAssignment(candidate, null, 'mina',   minaCampVal,   minaBedVal);
   _applyBedAssignment(candidate, null, 'arafat', arafatCampVal, arafatBedVal);
+
+  // Cross-camp guard: تغيير مخيم + سرير فارغ → فرض null صريح (يمسح bed+seat القديمَين)
+  const origMinaCamp2   = pilgrimRec?.mina_camp   || null;
+  const origArafatCamp2 = pilgrimRec?.arafat_camp || null;
+  if(minaCampVal !== null && minaCampVal !== origMinaCamp2 && !minaBedVal){
+    candidate.mina_bed = null;  candidate.mina_seat = null;
+  }
+  if(arafatCampVal !== null && arafatCampVal !== origArafatCamp2 && !arafatBedVal){
+    candidate.arafat_bed = null; candidate.arafat_seat = null;
+  }
 
   const before = pilgrimRec ? {
     mina_camp:   pilgrimRec.mina_camp,   mina_bed:   pilgrimRec.mina_bed,   mina_seat:   pilgrimRec.mina_seat,
@@ -8024,7 +8050,7 @@ async function savePilgrimAssign(pilgrimId) {
                     && !_fieldChanged(pilgrimRec?.['رقم جوال المشرف'],         supervisorPhone);
   const nothingChanged = Object.keys(updates).length === 2 && supUnchanged;
   if(nothingChanged){
-    showToast('لم يتم تغيير شيء', 'info');
+    showToast('لا يوجد ما يُحفظ', 'info');
     closeModals();
     return;
   }
@@ -8042,7 +8068,10 @@ async function savePilgrimAssign(pilgrimId) {
       });
     }
     closeModals();
-    showToast('تم التسكين بنجاح', 'success');
+    // استثنِ supervisor من الملخص إذا لم يتغيّر فعلاً
+    const excludeFromSummary = supUnchanged ? ['supervisor_name','supervisor_phone'] : [];
+    const summary = _summarizeUpdates(updates, excludeFromSummary);
+    showToast(summary ? 'تم تحديث: ' + summary : 'تم الحفظ', 'success');
     // تحديث عرض المخيمات تلقائياً
     renderCamps();
   } catch(e) {
@@ -8697,6 +8726,33 @@ function _fieldChanged(before, after){
   return norm(before) !== norm(after);
 }
 
+// خريطة أسماء الحقول لملخّص التوست — حقول متعدّدة تُدمج في فئة واحدة (Set يمنع التكرار)
+const FIELD_LABELS = {
+  mina_camp:   'مخيم منى',   mina_bed:   'مخيم منى',   mina_seat:   'مخيم منى',
+  arafat_camp: 'مخيم عرفات', arafat_bed: 'مخيم عرفات', arafat_seat: 'مخيم عرفات',
+  group_num:        'الفوج',
+  bus_num:          'الحافلة',
+  supervisor_name:  'المشرف',
+  supervisor_phone: 'المشرف'
+};
+
+/**
+ * يبني ملخّصاً نصياً للحقول المُحدَّثة لعرضه في toast النجاح.
+ * @param {Object} updates — كائن التحديثات المُرسل لـ DB
+ * @param {Array<string>} [excludeKeys] — مفاتيح تُستثنى (مثل supervisor إذا لم يتغيّر فعلاً)
+ * @returns {string} نص عربي مفصول بفاصلة (أو '' إذا فارغ)
+ */
+function _summarizeUpdates(updates, excludeKeys){
+  const ex = new Set(excludeKeys || []);
+  const labels = new Set();
+  Object.keys(updates || {}).forEach(k => {
+    if(ex.has(k)) return;
+    const label = FIELD_LABELS[k];
+    if(label) labels.add(label);
+  });
+  return [...labels].join('، ');
+}
+
 // أداة اختبار regression لـ _normalizeBedId — شغّلها في console: _testNormalizer()
 window._testNormalizer = function(){
   const STYLE = {
@@ -8819,6 +8875,23 @@ async function saveQuickEdit(pid) {
   const arafatBedRaw = document.getElementById('qe-arafat-bed')?.value  || null;
   const groupNum     = document.getElementById('qe-group')?.value       || null;
   const busNum       = document.getElementById('qe-bus')?.value         || null;
+
+  // Validation: camp و bed يجب أن يكونا متزامنَين (كلاهما موجود أو كلاهما فارغ)
+  const minaCampSet   = !!(minaCamp   && String(minaCamp).trim());
+  const minaBedSet    = !!(minaBedRaw && String(minaBedRaw).trim());
+  const arafatCampSet = !!(arafatCamp   && String(arafatCamp).trim());
+  const arafatBedSet  = !!(arafatBedRaw && String(arafatBedRaw).trim());
+  if(minaCampSet !== minaBedSet){
+    return showToast(minaCampSet
+      ? 'يرجى اختيار السرير في مخيم منى'
+      : 'يرجى اختيار مخيم منى قبل السرير', 'warning');
+  }
+  if(arafatCampSet !== arafatBedSet){
+    return showToast(arafatCampSet
+      ? 'يرجى اختيار السرير في مخيم عرفات'
+      : 'يرجى اختيار مخيم عرفات قبل السرير', 'warning');
+  }
+
   const idx = ALL_DATA.findIndex(p => String(p['_supabase_id']) === String(pid));
   const pilgrim = idx >= 0 ? ALL_DATA[idx] : null;
 
@@ -8826,6 +8899,17 @@ async function saveQuickEdit(pid) {
   const candidate = {};
   _applyBedAssignment(candidate, null, 'mina',   minaCamp,   minaBedRaw);
   _applyBedAssignment(candidate, null, 'arafat', arafatCamp, arafatBedRaw);
+
+  // Cross-camp guard: تغيير مخيم + سرير فارغ → فرض null صريح (يمسح bed+seat القديمَين)
+  const originalMinaCamp   = pilgrim?.mina_camp   || null;
+  const originalArafatCamp = pilgrim?.arafat_camp || null;
+  if(minaCamp !== null && minaCamp !== originalMinaCamp && !minaBedRaw){
+    candidate.mina_bed = null;  candidate.mina_seat = null;
+  }
+  if(arafatCamp !== null && arafatCamp !== originalArafatCamp && !arafatBedRaw){
+    candidate.arafat_bed = null; candidate.arafat_seat = null;
+  }
+
   if(groupNum !== null) candidate.group_num = groupNum || null;
   if(busNum   !== null) candidate.bus_num   = busNum   || null;
 
@@ -8844,7 +8928,7 @@ async function saveQuickEdit(pid) {
 
   // 3) إذا لا تغييرات: توست ثم عودة دون استدعاء DB
   if(Object.keys(updates).length === 0){
-    showToast('لم يتم تغيير شيء', 'info');
+    showToast('لا يوجد ما يُحفظ', 'info');
     if(window._quickEditOpenedFrom === 'booking-group'){ _returnToBookingGroupFromQE(); return; }
     const bookingNum = window._qeData?.bookingNum;
     const qectx = window._bookingCtx || 'camp';
@@ -8862,7 +8946,8 @@ async function saveQuickEdit(pid) {
         else                        pilgrim[k] = updates[k];
       });
     }
-    showToast('تم التسكين بنجاح', 'success');
+    const summary = _summarizeUpdates(updates);
+    showToast(summary ? 'تم تحديث: ' + summary : 'تم الحفظ', 'success');
     renderCamps();
     if(window._quickEditOpenedFrom === 'booking-group'){ _returnToBookingGroupFromQE(); return; }
     const bookingNum = window._qeData?.bookingNum;
@@ -9575,7 +9660,7 @@ async function saveUnassignedPilgrim(pilgrimId) {
   console.log(`[saveUnassignedPilgrim] ${Object.keys(updates).length}/${Object.keys(candidate).length} حقول تغيّرت`);
 
   if(Object.keys(updates).length === 0){
-    showToast('لم يتم تغيير شيء', 'info');
+    showToast('لا يوجد ما يُحفظ', 'info');
     return;
   }
 
@@ -9590,7 +9675,8 @@ async function saveUnassignedPilgrim(pilgrimId) {
       Object.keys(updates).forEach(k => { saved[k] = updates[k]; });
       saved['__saved'] = true;
     }
-    showToast('تم تسكين الحاج بنجاح', 'success');
+    const summary = _summarizeUpdates(updates);
+    showToast(summary ? 'تم تحديث: ' + summary : 'تم التسكين', 'success');
     // تحديث الصف نفسه مباشرة
     const row = document.getElementById('unassigned-row-'+pilgrimId);
     if(row) {
