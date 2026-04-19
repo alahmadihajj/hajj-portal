@@ -8546,7 +8546,12 @@ async function openPilgrimQuickEdit(pid) {
     const camp = camps.find(c=>(c.camp_num||c.name)===campNum);
     if(!camp) return '<option value="">—</option>';
     const cap = parseInt(camp.capacity)||0;
-    const selNorm = _normalizeBedId(selected, campNum);
+    // حماية cross-camp: لا تُطبِّع "selected" إلا إذا ينتمي لنفس المخيم المطلوب
+    // (دفاع عميق — الفتح الابتدائي آمن لكن مبدأ الاتساق يستدعي نفس الحماية)
+    const originalCamp = p ? (p[fk]||'') : '';
+    const selNorm = (originalCamp && originalCamp === campNum)
+      ? _normalizeBedId(selected, campNum)
+      : '';
     const bookedSet = new Set(
       ALL_DATA
         .filter(x => x[fk]===campNum && x[bk] && String(x['_supabase_id'])!==String(pid))
@@ -8715,7 +8720,12 @@ window._testNormalizer = function(){
     [undefined,  '101',  '',       'undefined'],
     ['  42  ',   '101',  '101-42', 'مسافات محيطة'],
     ['101.5',    '101',  '101-5',  'نقطة عشرية'],
-    ['5',        'A-10', 'A-10-5', 'مخيم بحرف وشرطة']
+    ['5',        'A-10', 'A-10-5', 'مخيم بحرف وشرطة'],
+    // ⚠️ حالات cross-camp — توثّق السلوك الحالي (ليست bug في _normalizeBedId نفسها)
+    // الحماية الصحيحة في موقع الاستخدام: قارن pilgrim[camp_field] === campNum قبل التطبيع
+    // راجع qeBeds/bedOpts في openPilgrimQuickEdit — v15.2
+    ['A-5',      'B',    'B-5',    '⚠️ cross-camp: سرير من A يُطبَّع ضد B (سلوك خطر — حُمي في موقع الاستخدام)'],
+    ['101-3',    '202',  '202-3',  '⚠️ cross-camp: سرير من 101 يُطبَّع ضد 202 (نفس التحذير)']
   ];
   console.log('%c🧪 اختبار _normalizeBedId', STYLE.title);
   let pass = 0, fail = 0;
@@ -8770,8 +8780,13 @@ function qeBeds(loc) {
     }
   }
   const cap = parseInt(camp.capacity)||0;
+  // حماية cross-camp: السرير "الحالي" صالح فقط إذا كان المخيم المختار = مخيم الحاج الأصلي
+  // بدون هذا الفحص، _normalizeBedId("A-5","B") يُرجع "B-5" زائفاً ويَتدخّل في القائمة الجديدة
+  const originalCamp   = pilgrim ? (pilgrim[fk]||'') : '';
   const currentBedRaw  = pilgrim ? (pilgrim[bk]||'') : '';
-  const currentBedNorm = _normalizeBedId(currentBedRaw, campNum);
+  const currentBedNorm = (originalCamp && originalCamp === campNum)
+    ? _normalizeBedId(currentBedRaw, campNum)
+    : '';
   const bookedSet = new Set(
     ALL_DATA
       .filter(x => x[fk]===campNum && x[bk] && String(x['_supabase_id'])!==String(pid))
@@ -8794,8 +8809,6 @@ function qeBeds(loc) {
   } else {
     bedSel.disabled = false;
   }
-  // TODO مؤقت — احذف بعد التحقق
-  try{ console.log('[qeBeds]', loc, { campNum, currentBedRaw, currentBedNorm, booked:[...bookedSet], availCount, cap }); }catch(_){}
   bedSel.innerHTML = html;
 }
 
