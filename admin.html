@@ -9325,44 +9325,102 @@ async function exportCurrentResultsPDF() {
       showToast('❌ مكتبات PDF لم تُحمّل — أعد التحميل', 'error');
       return;
     }
-    const element = document.getElementById('results-body');
-    if (!element) { showToast('❌ لم يُعثر على محتوى النتائج', 'error'); return; }
+    const bodyEl = document.getElementById('results-body');
+    if (!bodyEl) { showToast('❌ لم يُعثر على محتوى النتائج', 'error'); return; }
 
     showToast('⏳ جاري تجهيز PDF...', 'info');
 
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight
-    });
+    // ===== بناء صفحة الغلاف off-screen =====
+    const companyName = (typeof _getCompanyName === 'function' ? _getCompanyName() : '') || 'بوابة الحاج';
+    const license     = (typeof _getLicense === 'function' ? _getLicense() : '') || '';
+    const logoHTML    = (typeof _buildPrintLogoHTML === 'function')
+                        ? _buildPrintLogoHTML(120)
+                        : '<div style="font-size:100px;text-align:center">🕋</div>';
+    const respCount   = data.responses.length;
+    const surveyTitle = survey.title || 'استبيان';
+    const today       = new Date();
+    const dateStr     = today.toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric' });
 
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-    const pdfWidth  = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const margin = 20;
-    const imgWidth  = pdfWidth - margin * 2;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const imgData = canvas.toDataURL('image/png');
+    const coverEl = document.createElement('div');
+    coverEl.setAttribute('dir', 'rtl');
+    coverEl.style.cssText = 'position:fixed;top:-9999px;left:0;width:800px;height:1120px;background:#fff;padding:80px 60px;font-family:inherit;color:#3d2000;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between';
+    coverEl.innerHTML = `
+      <div>
+        <div style="text-align:center;margin-top:20px">${logoHTML}</div>
+        <div style="text-align:center;margin-top:28px;font-size:30px;font-weight:800">${companyName}</div>
+        ${license ? `<div style="text-align:center;margin-top:10px;font-size:14px;color:#888">🏅 ترخيص رقم: ${license}</div>` : ''}
+        <div style="height:2px;background:linear-gradient(90deg,transparent,#c8971a,transparent);margin:50px 60px"></div>
+        <div style="text-align:center;margin-top:50px">
+          <div style="font-size:15px;color:#888;letter-spacing:2px">تقرير نتائج استبيان</div>
+          <div style="font-size:32px;font-weight:800;margin-top:18px;line-height:1.5;padding:0 20px">${surveyTitle}</div>
+        </div>
+        <div style="margin-top:70px;display:flex;justify-content:center;gap:80px">
+          <div style="text-align:center">
+            <div style="font-size:44px;font-weight:800;color:#c8971a;line-height:1">${respCount}</div>
+            <div style="font-size:13px;color:#888;margin-top:8px">عدد المستجيبين</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:15px;font-weight:700;color:#3d2000;padding-top:16px">${dateStr}</div>
+            <div style="font-size:13px;color:#888;margin-top:8px">تاريخ التقرير</div>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;padding-top:30px;border-top:1px solid #eee">
+        <div style="font-size:12px;color:#aaa">📋 بوابة الحاج — نظام إدارة الاستبيانات</div>
+      </div>
+    `;
+    document.body.appendChild(coverEl);
 
-    let heightLeft = imgHeight;
-    let position = margin;
-    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-    heightLeft -= (pdfHeight - margin * 2);
+    try {
+      const canvasOpts = { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false };
+      const coverCanvas = await html2canvas(coverEl, canvasOpts);
+      const bodyCanvas  = await html2canvas(bodyEl, Object.assign({}, canvasOpts, {
+        windowWidth:  bodyEl.scrollWidth,
+        windowHeight: bodyEl.scrollHeight
+      }));
 
-    while (heightLeft > 0) {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+      const pdfWidth  = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 20;
+      const imgWidth = pdfWidth - margin * 2;
+
+      // --- صفحة 1: الغلاف ---
+      const coverImg = coverCanvas.toDataURL('image/png');
+      const coverH = Math.min((coverCanvas.height * imgWidth) / coverCanvas.width, pdfHeight - margin * 2);
+      pdf.addImage(coverImg, 'PNG', margin, margin, imgWidth, coverH);
+
+      // --- صفحات 2+: التحليل ---
+      const bodyImg = bodyCanvas.toDataURL('image/png');
+      const bodyH = (bodyCanvas.height * imgWidth) / bodyCanvas.width;
+      let heightLeft = bodyH;
+      let position = margin;
       pdf.addPage();
-      position = margin - (imgHeight - heightLeft);
-      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+      pdf.addImage(bodyImg, 'PNG', margin, position, imgWidth, bodyH);
       heightLeft -= (pdfHeight - margin * 2);
-    }
+      while (heightLeft > 0) {
+        pdf.addPage();
+        position = margin - (bodyH - heightLeft);
+        pdf.addImage(bodyImg, 'PNG', margin, position, imgWidth, bodyH);
+        heightLeft -= (pdfHeight - margin * 2);
+      }
 
-    const safeName = String(survey.title || 'survey').replace(/[\\/:*?"<>|]/g, '_').slice(0, 50);
-    pdf.save(`${safeName}_${new Date().toISOString().slice(0,10)}.pdf`);
-    showToast('✅ تم تصدير PDF', 'success');
+      // --- أرقام الصفحات (Latin — آمن عبر jsPDF) ---
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        pdf.setPage(p);
+        pdf.setFontSize(9);
+        pdf.setTextColor(150);
+        pdf.text(`${p} / ${totalPages}`, pdfWidth / 2, pdfHeight - 10, { align: 'center' });
+      }
+
+      const safeName = String(survey.title || 'survey').replace(/[\\/:*?"<>|]/g, '_').slice(0, 50);
+      pdf.save(`${safeName}_${new Date().toISOString().slice(0,10)}.pdf`);
+      showToast('✅ تم تصدير PDF', 'success');
+    } finally {
+      coverEl.remove();
+    }
   } catch (e) {
     console.error(e);
     showToast('❌ فشل التصدير: ' + (e.message || e), 'error');
