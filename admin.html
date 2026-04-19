@@ -401,6 +401,55 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 }
 .booking-group .bg-close-btn:hover{background:#eaeaea}
 
+/* Bulk bar: شريط الإجراء الجماعي داخل النافذة — sticky ليبقى مرئياً عند التمرير */
+.booking-group .bg-bulk-bar{
+  display:flex; align-items:center; flex-wrap:wrap; gap:8px;
+  padding:10px 14px; margin-bottom:12px;
+  background:var(--surface-2, #fff8e8);
+  border:1.5px solid var(--gold, #c8971a);
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+  position:sticky; top:0; z-index:10;
+  animation:bgBoxRise .22s cubic-bezier(.2,.8,.2,1);
+}
+.booking-group .bg-bulk-count{
+  font-size:13px; font-weight:700; color:var(--brown, #7a4500);
+  white-space:nowrap;
+}
+.booking-group .bg-bulk-select{
+  flex:0 1 auto; min-width:140px; padding:8px 10px;
+  border:1.5px solid var(--border, #e0d5c5); border-radius:8px;
+  font-size:12.5px; font-family:inherit; background:#fff;
+  transition:border-color .2s ease;
+}
+.booking-group .bg-bulk-select:focus{outline:none; border-color:var(--gold,#c8971a)}
+.booking-group .bg-bulk-apply{
+  padding:8px 18px; background:var(--brown, #7a4500); color:#fff;
+  border:none; border-radius:8px;
+  font-size:12.5px; font-weight:700; font-family:inherit;
+  cursor:pointer; min-height:36px;
+  transition:background .2s ease;
+}
+.booking-group .bg-bulk-apply:hover{background:#5a3000}
+.booking-group .bg-bulk-cancel{
+  padding:8px 14px; background:#f5f5f5; color:#555;
+  border:1px solid var(--border, #e0d5c5); border-radius:8px;
+  font-size:12.5px; font-family:inherit; cursor:pointer; min-height:36px;
+  transition:background .2s ease;
+}
+.booking-group .bg-bulk-cancel:hover{background:#eaeaea}
+
+/* Checkbox عمود الجدول (Desktop) */
+.booking-group .bg-check-col{width:36px; text-align:center; padding:8px 6px}
+.booking-group .bg-row-check,
+.booking-group #bg-check-all{
+  cursor:pointer; width:16px; height:16px;
+  accent-color:var(--gold, #c8971a);
+}
+
+/* زر تحديد الكل للجوال — يظهر فقط في الموبايل */
+.booking-group .bg-mobile-select-all{display:none}
+
 @media (max-width:768px){
   .modal-box.booking-group{
     width:95%!important;max-width:95vw!important;
@@ -415,9 +464,15 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   .booking-group .bg-desktop-table{display:none}
   .booking-group .bg-mobile-cards{display:flex;flex-direction:column;gap:10px}
   .booking-group .bg-card{
+    position:relative;
     background:#fff;border:1px solid #e0d5c5;border-radius:12px;
     padding:14px;
     box-shadow:0 2px 6px rgba(0,0,0,.05);
+  }
+  .booking-group .bg-card-check{
+    position:absolute; top:12px; left:12px;
+    width:20px; height:20px; cursor:pointer;
+    accent-color:var(--gold, #c8971a);
   }
   .booking-group .bg-card.bg-card-me{
     border:2px solid #c8971a;
@@ -427,6 +482,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   .booking-group .bg-card-header{
     display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
     margin-bottom:8px;
+    padding-left:36px; /* مساحة للـ checkbox */
   }
   .booking-group .bg-card-name{
     font-size:15px;font-weight:800;color:#3d2000;
@@ -459,6 +515,35 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   .booking-group .bg-close-btn{
     flex:1 1 auto;padding:12px;font-size:14px;min-height:48px;
   }
+  /* Bulk bar الجوال: عمودي + عرض كامل */
+  .booking-group .bg-bulk-bar{
+    flex-direction:column; align-items:stretch; gap:8px;
+    padding:12px; margin-bottom:12px;
+    background:var(--surface-2, #fff8e8);
+    border-color:var(--gold, #c8971a);
+  }
+  .booking-group .bg-bulk-count{text-align:center; padding:4px 0; font-size:14px}
+  .booking-group .bg-bulk-select,
+  .booking-group .bg-bulk-apply,
+  .booking-group .bg-bulk-cancel{
+    width:100%; min-height:44px; font-size:14px;
+  }
+  /* زر تحديد الكل المستقل للجوال */
+  .booking-group .bg-mobile-select-all{
+    display:block; margin-bottom:10px;
+  }
+  .booking-group .bg-select-all-btn{
+    width:100%; padding:10px; min-height:44px;
+    background:var(--surface, #fff);
+    border:1.5px dashed var(--gold, #c8971a);
+    border-radius:10px;
+    font-size:13.5px; font-weight:700; font-family:inherit;
+    color:var(--brown, #7a4500);
+    cursor:pointer;
+    transition:background .2s ease;
+  }
+  .booking-group .bg-select-all-btn:hover,
+  .booking-group .bg-select-all-btn:active{background:#fff8e8}
 }
 .modal-title{font-size:17px;font-weight:700;color:#3d2000;margin-bottom:20px}
 .form-row{margin-bottom:14px}
@@ -3325,50 +3410,45 @@ function clearDataSelection() {
   updateDataBulkBar();
 }
 
-function updateDataBulkOptions() {
-  const field = document.getElementById('data-bulk-field').value;
-  const valSel = document.getElementById('data-bulk-value');
+/**
+ * Helper مشترك: يبني خيارات قيمة الحقل في أي bulk bar.
+ * يدعم static (ثلاثة حقول) + dynamic (حافلة/فوج) + async (مخيم منى/عرفات).
+ * يُستدعى من updateDataBulkOptions و updateBGBulkOptions.
+ */
+function _buildBulkValueOptions(field, valSel){
+  if(!valSel) return;
   const staticOpts = {
     bus_status: ['ركب', 'لم يركب'],
     camp_status: ['حضر', 'لم يصل'],
     nusuk_card_status: ['لم تطبع','في الطباعة','موجودة لدى الإدارة','موجودة لدى المشرف','مسلّمة للحاج']
   };
-  if(staticOpts[field]) {
+  if(staticOpts[field]){
     valSel.innerHTML = '<option value="">— اختر القيمة —</option>' +
       staticOpts[field].map(v=>`<option value="${v}">${v}</option>`).join('');
     valSel.disabled = false;
-  } else if(field === 'bus_num') {
+  } else if(field === 'bus_num'){
     const buses = [...new Set(ALL_DATA.map(p=>p['رقم الحافلة الخاصة بك']).filter(Boolean))].sort((a,b)=>Number(a)-Number(b));
     valSel.innerHTML = '<option value="">— اختر الحافلة —</option>' +
       buses.map(b=>`<option value="${b}">حافلة ${b}</option>`).join('');
     valSel.disabled = false;
-  } else if(field === 'group_num') {
+  } else if(field === 'group_num'){
     const groups = [...new Set(ALL_DATA.map(p=>p['رقم فوج التفويج الخاص بك']).filter(Boolean))].sort();
     valSel.innerHTML = '<option value="">— اختر الفوج —</option>' +
       groups.map(g=>`<option value="${g}">فوج ${g}</option>`).join('');
     valSel.disabled = false;
-  } else if(field === 'mina_camp') {
+  } else if(field === 'mina_camp' || field === 'arafat_camp'){
+    const loc = field === 'mina_camp' ? 'منى' : 'عرفات';
+    const fk  = field === 'mina_camp' ? 'mina_camp' : 'arafat_camp';
+    const bk  = field === 'mina_camp' ? 'mina_bed' : 'arafat_bed';
     valSel.innerHTML = '<option value="">— جاري التحميل —</option>';
     valSel.disabled = false;
     window.DB.Camps.getAll().then(allCamps => {
-      const minaCamps = allCamps.filter(c=>c.location==='منى');
-      valSel.innerHTML = '<option value="">— اختر مخيم منى —</option>' +
-        (()=>{ const sorted=_sortCamps(minaCamps); let html=''; let lt=null; sorted.forEach(camp=>{ const t=camp.camp_type||''; if(t!==lt){if(lt!==null)html+='</optgroup>';html+=`<optgroup label="${(t===''||t==='رجال')?'👨 رجال':t==='نساء'?'👩 نساء':'👨 رجال'}">`; lt=t;} const cNum=camp.camp_num||camp.name; const cap=parseInt(camp.capacity)||0; const occ=ALL_DATA.filter(p=>p['mina_camp']===cNum&&p['mina_bed']).length; const full=cap>0&&occ>=cap; html+=`<option value="${cNum}" ${full?'disabled':''} style="${full?'color:#bbb':''}">‎${cNum}${full?' ⛔':' — '+(cap-occ)}</option>`; }); if(lt!==null)html+='</optgroup>'; return html; })();
+      const locCamps = allCamps.filter(c=>c.location===loc);
+      valSel.innerHTML = '<option value="">— اختر مخيم '+loc+' —</option>' +
+        (()=>{ const sorted=_sortCamps(locCamps); let html=''; let lt=null; sorted.forEach(camp=>{ const t=camp.camp_type||''; if(t!==lt){if(lt!==null)html+='</optgroup>';html+=`<optgroup label="${(t===''||t==='رجال')?'👨 رجال':t==='نساء'?'👩 نساء':'👨 رجال'}">`; lt=t;} const cNum=camp.camp_num||camp.name; const cap=parseInt(camp.capacity)||0; const occ=ALL_DATA.filter(p=>p[fk]===cNum&&p[bk]).length; const full=cap>0&&occ>=cap; html+=`<option value="${cNum}" ${full?'disabled':''} style="${full?'color:#bbb':''}">‎${cNum}${full?' ⛔':' — '+(cap-occ)}</option>`; }); if(lt!==null)html+='</optgroup>'; return html; })();
     }).catch(()=>{
-      const camps = [...new Set(ALL_DATA.map(p=>p['mina_camp']).filter(Boolean))].sort();
-      valSel.innerHTML = '<option value="">— اختر مخيم منى —</option>' +
-        camps.map(c=>`<option value="${c}">${c}</option>`).join('');
-    });
-  } else if(field === 'arafat_camp') {
-    valSel.innerHTML = '<option value="">— جاري التحميل —</option>';
-    valSel.disabled = false;
-    window.DB.Camps.getAll().then(allCamps => {
-      const arafatCamps = allCamps.filter(c=>c.location==='عرفات');
-      valSel.innerHTML = '<option value="">— اختر مخيم عرفات —</option>' +
-        (()=>{ const sorted=_sortCamps(arafatCamps); let html=''; let lt=null; sorted.forEach(camp=>{ const t=camp.camp_type||''; if(t!==lt){if(lt!==null)html+='</optgroup>';html+=`<optgroup label="${(t===''||t==='رجال')?'👨 رجال':t==='نساء'?'👩 نساء':'👨 رجال'}">`; lt=t;} const cNum=camp.camp_num||camp.name; const cap=parseInt(camp.capacity)||0; const occ=ALL_DATA.filter(p=>p['arafat_camp']===cNum&&p['arafat_bed']).length; const full=cap>0&&occ>=cap; html+=`<option value="${cNum}" ${full?'disabled':''} style="${full?'color:#bbb':''}">‎${cNum}${full?' ⛔':' — '+(cap-occ)}</option>`; }); if(lt!==null)html+='</optgroup>'; return html; })();
-    }).catch(()=>{
-      const camps = [...new Set(ALL_DATA.map(p=>p['arafat_camp']).filter(Boolean))].sort();
-      valSel.innerHTML = '<option value="">— اختر مخيم عرفات —</option>' +
+      const camps = [...new Set(ALL_DATA.map(p=>p[fk]).filter(Boolean))].sort();
+      valSel.innerHTML = '<option value="">— اختر مخيم '+loc+' —</option>' +
         camps.map(c=>`<option value="${c}">${c}</option>`).join('');
     });
   } else {
@@ -3377,31 +3457,99 @@ function updateDataBulkOptions() {
   }
 }
 
-async function applyDataBulk() {
+/**
+ * Helper مشترك: يحدّث سجل ALL_DATA للمفاتيح العربية بعد bulk update.
+ * يُستدعى من applyDataBulk و applyBGBulk.
+ */
+function _applyBulkFieldToMemory(r, field, value){
+  if(!r) return;
+  if(field === 'bus_status')              r['حالة الإركاب']             = value;
+  else if(field === 'camp_status')        r['حالة الحضور في المخيم']     = value;
+  else if(field === 'bus_num')            r['رقم الحافلة الخاصة بك']    = value;
+  else if(field === 'group_num')          r['رقم فوج التفويج الخاص بك'] = value;
+  else if(field === 'nusuk_card_status')  r['حالة بطاقة نسك']            = value;
+  else if(field === 'mina_camp')          r['mina_camp']                  = value;
+  else if(field === 'arafat_camp')        r['arafat_camp']                = value;
+}
+
+function updateDataBulkOptions(){
+  const field  = document.getElementById('data-bulk-field').value;
+  const valSel = document.getElementById('data-bulk-value');
+  _buildBulkValueOptions(field, valSel);
+}
+
+async function applyDataBulk(){
   const field = document.getElementById('data-bulk-field').value;
   const value = document.getElementById('data-bulk-value').value;
-  if(!field || !value) { showToast('اختر الحقل والقيمة أولاً', 'warning'); return; }
+  if(!field || !value){ showToast('اختر الحقل والقيمة أولاً', 'warning'); return; }
   const ids = [...document.querySelectorAll('.data-row-check:checked')].map(c=>parseInt(c.dataset.id));
   if(!ids.length) return;
-  showToast(`⏳ جاري تحديث ${ids.length} حاج...`, 'info');
+  showToast(`جاري تحديث ${ids.length} حاج`, 'info');
   try {
     await window.DB.Pilgrims.bulkUpdate(ids, { [field]: value });
     ids.forEach(id => {
-      const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(id));
-      if(r) {
-        if(field==='bus_status') r['حالة الإركاب'] = value;
-        else if(field==='camp_status') r['حالة الحضور في المخيم'] = value;
-        else if(field==='bus_num') r['رقم الحافلة الخاصة بك'] = value;
-        else if(field==='group_num') r['رقم فوج التفويج الخاص بك'] = value;
-        else if(field==='nusuk_card_status') r['حالة بطاقة نسك'] = value;
-        else if(field==='mina_camp') r['mina_camp'] = value;
-        else if(field==='arafat_camp') r['arafat_camp'] = value;
-      }
+      const r = ALL_DATA.find(p => String(p['_supabase_id']) === String(id));
+      _applyBulkFieldToMemory(r, field, value);
     });
-    showToast(`✅ تم تحديث ${ids.length} حاج`, 'success');
+    showToast(`تم تحديث ${ids.length} حاج`, 'success');
     clearDataSelection();
     render();
-  } catch(e) { showToast('خطأ: '+e.message, 'error'); }
+  } catch(e){ showToast('خطأ: '+e.message, 'error'); }
+}
+
+// ===== Bulk actions لنافذة الحجاج المرتبطين (Booking Group) =====
+function toggleAllBG(cb){
+  document.querySelectorAll('.bg-row-check').forEach(c => c.checked = cb.checked);
+  updateBGBulkBar();
+}
+
+function updateBGBulkBar(){
+  const checks = document.querySelectorAll('.bg-row-check:checked');
+  const bar    = document.getElementById('bg-bulk-bar');
+  const count  = document.getElementById('bg-selected-count');
+  const all    = document.getElementById('bg-check-all');
+  const total  = document.querySelectorAll('.bg-row-check').length;
+  if(bar)   bar.style.display = checks.length ? 'flex' : 'none';
+  if(count) count.textContent = `تم تحديد ${checks.length} حاج`;
+  if(all){
+    all.indeterminate = checks.length > 0 && checks.length < total;
+    all.checked       = checks.length === total && total > 0;
+  }
+}
+
+function clearBGSelection(){
+  document.querySelectorAll('.bg-row-check').forEach(c => c.checked = false);
+  const all = document.getElementById('bg-check-all');
+  if(all){ all.checked = false; all.indeterminate = false; }
+  updateBGBulkBar();
+}
+
+function updateBGBulkOptions(){
+  const field  = document.getElementById('bg-bulk-field').value;
+  const valSel = document.getElementById('bg-bulk-value');
+  _buildBulkValueOptions(field, valSel);
+}
+
+async function applyBGBulk(){
+  const field = document.getElementById('bg-bulk-field').value;
+  const value = document.getElementById('bg-bulk-value').value;
+  if(!field || !value){ showToast('اختر الحقل والقيمة أولاً', 'warning'); return; }
+  const ids = [...document.querySelectorAll('.bg-row-check:checked')].map(c=>parseInt(c.dataset.id));
+  if(!ids.length) return;
+  showToast(`جاري تحديث ${ids.length} حاج`, 'info');
+  try {
+    await window.DB.Pilgrims.bulkUpdate(ids, { [field]: value });
+    ids.forEach(id => {
+      const r = ALL_DATA.find(p => String(p['_supabase_id']) === String(id));
+      _applyBulkFieldToMemory(r, field, value);
+    });
+    showToast(`تم تحديث ${ids.length} حاج`, 'success');
+    // إعادة رسم النافذة بالبيانات الجديدة (openModal يكتب innerHTML فقط — لا يُغلق overlay)
+    const bn  = window._currentBookingGroupNum;
+    const aid = window._currentBookingClickedId;
+    const ctx = window._currentBookingCtx || 'main';
+    if(bn || aid) showBookingGroup(bn, aid, ctx);
+  } catch(e){ showToast('خطأ: '+e.message, 'error'); }
 }
 
 // ===== بطاقات نسك =====
@@ -8429,6 +8577,10 @@ function closeBookingGroup() {
 
 function showBookingGroup(bookingNum, clickedId, ctx) {
   window._bookingCtx = ctx||'camp';
+  // حفظ السياق لإعادة الرسم بعد bulk update
+  window._currentBookingGroupNum  = bookingNum;
+  window._currentBookingClickedId = clickedId;
+  window._currentBookingCtx       = ctx || 'main';
   if(!bookingNum && !clickedId) return;
   const anchor = ALL_DATA.find(p=>String(p['_supabase_id'])===String(clickedId)) || ALL_DATA.find(p=>p['رقم الحجز']===bookingNum);
   if(!anchor) return;
@@ -8446,6 +8598,7 @@ function showBookingGroup(bookingNum, clickedId, ctx) {
     const minaBed = p['mina_bed'] ? ('-'+esc((p['mina_bed']+'').split('-')[1]||'')) : '';
     const arafatBed = p['arafat_bed'] ? ('-'+esc((p['arafat_bed']+'').split('-')[1]||'')) : '';
     return `<tr class="${isMe?'bg-row-me':''}">
+      <td class="bg-check-col"><input type="checkbox" class="bg-row-check" data-id="${pid}" onchange="updateBGBulkBar()" onclick="event.stopPropagation()" aria-label="تحديد الحاج"></td>
       <td class="bg-name-cell" onclick="_openQEFromBG('${pid}','${bnSafe}','${aidSafe}')">
         ${isMe?'<span class="bg-me-dot" aria-hidden="true"></span>':''}
         <span class="bg-name-text">${esc(p['اسم الحاج']||'—')}</span>
@@ -8464,6 +8617,7 @@ function showBookingGroup(bookingNum, clickedId, ctx) {
     const isMe = String(p['_supabase_id'])===String(clickedId);
     const pid  = esc(p['_supabase_id']);
     return `<div class="bg-card ${isMe?'bg-card-me':''}">
+      <input type="checkbox" class="bg-card-check bg-row-check" data-id="${pid}" onchange="updateBGBulkBar()" onclick="event.stopPropagation()" aria-label="تحديد الحاج">
       <div class="bg-card-header">
         <div class="bg-card-name" onclick="_openQEFromBG('${pid}','${bnSafe}','${aidSafe}')">${esc(p['اسم الحاج']||'—')}</div>
         ${isMe?'<span class="bg-card-badge">📍 المحدّد</span>':''}
@@ -8482,6 +8636,27 @@ function showBookingGroup(bookingNum, clickedId, ctx) {
     </div>`;
   }).join('');
 
+  // Bulk bar HTML (مشترك Desktop + Mobile) — يظهر فقط عند التحديد
+  const bulkBarHtml = `
+    <div id="bg-bulk-bar" class="bg-bulk-bar" style="display:none">
+      <span id="bg-selected-count" class="bg-bulk-count"></span>
+      <select id="bg-bulk-field" class="bg-bulk-select" onchange="updateBGBulkOptions()" aria-label="الحقل">
+        <option value="">— اختر الحقل —</option>
+        <option value="bus_status">🚌 حالة الإركاب</option>
+        <option value="camp_status">🏕️ حالة الوصول للمخيم</option>
+        <option value="bus_num">🚌 رقم الحافلة</option>
+        <option value="group_num">👥 رقم الفوج</option>
+        <option value="nusuk_card_status">🪪 حالة بطاقة نسك</option>
+        <option value="mina_camp">🏕️ مخيم منى</option>
+        <option value="arafat_camp">🌄 مخيم عرفات</option>
+      </select>
+      <select id="bg-bulk-value" class="bg-bulk-select" aria-label="القيمة">
+        <option value="">— اختر القيمة —</option>
+      </select>
+      <button class="bg-bulk-apply" onclick="applyBGBulk()">تطبيق</button>
+      <button class="bg-bulk-cancel" onclick="clearBGSelection()">إلغاء</button>
+    </div>`;
+
   openModal(`
     <div class="bg-header">
       <div class="bg-header-info">
@@ -8491,10 +8666,15 @@ function showBookingGroup(bookingNum, clickedId, ctx) {
       <button class="bg-close-x" onclick="closeBookingGroup()" aria-label="إغلاق">✕</button>
     </div>
     <div class="bg-body">
+      ${bulkBarHtml}
+      <div class="bg-mobile-select-all">
+        <button class="bg-select-all-btn" onclick="_toggleAllBGMobile()" id="bg-select-all-btn">☐ تحديد الكل</button>
+      </div>
       <div class="bg-desktop-table">
         <table class="bg-table">
           <thead>
             <tr>
+              <th class="bg-check-col"><input type="checkbox" id="bg-check-all" onclick="toggleAllBG(this)" aria-label="تحديد الكل"></th>
               <th class="bg-th-name">الاسم</th>
               <th>رقم الهوية</th>
               <th>رقم الحجز</th>
@@ -8521,6 +8701,16 @@ function showBookingGroup(bookingNum, clickedId, ctx) {
   const box = document.getElementById('modal-content');
   if(box) box.classList.add('booking-group');
   _ensureBgEscHandler();
+}
+
+// زر "تحديد الكل / إلغاء الكل" المستقل للجوال
+function _toggleAllBGMobile(){
+  const btn = document.getElementById('bg-select-all-btn');
+  const boxes = document.querySelectorAll('.bg-row-check');
+  const anyUnchecked = [...boxes].some(c => !c.checked);
+  boxes.forEach(c => c.checked = anyUnchecked);
+  if(btn) btn.textContent = anyUnchecked ? '☑ إلغاء التحديد' : '☐ تحديد الكل';
+  updateBGBulkBar();
 }
 
 
