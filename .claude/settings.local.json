@@ -12,7 +12,11 @@
       "Bash(node --check supabase.js)",
       "Bash(node --check config.js)",
       "Bash(node -e ' *)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(awk 'NR>=9316 && NR<=9371' admin.html)",
+      "Bash(rm .claude/pdf_fn.js)",
+      "Bash(awk 'NR>=10011 && NR<=10101' admin.html)",
+      "Bash(rm .claude/fn.js)"
     ]
   }
 }
