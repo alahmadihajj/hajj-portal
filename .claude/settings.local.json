@@ -17,7 +17,9 @@
       "Bash(rm .claude/pdf_fn.js)",
       "Bash(awk 'NR>=10011 && NR<=10101' admin.html)",
       "Bash(rm .claude/fn.js)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(awk *)",
+      "Bash(grep -E \"^\\(\\\\+[^+].*\\(pc-gender|pc-tel|pc-wa|pc-chip-label|pc-phone|pc-city|_telNumber|_waNumber|_genderBadge|genderBadge|waHref|telHref|mobRaw|mobDisp|waNum|🌍|🆔|👩|👨|📞|💬|منى:|عرفات:|الفوج:|الحافلة:|🏙️\\)|\\\\-[^-].*\\(🌍 |🏙️ |📱 <strong|onclick=\\\\\"event.stopPropagation\\\\\\\\\\(\\\\\\\\\\);openPilgrimAssign|pc-nat\\)\\)\")"
     ]
   }
 }
