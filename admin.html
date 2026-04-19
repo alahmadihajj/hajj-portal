@@ -10060,6 +10060,17 @@ async function saveSurveySettings() {
     return;
   }
 
+  // ===== تنبيه ذكي: تواريخ في الماضي (confirm بسيط — يُسمح بالتجاوز) =====
+  const _nowTs = Date.now();
+  if (data.end_date && new Date(data.end_date).getTime() < _nowTs) {
+    const ok = confirm('🚨 تاريخ الانتهاء في الماضي!\nالاستبيان لن يظهر للحجاج أبداً.\n\nهل تريد المتابعة بالحفظ؟');
+    if (!ok) { switchSurveySettingsTab('schedule'); return; }
+  }
+  if (data.start_date && new Date(data.start_date).getTime() < _nowTs && data.auto_activate) {
+    const ok = confirm('⚠️ تاريخ البدء في الماضي + التفعيل التلقائي مُشغَّل!\nالاستبيان سيُفعَّل فوراً عند الحفظ.\n\nهل تريد المتابعة؟');
+    if (!ok) { switchSurveySettingsTab('schedule'); return; }
+  }
+
   // Warning for system survey title change
   if (isSystemSurvey(original) && data.title !== original.title) {
     const ok = await showConfirm('أنت تُغيّر عنوان استبيان نظامي. هل تريد المتابعة؟', 'تنبيه', 'نعم، احفظ', '#c8971a', '⚠️');
