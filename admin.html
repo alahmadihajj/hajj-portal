@@ -578,6 +578,32 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       .datetime-group input[type="time"]{width:100%}
     }
 
+    /* ===== Date Warning Modal (dwm) ===== */
+    .dwm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1100;display:flex;align-items:center;justify-content:center;padding:20px;animation:dwmFadeIn .18s ease}
+    @keyframes dwmFadeIn{from{opacity:0}to{opacity:1}}
+    .dwm-container{background:#fff;border-radius:16px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.28);animation:dwmSlideUp .22s ease;overflow:hidden;font-family:inherit}
+    @keyframes dwmSlideUp{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .dwm-header{padding:20px 24px 16px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #eee}
+    .dwm-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+    .dwm-title{font-size:16px;font-weight:800;color:#3d2000;line-height:1.35}
+    .dwm-body{padding:18px 24px 6px;color:#444;font-size:13.5px;line-height:1.8}
+    .dwm-body .dwm-desc{margin:0 0 10px}
+    .dwm-details{background:#fffbf0;border:1px solid #f0e0b0;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#7a4500;margin:8px 0;line-height:1.7}
+    .dwm-note{margin-top:8px;font-size:12px;color:#888;font-style:italic}
+    .dwm-footer{display:flex;gap:10px;padding:14px 20px 20px;justify-content:flex-end}
+    .dwm-btn{padding:9px 20px;border-radius:10px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;transition:transform .1s,filter .15s;min-width:96px}
+    .dwm-btn:active{transform:scale(.96)}
+    .dwm-btn-cancel{background:#f3f4f6;color:#555;border:1px solid #e5e7eb}
+    .dwm-btn-cancel:hover{background:#e5e7eb}
+    .dwm-btn-confirm{color:#fff}
+    .dwm-btn-confirm:hover{filter:brightness(1.08)}
+    .dwm-warning .dwm-icon{background:#fef3c7;color:#b45309}
+    .dwm-warning .dwm-btn-confirm{background:linear-gradient(135deg,#f59e0b,#d97706)}
+    .dwm-danger  .dwm-icon{background:#fee2e2;color:#b91c1c}
+    .dwm-danger  .dwm-btn-confirm{background:linear-gradient(135deg,#ef4444,#b91c1c)}
+    .dwm-error   .dwm-icon{background:#fecaca;color:#7f1d1d}
+    .dwm-error   .dwm-btn-confirm{background:linear-gradient(135deg,#dc2626,#7f1d1d)}
+
     /* ===== Survey Settings Modal ===== */
     .ssm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1001;display:flex;align-items:center;justify-content:center;padding:20px;animation:ssmFadeIn .2s ease}
     @keyframes ssmFadeIn{from{opacity:0}to{opacity:1}}
@@ -10008,6 +10034,60 @@ function duplicateFromSettings() {
   setTimeout(() => duplicateSurvey(tempId), 250);
 }
 
+// ===== Date Warning Modal =====
+// types: 'warning' (أصفر) | 'danger' (أحمر) | 'error' (أحمر قوي، بدون إلغاء افتراضياً)
+function showDateWarningModal(opts) {
+  return new Promise(resolve => {
+    const o = opts || {};
+    const type         = o.type || 'warning';
+    const defaultIcon  = type === 'error' ? '❌' : type === 'danger' ? '🚨' : '⚠️';
+    const title        = o.title || 'تنبيه';
+    const description  = o.description || '';
+    const details      = o.details || '';
+    const note         = o.note || '';
+    const confirmLabel = o.confirmLabel || 'متابعة';
+    const cancelLabel  = o.cancelLabel || 'إلغاء';
+    const showCancel   = (o.showCancel !== undefined) ? o.showCancel : (type !== 'error');
+
+    const overlay = document.createElement('div');
+    overlay.className = 'dwm-overlay dwm-' + type;
+    overlay.setAttribute('dir', 'rtl');
+    overlay.innerHTML = `
+      <div class="dwm-container" role="dialog" aria-modal="true">
+        <div class="dwm-header">
+          <div class="dwm-icon">${defaultIcon}</div>
+          <div class="dwm-title">${title}</div>
+        </div>
+        <div class="dwm-body">
+          ${description ? `<div class="dwm-desc">${description}</div>` : ''}
+          ${details ? `<div class="dwm-details">${details}</div>` : ''}
+          ${note ? `<div class="dwm-note">${note}</div>` : ''}
+        </div>
+        <div class="dwm-footer">
+          ${showCancel ? `<button type="button" class="dwm-btn dwm-btn-cancel">${cancelLabel}</button>` : ''}
+          <button type="button" class="dwm-btn dwm-btn-confirm">${confirmLabel}</button>
+        </div>
+      </div>
+    `;
+
+    const close = (result) => {
+      document.removeEventListener('keydown', escHandler);
+      overlay.remove();
+      resolve(result);
+    };
+    const escHandler = (e) => { if (e.key === 'Escape') close(false); };
+
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(false); });
+    overlay.querySelector('.dwm-btn-confirm').addEventListener('click', () => close(true));
+    const cancelBtn = overlay.querySelector('.dwm-btn-cancel');
+    if (cancelBtn) cancelBtn.addEventListener('click', () => close(false));
+    document.addEventListener('keydown', escHandler);
+
+    document.body.appendChild(overlay);
+    setTimeout(() => { const btn = overlay.querySelector('.dwm-btn-confirm'); if (btn) btn.focus(); }, 50);
+  });
+}
+
 async function saveSurveySettings() {
   const id = window._ssmCurrentId;
   if (!id) return;
@@ -10053,21 +10133,50 @@ async function saveSurveySettings() {
     switchSurveySettingsTab('general');
     return;
   }
-  // Validation: end_date must be > start_date (مقارنة تواريخ فعلية)
+  // ===== تنبيهات التواريخ (Modal احترافي بدل confirm/toast) =====
+  const _fmtDate = (iso) => { try { return new Date(iso).toLocaleString('ar-EG', { dateStyle:'medium', timeStyle:'short' }); } catch(e){ return String(iso); } };
+  const _nowTs = Date.now();
+
+  // 1) خطأ منطقي: النهاية قبل/تساوي البداية (لا يُسمح بالتجاوز)
   if (data.start_date && data.end_date && new Date(data.end_date) <= new Date(data.start_date)) {
-    showToast('❌ وقت النهاية يجب أن يكون بعد وقت البداية', 'error');
+    await showDateWarningModal({
+      type: 'error',
+      title: 'خطأ منطقي في التواريخ',
+      description: 'وقت النهاية يجب أن يكون بعد وقت البداية.',
+      details: '🟢 البداية: ' + _fmtDate(data.start_date) + '<br>🔴 النهاية: ' + _fmtDate(data.end_date),
+      note: 'يُرجى تعديل التواريخ قبل الحفظ.',
+      confirmLabel: 'فهمت',
+      showCancel: false
+    });
     switchSurveySettingsTab('schedule');
     return;
   }
 
-  // ===== تنبيه ذكي: تواريخ في الماضي (confirm بسيط — يُسمح بالتجاوز) =====
-  const _nowTs = Date.now();
+  // 2) تاريخ الانتهاء في الماضي (يُسمح بالتجاوز)
   if (data.end_date && new Date(data.end_date).getTime() < _nowTs) {
-    const ok = confirm('🚨 تاريخ الانتهاء في الماضي!\nالاستبيان لن يظهر للحجاج أبداً.\n\nهل تريد المتابعة بالحفظ؟');
+    const ok = await showDateWarningModal({
+      type: 'danger',
+      title: 'تاريخ الانتهاء في الماضي',
+      description: 'الاستبيان سيُعتبر منتهياً فور حفظه ولن يظهر للحجاج.',
+      details: 'تاريخ الانتهاء المُحدَّد: ' + _fmtDate(data.end_date),
+      note: 'هل تريد المتابعة بالحفظ رغم ذلك؟',
+      confirmLabel: 'نعم، احفظ',
+      cancelLabel: 'رجوع'
+    });
     if (!ok) { switchSurveySettingsTab('schedule'); return; }
   }
+
+  // 3) تاريخ البدء في الماضي + التفعيل التلقائي (يُسمح بالتجاوز)
   if (data.start_date && new Date(data.start_date).getTime() < _nowTs && data.auto_activate) {
-    const ok = confirm('⚠️ تاريخ البدء في الماضي + التفعيل التلقائي مُشغَّل!\nالاستبيان سيُفعَّل فوراً عند الحفظ.\n\nهل تريد المتابعة؟');
+    const ok = await showDateWarningModal({
+      type: 'warning',
+      title: 'تاريخ البدء في الماضي',
+      description: 'التفعيل التلقائي مُشغَّل والاستبيان سيُفعَّل فوراً عند الحفظ.',
+      details: 'تاريخ البدء المُحدَّد: ' + _fmtDate(data.start_date),
+      note: 'هل تريد المتابعة؟',
+      confirmLabel: 'نعم، تابع',
+      cancelLabel: 'رجوع'
+    });
     if (!ok) { switchSurveySettingsTab('schedule'); return; }
   }
 
