@@ -399,6 +399,68 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 .am-btn-color-info   {background:#1a5fa8!important; color:#fff!important; border:none!important; box-shadow:0 3px 10px rgba(26,95,168,.3)}
 .am-btn-ic{font-size:15px; line-height:1}
 
+/* ===== Bulk Preview Modal (v16.0) ===== */
+.am-box-bulk{ max-width:820px }
+.bp-stat-changed   { color:#2e7d32; font-weight:800 }
+.bp-stat-unchanged { color:#888;    font-weight:700 }
+.bp-search{ margin:8px 0 12px }
+.bp-search input{
+  width:100%; box-sizing:border-box;
+  padding:10px 14px;
+  border:1.5px solid var(--border, #e0d5c5);
+  border-radius:8px;
+  font-size:14px; font-family:inherit;
+  background:var(--surface, #fff);
+  transition:border-color .2s;
+}
+.bp-search input:focus{ outline:none; border-color:var(--gold, #c8971a) }
+.bp-table-wrap{
+  max-height:50vh; overflow-y:auto;
+  border:1px solid var(--border, #e0d5c5);
+  border-radius:10px;
+  margin-bottom:14px;
+  text-align:right;
+}
+.bp-table{ width:100%; border-collapse:collapse; font-size:13px }
+.bp-table thead th{
+  background:var(--brown, #3d2000); color:#fff;
+  padding:10px 12px; font-weight:700;
+  position:sticky; top:0; z-index:1;
+  text-align:center; white-space:nowrap;
+}
+.bp-table tbody td{
+  padding:9px 10px;
+  border-bottom:1px solid var(--border-light, #f0e8d8);
+  text-align:center;
+}
+.bp-table tr.bp-changed   td{ background:#fff8e8 }
+.bp-table tr.bp-unchanged    { opacity:.55 }
+.bp-table .bp-name    { font-weight:700; color:var(--brown, #3d2000); text-align:right }
+.bp-table .bp-booking { color:var(--gold, #c8971a); font-weight:700 }
+.bp-table .bp-before  { color:#888 }
+.bp-table .bp-after   { color:var(--brown, #3d2000); font-weight:700 }
+.bp-table .bp-bed     { color:var(--gold, #c8971a); font-weight:700 }
+.bp-cards{ display:none }
+.bp-empty{
+  text-align:center; padding:20px; color:#888; font-size:13px;
+  margin-bottom:14px;
+}
+
+/* ===== Bulk Expand buttons ===== */
+.data-bulk-expand, .bg-bulk-expand{
+  padding:7px 12px;
+  background:var(--surface-2, #fff8e8);
+  color:var(--brown, #7a4500);
+  border:1.5px solid var(--gold, #c8971a);
+  border-radius:8px;
+  font-size:12px; font-weight:700; font-family:inherit;
+  cursor:pointer; min-height:34px;
+  transition:background .2s ease;
+  display:inline-flex; align-items:center; gap:4px;
+}
+.data-bulk-expand:hover, .bg-bulk-expand:hover{ background:#fff3d4 }
+.data-bulk-expand:active, .bg-bulk-expand:active{ transform:scale(.97) }
+
 @media (max-width:600px){
   .am-overlay{align-items:flex-end; padding:0}
   .am-box{
@@ -407,11 +469,31 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
     padding:24px 20px 16px;
     max-height:92vh;
   }
+  .am-box-bulk{ max-width:100%; max-height:95vh }
   .am-icon{width:64px; height:64px; font-size:38px}
   .am-title{font-size:16px}
   .am-desc{font-size:13px}
   .am-actions{flex-direction:column; gap:8px}
   .am-btn{width:100%; justify-content:center; min-height:48px; font-size:14px}
+  /* Preview يتحوّل لبطاقات */
+  .bp-table{ display:none }
+  .bp-cards{ display:flex; flex-direction:column; gap:8px; padding:6px }
+  .bp-card{
+    background:var(--surface, #fff);
+    border:1px solid var(--border, #e0d5c5);
+    border-radius:10px; padding:12px;
+    font-size:13px;
+  }
+  .bp-card.bp-changed{ background:#fff8e8; border-color:var(--gold, #c8971a) }
+  .bp-card.bp-unchanged{ opacity:.6 }
+  .bp-card-name{ font-weight:800; color:var(--brown, #3d2000); margin-bottom:6px; font-size:14px }
+  .bp-card-row{ display:flex; justify-content:space-between; padding:3px 0; font-size:12.5px }
+  .bp-card-row .bp-lbl{ color:#888 }
+  .bp-card-row .bp-val{ font-weight:700; color:var(--brown, #3d2000) }
+  .bp-card-row .bp-val-after{ color:var(--brown, #3d2000) }
+  .bp-card-row .bp-val-bed{ color:var(--gold, #c8971a) }
+  /* أزرار التوسيع عرض كامل */
+  .data-bulk-expand, .bg-bulk-expand{ width:100%; min-height:44px; font-size:14px }
 }
 
 /* Readonly form fields */
@@ -2559,6 +2641,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
     <select id="data-bulk-value" style="padding:7px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:12px;font-family:inherit">
       <option value="">— اختر القيمة —</option>
     </select>
+    <button class="data-bulk-expand" onclick="_expandBulkSelection('data')" title="يُضيف كل أفراد مجموعات الحجز">🔄 توسيع</button>
     <button onclick="applyDataBulk()" style="padding:7px 16px;background:#7a4500;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✅ تطبيق</button>
     <button onclick="clearDataSelection()" style="padding:7px 10px;background:#f5f5f5;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">✕ إلغاء</button>
   </div>
@@ -3632,10 +3715,362 @@ function _applyBulkFieldToMemory(r, field, value){
   else if(field === 'arafat_camp')        r['arafat_camp']                = value;
 }
 
+// تسمية عربية للحقل — تُستخدم في Preview Modal
+function _bulkFieldLabel(field){
+  const map = {
+    bus_status:'حالة الإركاب', camp_status:'حالة الحضور',
+    bus_num:'رقم الحافلة', group_num:'رقم الفوج',
+    nusuk_card_status:'حالة بطاقة نسك',
+    mina_camp:'مخيم منى', arafat_camp:'مخيم عرفات'
+  };
+  return map[field] || field;
+}
+
+// قراءة القيمة الحالية للحقل من سجل حاج — تُستخدم في Preview
+function _getFieldValueForPreview(p, field){
+  if(!p) return '';
+  const map = {
+    mina_camp: p.mina_camp, arafat_camp: p.arafat_camp,
+    bus_num: p['رقم الحافلة الخاصة بك'], group_num: p['رقم فوج التفويج الخاص بك'],
+    bus_status: p['حالة الإركاب'], camp_status: p['حالة الحضور في المخيم'],
+    nusuk_card_status: p['حالة بطاقة نسك']
+  };
+  return map[field] || '';
+}
+
+/**
+ * Modal Preview قبل bulk apply. يعرض جدول قبل/بعد responsive.
+ * @param {Array<number>} ids
+ * @param {string} field
+ * @param {string} value
+ * @param {Map<id,bedKey>|null} assignments — للـ camp fields
+ * @returns {Promise<boolean>} true إذا المستخدم ضغط "تأكيد"
+ */
+function _showBulkPreview(ids, field, value, assignments){
+  // في DEV tests: auto-approve flag يتخطّى الـ modal
+  if(window._bulkPipelineAutoApprove) return Promise.resolve(true);
+
+  return new Promise(resolve => {
+    const esc = (s)=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const isCamp = field === 'mina_camp' || field === 'arafat_camp';
+    const fieldLbl = _bulkFieldLabel(field);
+
+    const rows = (ids||[]).map(id => {
+      const p = ALL_DATA.find(x => String(x['_supabase_id']) === String(id));
+      if(!p) return null;
+      const before = _getFieldValueForPreview(p, field);
+      const after  = value;
+      const bedAfter = (isCamp && assignments) ? (assignments.get(id) || '—') : null;
+      return {
+        id, name: p['اسم الحاج']||'—',
+        bookingNum: p['رقم الحجز']||'—',
+        before, after, bedAfter,
+        changed: _fieldChanged(before, after)
+      };
+    }).filter(Boolean);
+
+    const changedCount = rows.filter(r => r.changed).length;
+    const unchangedCount = rows.length - changedCount;
+
+    const rowHTML = (r) => {
+      return `<tr class="bp-row ${r.changed?'bp-changed':'bp-unchanged'}" data-name="${esc(r.name.toLowerCase())}" data-booking="${esc(r.bookingNum)}">
+        ${isCamp?`<td class="bp-booking">${esc(r.bookingNum)}</td>`:''}
+        <td class="bp-name">${esc(r.name)}</td>
+        <td class="bp-before">${esc(r.before||'—')}</td>
+        <td class="bp-after">${esc(r.after)}</td>
+        ${isCamp?`<td class="bp-bed">${esc(r.bedAfter||'—')}</td>`:''}
+      </tr>`;
+    };
+    const cardHTML = (r) => `<div class="bp-card ${r.changed?'bp-changed':'bp-unchanged'}" data-name="${esc(r.name.toLowerCase())}" data-booking="${esc(r.bookingNum)}">
+      <div class="bp-card-name">${esc(r.name)}</div>
+      ${isCamp?`<div class="bp-card-row"><span class="bp-lbl">رقم الحجز:</span><span class="bp-val">${esc(r.bookingNum)}</span></div>`:''}
+      <div class="bp-card-row"><span class="bp-lbl">${esc(fieldLbl)} — قبل:</span><span class="bp-val">${esc(r.before||'—')}</span></div>
+      <div class="bp-card-row"><span class="bp-lbl">${esc(fieldLbl)} — بعد:</span><span class="bp-val bp-val-after">${esc(r.after)}</span></div>
+      ${isCamp?`<div class="bp-card-row"><span class="bp-lbl">السرير:</span><span class="bp-val bp-val-bed">${esc(r.bedAfter||'—')}</span></div>`:''}
+    </div>`;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'am-overlay';
+    overlay.setAttribute('role','dialog');
+    overlay.setAttribute('aria-modal','true');
+    overlay.setAttribute('aria-live','assertive');
+    overlay.innerHTML = `
+      <div class="am-box am-box-bulk" tabindex="-1">
+        <button class="am-close" aria-label="إغلاق" type="button">✕</button>
+        <div class="am-icon am-icon-info">👁️</div>
+        <h3 class="am-title">مراجعة التحديث قبل التطبيق</h3>
+        <p class="am-desc">
+          <span class="bp-stat bp-stat-changed">${changedCount}</span> سيتغيّر •
+          <span class="bp-stat bp-stat-unchanged">${unchangedCount}</span> بدون تغيير
+          (الحقل: <strong>${esc(fieldLbl)}</strong> ← <strong>${esc(value)}</strong>)
+        </p>
+        <div class="bp-search">
+          <input type="text" id="bp-search-input" placeholder="🔍 بحث بالاسم أو رقم الحجز..." aria-label="بحث">
+        </div>
+        <div class="bp-table-wrap">
+          <table class="bp-table">
+            <thead>
+              <tr>
+                ${isCamp?'<th>رقم الحجز</th>':''}
+                <th>الاسم</th>
+                <th>${esc(fieldLbl)} — قبل</th>
+                <th>${esc(fieldLbl)} — بعد</th>
+                ${isCamp?'<th>السرير المقترح</th>':''}
+              </tr>
+            </thead>
+            <tbody id="bp-tbody">${rows.map(rowHTML).join('')}</tbody>
+          </table>
+          <div class="bp-cards" id="bp-cards">${rows.map(cardHTML).join('')}</div>
+        </div>
+        <div class="bp-empty" id="bp-empty" hidden>لا نتائج مطابقة</div>
+        <div class="am-actions">
+          <button class="am-btn am-btn-primary" data-val="confirm" type="button">✅ تأكيد التطبيق على ${rows.length} حاج</button>
+          <button class="am-btn am-btn-cancel"  data-val="cancel"  type="button">إلغاء</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const close = (val) => {
+      document.removeEventListener('keydown', onKey);
+      overlay.classList.add('am-leaving');
+      setTimeout(() => { overlay.remove(); resolve(val === 'confirm'); }, 180);
+    };
+    const onKey = (e) => {
+      if(e.key === 'Escape'){ e.preventDefault(); close('cancel'); }
+    };
+    document.addEventListener('keydown', onKey);
+    overlay.addEventListener('click', e => { if(e.target === overlay) close('cancel'); });
+    overlay.querySelector('.am-close').addEventListener('click', () => close('cancel'));
+    overlay.querySelectorAll('.am-btn').forEach(btn => {
+      btn.addEventListener('click', () => close(btn.dataset.val));
+    });
+    // فلترة live
+    const searchEl = overlay.querySelector('#bp-search-input');
+    const emptyEl  = overlay.querySelector('#bp-empty');
+    const tableEls = overlay.querySelectorAll('#bp-tbody .bp-row');
+    const cardEls  = overlay.querySelectorAll('#bp-cards .bp-card');
+    searchEl.addEventListener('input', () => {
+      const q = String(searchEl.value||'').trim().toLowerCase();
+      let visible = 0;
+      const check = el => {
+        const n = el.dataset.name || '';
+        const b = el.dataset.booking || '';
+        const match = !q || n.includes(q) || b.includes(q);
+        el.style.display = match ? '' : 'none';
+        if(match) visible++;
+      };
+      tableEls.forEach(check);
+      cardEls.forEach(check);
+      if(emptyEl) emptyEl.hidden = visible > 0;
+    });
+    setTimeout(() => overlay.querySelector('.am-btn-primary')?.focus(), 30);
+  });
+}
+
 function updateDataBulkOptions(){
   const field  = document.getElementById('data-bulk-field').value;
   const valSel = document.getElementById('data-bulk-value');
   _buildBulkValueOptions(field, valSel);
+}
+
+/**
+ * Pipeline موحّد لـ Bulk: 9 خطوات (pre-filter → gender → capacity → split → preview → auto-assign → supervisor → DB → feedback).
+ * يُستدعى من applyDataBulk و applyBGBulk.
+ * @param {Array<number>} ids
+ * @param {string} field
+ * @param {string} value
+ * @param {Object} context — { source: 'data'|'bg', _iterCount?: number }
+ * @returns {Promise<{success:boolean, updated:number, failed:number, skipReason?:string}>}
+ */
+async function _executeBulkPipeline(ids, field, value, context){
+  context = context || { source:'data' };
+  if(!context._iterCount) context._iterCount = 0;
+  if(!ids || !ids.length) return { success:false, skipReason:'empty_ids' };
+
+  // 1) Pre-filter — نوع الحقل
+  const isCamp  = field === 'mina_camp' || field === 'arafat_camp';
+  const isBus   = field === 'bus_num';
+  const isGroup = field === 'group_num';
+  const loc = isCamp ? (field === 'mina_camp' ? 'mina' : 'arafat') : null;
+  let camp = null;
+  if(isCamp){
+    await _refreshCampsCache();
+    camp = (window._campsCache||[]).find(c => (c.camp_num||c.name) === value);
+    if(!camp){ showToast('المخيم غير موجود', 'error'); return { success:false, skipReason:'camp_not_found' }; }
+  }
+  let workingIds = ids.slice();
+
+  // 2) Gender check (camp فقط)
+  if(isCamp){
+    const gCheck = _checkBulkGender(workingIds, camp);
+    if(!gCheck.ok){
+      const matching = workingIds.length - gCheck.mismatches.length;
+      const items = gCheck.mismatches.slice(0,5).map(m => ({
+        icon: m.gender==='ذكر'?'👨':'👩', label:m.name, value:m.gender
+      }));
+      if(gCheck.mismatches.length > 5) items.push({ icon:'…', label:'وآخرون', value:(gCheck.mismatches.length-5)+' حاج' });
+      const actions = [];
+      if(matching > 0) actions.push({ label:`تطبيق على المتوافقين (${matching})`, value:'filter', emoji:'✅', variant:'primary' });
+      actions.push({ label:'إلغاء', value:null, variant:'cancel' });
+      const decision = await showActionModal({
+        type:'warning',
+        title:'الجنس لا يتطابق مع نوع المخيم',
+        description:`المخيم ${value} مخصّص لـ ${camp.camp_type}. ${gCheck.mismatches.length} حاج من جنس مختلف.`,
+        items, actions
+      });
+      if(decision !== 'filter') return { success:false, skipReason:'gender_abort' };
+      const ex = new Set(gCheck.mismatches.map(m => String(m.id)));
+      workingIds = workingIds.filter(id => !ex.has(String(id)));
+      if(!workingIds.length){ showToast('لا حجاج متوافقين', 'warning'); return { success:false, skipReason:'no_matching_gender' }; }
+    }
+  }
+
+  // 3) Capacity check (camp فقط)
+  if(isCamp){
+    const cCheck = _checkBulkCapacity(workingIds, value, loc);
+    if(!cCheck.ok){
+      const decision = await showActionModal({
+        type:'warning',
+        title:'السعة لا تكفي',
+        description:`المخيم ${value} سعته ${cCheck.capacity}. متاح ${cCheck.available} سرير فقط.`,
+        items:[
+          { icon:'🏕️', label:'السعة الكلية:',   value:cCheck.capacity+' سرير' },
+          { icon:'🛏️', label:'المحجوز حالياً:', value:(cCheck.capacity - cCheck.available)+' سرير' },
+          { icon:'✓',   label:'المتاح:',         value:cCheck.available+' سرير' },
+          { icon:'👥',  label:'المطلوب:',        value:cCheck.needed+' حاج' },
+          { icon:'⚠️',  label:'النقص:',          value:(cCheck.needed - cCheck.available)+' سرير' }
+        ],
+        actions:[
+          { label:`تطبيق على ${cCheck.available} فقط`, value:'reduce', emoji:'📉', variant:'primary', color:'warning' },
+          { label:'إلغاء واختيار مخيم آخر',              value:null,    variant:'cancel' }
+        ]
+      });
+      if(decision !== 'reduce') return { success:false, skipReason:'capacity_abort' };
+      workingIds = _sortPilgrimsForAssignment(workingIds).slice(0, cCheck.available);
+    }
+  }
+
+  // 4) Booking integrity check (camp فقط حالياً)
+  if(isCamp){
+    const fk = loc === 'mina' ? 'mina_camp' : 'arafat_camp';
+    const biCheck = _checkBookingIntegrity(workingIds, { targetField: fk, targetValue: value });
+    if(!biCheck.ok){
+      const items = biCheck.splits.slice(0,5).map(s => ({
+        icon:'📋', label:'حجز #'+s.bookingKey,
+        value:`${s.selectedCount}/${s.totalCount} — ينقص ${s.missingIds.length}`
+      }));
+      if(biCheck.splits.length > 5) items.push({ icon:'…', label:'ومجموعات أخرى', value:(biCheck.splits.length-5)+' حجز' });
+      const decision = await showActionModal({
+        type:'warning',
+        title:'تفكيك مجموعات حجز',
+        description:`${biCheck.splits.length} مجموعة حجز ستتفكّك. بعض الأفراد خارج التحديد.`,
+        items,
+        actions:[
+          { label:'توسيع التحديد تلقائياً', value:'expand', emoji:'🔄', variant:'primary', color:'success' },
+          { label:'متابعة مع التفكيك',      value:'split',  emoji:'⚠️', variant:'secondary', color:'warning' },
+          { label:'إلغاء',                   value:null,     variant:'cancel' }
+        ]
+      });
+      if(decision === null) return { success:false, skipReason:'split_abort' };
+      if(decision === 'expand'){
+        context._iterCount++;
+        if(context._iterCount > 3){
+          showToast('توقّفت إعادة التوسيع — تحديد غير متسق', 'error');
+          return { success:false, skipReason:'iter_limit' };
+        }
+        const allSet = new Set(workingIds.map(String));
+        biCheck.splits.forEach(s => s.missingIds.forEach(id => allSet.add(String(id))));
+        const expanded = [...allSet].map(Number);
+        return _executeBulkPipeline(expanded, field, value, context);
+      }
+      // 'split' → continue
+    }
+  }
+
+  // 5-6) Auto-assign أسرّة متتالية (camp فقط)
+  let assignments = null;
+  if(isCamp){
+    const sorted = _sortPilgrimsForAssignment(workingIds);
+    const r = _autoAssignBedsSequential(value, loc, sorted);
+    if(r.shortage > 0){
+      showToast(`تعذّر تسكين ${r.shortage} حاج — أسرّة غير كافية`, 'error');
+      return { success:false, skipReason:'assignment_shortage' };
+    }
+    assignments = r.assignments;
+    workingIds  = sorted;
+    if(r.nonContiguous){
+      showToast('تم التسكين بأسرّة غير متجاورة — يُستحسن اختيار مخيم آخر', 'warning', 6000);
+    }
+  }
+
+  // 5) Preview UI
+  const approved = await _showBulkPreview(workingIds, field, value, assignments);
+  if(!approved) return { success:false, skipReason:'preview_cancel' };
+
+  // 7) Supervisor sync (bus/group فقط)
+  let supervisorData = null;
+  if((isBus || isGroup) && value){
+    try {
+      const sysusers = window._sysusersCache || (await window.DB.SysUsers.getAll());
+      window._sysusersCache = sysusers;
+      supervisorData = isBus
+        ? _syncSupervisorForBus(value, sysusers)
+        : _syncSupervisorForGroup(value, sysusers);
+    } catch(_){}
+  }
+
+  // 8) Apply to DB
+  let ok = 0, fail = 0;
+  if(isCamp && assignments){
+    // حلقة فردية (كل حاج بسرير مختلف) مع _applyBedAssignment
+    showToast(`جاري تسكين ${workingIds.length} حاج`, 'info');
+    for(const id of workingIds){
+      try {
+        const bedKey = assignments.get(id);
+        const pilgrimRec = ALL_DATA.find(p => String(p['_supabase_id']) === String(id));
+        const updates = {};
+        _applyBedAssignment(updates, pilgrimRec, loc, value, bedKey);
+        await window.DB.Pilgrims.update(parseInt(id), updates);
+        ok++;
+      } catch(e){
+        fail++;
+        const p = ALL_DATA.find(x => String(x['_supabase_id']) === String(id));
+        console.error('[bulk] FAILED', 'pilgrim_id:'+id, 'name:'+(p?.['اسم الحاج']||'—'), 'error:'+e.message);
+      }
+    }
+  } else {
+    // bulkUpdate موحّد
+    const baseUpdates = { [field]: value };
+    if(supervisorData){
+      baseUpdates.supervisor_name  = supervisorData.supervisor_name;
+      baseUpdates.supervisor_phone = supervisorData.supervisor_phone;
+    }
+    try {
+      await window.DB.Pilgrims.bulkUpdate(workingIds, baseUpdates);
+      workingIds.forEach(id => {
+        const r = ALL_DATA.find(p => String(p['_supabase_id']) === String(id));
+        _applyBulkFieldToMemory(r, field, value);
+        if(supervisorData && r){
+          r['اسم المشرف الخاص بالحاج'] = supervisorData.supervisor_name;
+          r['رقم جوال المشرف']          = supervisorData.supervisor_phone;
+        }
+      });
+      ok = workingIds.length;
+    } catch(e){
+      fail = workingIds.length;
+      console.error('[bulk] bulkUpdate FAILED', 'error:'+e.message);
+    }
+  }
+
+  // 9) Feedback
+  if(fail === 0){
+    showToast(`تم تحديث ${ok} حاج بنجاح`, 'success');
+  } else if(ok > 0){
+    showToast(`نجح ${ok} • فشل ${fail} (راجع console)`, 'warning', 6000);
+  } else {
+    showToast('فشل التحديث', 'error');
+  }
+  return { success: ok > 0, updated: ok, failed: fail };
 }
 
 async function applyDataBulk(){
@@ -3644,17 +4079,11 @@ async function applyDataBulk(){
   if(!field || !value){ showToast('اختر الحقل والقيمة أولاً', 'warning'); return; }
   const ids = [...document.querySelectorAll('.data-row-check:checked')].map(c=>parseInt(c.dataset.id));
   if(!ids.length) return;
-  showToast(`جاري تحديث ${ids.length} حاج`, 'info');
-  try {
-    await window.DB.Pilgrims.bulkUpdate(ids, { [field]: value });
-    ids.forEach(id => {
-      const r = ALL_DATA.find(p => String(p['_supabase_id']) === String(id));
-      _applyBulkFieldToMemory(r, field, value);
-    });
-    showToast(`تم تحديث ${ids.length} حاج`, 'success');
+  const result = await _executeBulkPipeline(ids, field, value, { source:'data' });
+  if(result.success){
     clearDataSelection();
     render();
-  } catch(e){ showToast('خطأ: '+e.message, 'error'); }
+  }
 }
 
 // ===== Bulk actions لنافذة الحجاج المرتبطين (Booking Group) =====
@@ -3677,6 +4106,26 @@ function updateBGBulkBar(){
   }
 }
 
+/**
+ * توسيع التحديد ليشمل كل أفراد مجموعات الحجز للحجاج المحدَّدين.
+ * @param {'data'|'bg'} scope
+ */
+function _expandBulkSelection(scope){
+  const sel = scope === 'data' ? '.data-row-check' : '.bg-row-check';
+  const currentIds = [...document.querySelectorAll(sel+':checked')].map(c => parseInt(c.dataset.id));
+  if(!currentIds.length){ showToast('لا يوجد تحديد حالياً', 'warning'); return; }
+  const allMates = new Set(currentIds.map(String));
+  currentIds.forEach(id => {
+    _getBookingMates(id).forEach(m => allMates.add(String(m['_supabase_id'])));
+  });
+  document.querySelectorAll(sel).forEach(cb => {
+    if(allMates.has(String(cb.dataset.id))) cb.checked = true;
+  });
+  (scope === 'data' ? updateDataBulkBar : updateBGBulkBar)();
+  const added = allMates.size - currentIds.length;
+  showToast(added > 0 ? `أُضيف ${added} حاج من مجموعات الحجز` : 'كل أفراد المجموعات مُحدَّدون مسبقاً', 'info');
+}
+
 function clearBGSelection(){
   document.querySelectorAll('.bg-row-check').forEach(c => c.checked = false);
   const all = document.getElementById('bg-check-all');
@@ -3696,20 +4145,14 @@ async function applyBGBulk(){
   if(!field || !value){ showToast('اختر الحقل والقيمة أولاً', 'warning'); return; }
   const ids = [...document.querySelectorAll('.bg-row-check:checked')].map(c=>parseInt(c.dataset.id));
   if(!ids.length) return;
-  showToast(`جاري تحديث ${ids.length} حاج`, 'info');
-  try {
-    await window.DB.Pilgrims.bulkUpdate(ids, { [field]: value });
-    ids.forEach(id => {
-      const r = ALL_DATA.find(p => String(p['_supabase_id']) === String(id));
-      _applyBulkFieldToMemory(r, field, value);
-    });
-    showToast(`تم تحديث ${ids.length} حاج`, 'success');
+  const result = await _executeBulkPipeline(ids, field, value, { source:'bg' });
+  if(result.success){
     // إعادة رسم النافذة بالبيانات الجديدة (openModal يكتب innerHTML فقط — لا يُغلق overlay)
     const bn  = window._currentBookingGroupNum;
     const aid = window._currentBookingClickedId;
     const ctx = window._currentBookingCtx || 'main';
     if(bn || aid) showBookingGroup(bn, aid, ctx);
-  } catch(e){ showToast('خطأ: '+e.message, 'error'); }
+  }
 }
 
 // ===== بطاقات نسك =====
@@ -9002,6 +9445,7 @@ function showBookingGroup(bookingNum, clickedId, ctx) {
       <select id="bg-bulk-value" class="bg-bulk-select" aria-label="القيمة">
         <option value="">— اختر القيمة —</option>
       </select>
+      <button class="bg-bulk-expand" onclick="_expandBulkSelection('bg')" title="يُضيف كل أفراد مجموعات الحجز">🔄 توسيع</button>
       <button class="bg-bulk-apply" onclick="applyBGBulk()">تطبيق</button>
       <button class="bg-bulk-cancel" onclick="clearBGSelection()">إلغاء</button>
     </div>`;
@@ -9407,14 +9851,29 @@ function _getAvailableBedsInCamp(campNum, loc, excludeIds){
  * @returns {{assignments: Map<id, bedKey>, nonContiguous: boolean, shortage: number}}
  */
 function _autoAssignBedsSequential(campNum, loc, orderedIds){
-  const available = _getAvailableBedsInCamp(campNum, loc, orderedIds);
+  const fk = loc === 'mina' ? 'mina_camp' : 'arafat_camp';
+  const bk = loc === 'mina' ? 'mina_bed'  : 'arafat_bed';
   const assignments = new Map();
   const total = orderedIds.length;
   let nonContiguous = false;
-  // محاولة: ابحث عن نافذة متتالية بحجم كل مجموعة حجز
-  const byBooking = _groupByBooking(orderedIds);
+  // الخيار B: احتفظ بالأسرّة الصالحة للحجاج الموجودين أصلاً في نفس المخيم
+  const keepIds = new Set();
+  orderedIds.forEach(id => {
+    const p = ALL_DATA.find(x => String(x['_supabase_id']) === String(id));
+    if(p && p[fk] === campNum && p[bk]){
+      assignments.set(id, _normalizeBedId(p[bk], campNum));
+      keepIds.add(String(id));
+    }
+  });
+  const keptBeds = new Set([...assignments.values()]);
+  const needAssign = orderedIds.filter(id => !keepIds.has(String(id)));
+  // Pool: أسرّة متاحة استثناء كل المحدَّدين، ثم إزالة الأسرّة المحتفظ بها
+  const available = _getAvailableBedsInCamp(campNum, loc, orderedIds)
+    .filter(b => !keptBeds.has(b.key));
+  // محاولة: ابحث عن نافذة متتالية بحجم كل مجموعة حجز (فقط للذين يحتاجون تعيين)
+  const byBooking = _groupByBooking(needAssign);
   let bedsUsed = new Set();
-  byBooking.forEach((pilgrims, bookingKey) => {
+  byBooking.forEach((pilgrims) => {
     const needed = pilgrims.length;
     // ابحث عن نافذة متتالية من `needed` أسرّة متاحة وغير مستخدمة
     let windowStart = -1;
@@ -9434,7 +9893,7 @@ function _autoAssignBedsSequential(campNum, loc, orderedIds){
         bedsUsed.add(bed.key);
       });
     } else {
-      // لا يوجد نافذة متتالية — أعطِ أي أسرّة متاحة
+      // لا يوجد نافذة متتالية — أعطِ أي أسرّة متاحة (fallback الخيار C)
       nonContiguous = true;
       const remaining = available.filter(a => !bedsUsed.has(a.key));
       pilgrims.forEach((p, idx) => {
@@ -9483,12 +9942,19 @@ function _checkBulkGender(ids, camp){
 
 /**
  * فحص تفكيك الحجز: هل التحديد يفكّك مجموعات حجز؟
+ * @param {Array<number>} ids
+ * @param {Object} [opts]
+ * @param {string} [opts.targetField] — حقل المخيم المستهدف (مثل 'mina_camp'). عند تحديده:
+ *   إذا كل الأعضاء المفقودين في نفس المخيم المستهدف فعلاً → تخطّى (توحيد إيجابي، ليس تفكيكاً)
+ * @param {string} [opts.targetValue] — قيمة المخيم المستهدف
  * @returns {{ok: boolean, splits: Array<{bookingKey, selectedCount, totalCount, missingIds, missingDetails}>}}
  */
-function _checkBookingIntegrity(ids){
+function _checkBookingIntegrity(ids, opts){
   const selectedSet = new Set((ids || []).map(String));
   const seen = new Set();
   const splits = [];
+  const targetField = opts && opts.targetField;
+  const targetValue = opts && opts.targetValue;
   (ids || []).forEach(id => {
     const p = ALL_DATA.find(x => String(x['_supabase_id']) === String(id));
     if(!p) return;
@@ -9498,19 +9964,23 @@ function _checkBookingIntegrity(ids){
     const mates = _getBookingMates(id); // يشمل نفسه
     if(mates.length <= 1) return; // حاج وحده — لا مجموعة
     const missing = mates.filter(m => !selectedSet.has(String(m['_supabase_id'])));
-    if(missing.length > 0){
-      splits.push({
-        bookingKey: key,
-        selectedCount: mates.length - missing.length,
-        totalCount: mates.length,
-        missingIds: missing.map(m => m['_supabase_id']),
-        missingDetails: missing.map(m => ({
-          id: m['_supabase_id'],
-          name: m['اسم الحاج']||'—',
-          currentCamp: m['mina_camp'] || m['arafat_camp'] || 'غير مُسكَّن'
-        }))
-      });
+    if(missing.length === 0) return;
+    // توحيد إيجابي: إذا كل الأعضاء المفقودين (غير المُحدَّدين) أصلاً في المخيم المستهدف → لا تفكيك
+    if(targetField && targetValue){
+      const allAtTarget = missing.every(m => m[targetField] === targetValue);
+      if(allAtTarget) return; // توحيد، لا تحذير
     }
+    splits.push({
+      bookingKey: key,
+      selectedCount: mates.length - missing.length,
+      totalCount: mates.length,
+      missingIds: missing.map(m => m['_supabase_id']),
+      missingDetails: missing.map(m => ({
+        id: m['_supabase_id'],
+        name: m['اسم الحاج']||'—',
+        currentCamp: m['mina_camp'] || m['arafat_camp'] || 'غير مُسكَّن'
+      }))
+    });
   });
   return { ok: splits.length === 0, splits };
 }
@@ -9697,6 +10167,138 @@ window._testAssignmentHelpers = function(){
   window._campsCache = origCache;
 
   const msg = fail === 0 ? '🎉 كل اختبارات Assignment helpers نجحت ('+pass+'/'+cases.length+')'
+                          : '⚠️ فشل '+fail+' من '+cases.length+' اختبار';
+  console.log('%c'+msg, fail === 0 ? STYLE.okSum : STYLE.failSum);
+  if(failures.length) console.table(failures);
+  return { pass, fail, total: cases.length, failures };
+};
+
+// اختبار Pipeline الـ Bulk — يستخدم _bulkPipelineAutoApprove لتخطّي modals
+window._testBulkPipeline = async function(){
+  const STYLE = {
+    title:   'background:linear-gradient(135deg,#3d2000,#c8971a);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:bold',
+    pass:    'color:#2e7d32;font-weight:600',
+    fail:    'color:#c00;font-weight:bold',
+    okSum:   'background:#2e7d32;color:#fff;padding:8px 16px;border-radius:6px;font-weight:bold',
+    failSum: 'background:#c00;color:#fff;padding:8px 16px;border-radius:6px;font-weight:bold'
+  };
+  // إعداد بيانات mock
+  const origData  = ALL_DATA.slice();
+  const origCache = window._campsCache;
+  const origApprove = window._bulkPipelineAutoApprove;
+  ALL_DATA.length = 0;
+  [
+    {_supabase_id:1, 'اسم الحاج':'أحمد', 'الجنس':'ذكر',  'رقم الحجز':'B1', booking_ref:'B1', mina_camp:'C1', mina_bed:'C1-1'},
+    {_supabase_id:2, 'اسم الحاج':'سالم', 'الجنس':'ذكر',  'رقم الحجز':'B1', booking_ref:'B1', mina_camp:'C1', mina_bed:'C1-2'},
+    {_supabase_id:3, 'اسم الحاج':'ليلى', 'الجنس':'أنثى', 'رقم الحجز':'B1', booking_ref:'B1'},
+    {_supabase_id:4, 'اسم الحاج':'محمد', 'الجنس':'ذكر',  'رقم الحجز':'B2', booking_ref:'B2'},
+    {_supabase_id:5, 'اسم الحاج':'سارة', 'الجنس':'أنثى', 'رقم الحجز':'B2', booking_ref:'B2'},
+    {_supabase_id:6, 'اسم الحاج':'خالد', 'الجنس':'ذكر',  'رقم الحجز':'B3', booking_ref:'B3'}
+  ].forEach(p => ALL_DATA.push(p));
+  window._campsCache = [
+    { camp_num:'C1', capacity:10, camp_type:'رجال', location:'منى' },
+    { camp_num:'C2', capacity:5,  camp_type:'نساء', location:'منى' },
+    { camp_num:'C3', capacity:3,  camp_type:'رجال', location:'منى' }
+  ];
+
+  const cases = [
+    { name:'_groupByBooking لـ 2 حجز مختلف', run:async ()=>{
+        return _groupByBooking([1,4]).size === 2;
+      }},
+    { name:'_sortPilgrimsForAssignment ذكور قبل إناث', run:async ()=>{
+        const s = _sortPilgrimsForAssignment([3,2,1]);
+        return s[s.length-1] === 3;
+      }},
+    { name:'_checkBulkGender: ذكور+إناث في نساء', run:async ()=>{
+        const c2 = window._campsCache.find(c=>c.camp_num==='C2');
+        return _checkBulkGender([1,3], c2).mismatches.length === 1;
+      }},
+    { name:'_checkBulkCapacity: 3 في C3 ممتلئ', run:async ()=>{
+        // C3 فارغ في mock data الحالي — نُضيف شاغلين مؤقتاً
+        ALL_DATA.push({_supabase_id:101, mina_camp:'C3', mina_bed:'C3-1'});
+        ALL_DATA.push({_supabase_id:102, mina_camp:'C3', mina_bed:'C3-2'});
+        ALL_DATA.push({_supabase_id:103, mina_camp:'C3', mina_bed:'C3-3'});
+        const r = _checkBulkCapacity([4,5], 'C3', 'mina');
+        ALL_DATA.splice(-3, 3); // cleanup
+        return r.ok === false && r.available === 0;
+      }},
+    { name:'_checkBookingIntegrity: ناقص→split', run:async ()=>{
+        return _checkBookingIntegrity([1,2]).splits.length === 1;
+      }},
+    { name:'_checkBookingIntegrity: توحيد إيجابي (targetField)', run:async ()=>{
+        // الأعضاء غير المحدَّدين في C1، والهدف C1 → لا تفكيك
+        const r = _checkBookingIntegrity([1], { targetField:'mina_camp', targetValue:'C1' });
+        return r.ok === true;
+      }},
+    { name:'_autoAssignBedsSequential متتالي', run:async ()=>{
+        const r = _autoAssignBedsSequential('C1', 'mina', [4,5]);
+        return r.nonContiguous === false && r.assignments.size === 2;
+      }},
+    { name:'_autoAssignBedsSequential keep existing (B)', run:async ()=>{
+        // 1 و 2 في C1 أصلاً بسرير صالح
+        const r = _autoAssignBedsSequential('C1', 'mina', [1,2,4]);
+        return r.assignments.get(1) === 'C1-1' && r.assignments.get(2) === 'C1-2';
+      }},
+    { name:'_expandBulkSelection helper المنطقي', run:async ()=>{
+        // محاكاة: mates للـ id=1 يشمل 1,2,3
+        return _getBookingMates(1).length === 3;
+      }},
+    { name:'Pipeline non-camp field (skip validations)', run:async ()=>{
+        window._bulkPipelineAutoApprove = true;
+        // mock DB.Pilgrims.bulkUpdate
+        const origUpdate = window.DB?.Pilgrims?.bulkUpdate;
+        if(window.DB?.Pilgrims) window.DB.Pilgrims.bulkUpdate = async () => true;
+        const r = await _executeBulkPipeline([1,2,3], 'bus_status', 'ركب', { source:'test' });
+        if(window.DB?.Pilgrims && origUpdate) window.DB.Pilgrims.bulkUpdate = origUpdate;
+        return r.success === true && r.updated === 3;
+      }},
+    { name:'Pipeline gender filter → matching only', run:async ()=>{
+        window._bulkPipelineAutoApprove = true;
+        // نحتاج تدخّل في showActionModal — لا نختبر هنا، نفحص helper مباشرة
+        const c2 = window._campsCache.find(c=>c.camp_num==='C2');
+        const gc = _checkBulkGender([1,3], c2);
+        return gc.mismatches.length === 1 && gc.mismatches[0].id === 1;
+      }},
+    { name:'Non-existent camp → early abort', run:async ()=>{
+        window._bulkPipelineAutoApprove = true;
+        const r = await _executeBulkPipeline([1], 'mina_camp', 'CX_NONEXISTENT', { source:'test' });
+        return r.success === false && r.skipReason === 'camp_not_found';
+      }},
+    { name:'Empty ids → early abort', run:async ()=>{
+        const r = await _executeBulkPipeline([], 'mina_camp', 'C1', { source:'test' });
+        return r.success === false && r.skipReason === 'empty_ids';
+      }},
+    { name:'_getFieldValueForPreview يُرجع القيمة الصحيحة', run:async ()=>{
+        const p = ALL_DATA.find(x => x._supabase_id === 1);
+        return _getFieldValueForPreview(p, 'mina_camp') === 'C1';
+      }},
+    { name:'_bulkFieldLabel يُرجع تسمية عربية', run:async ()=>{
+        return _bulkFieldLabel('mina_camp') === 'مخيم منى' && _bulkFieldLabel('bus_num') === 'رقم الحافلة';
+      }}
+  ];
+
+  console.log('%c🧪 اختبار Bulk Pipeline', STYLE.title);
+  let pass = 0, fail = 0;
+  const failures = [];
+  for(let i = 0; i < cases.length; i++){
+    const c = cases[i];
+    try {
+      const ok = await c.run();
+      if(ok){ pass++; console.log('%c✅ ['+(i+1)+'] '+c.name, STYLE.pass); }
+      else  { fail++; failures.push({idx:i+1, name:c.name, error:'returned false'}); console.log('%c❌ ['+(i+1)+'] '+c.name, STYLE.fail); }
+    } catch(e){
+      fail++; failures.push({idx:i+1, name:c.name, error:e.message});
+      console.log('%c❌ ['+(i+1)+'] '+c.name+': '+e.message, STYLE.fail);
+    }
+  }
+
+  // استعادة
+  ALL_DATA.length = 0;
+  origData.forEach(p => ALL_DATA.push(p));
+  window._campsCache = origCache;
+  window._bulkPipelineAutoApprove = origApprove;
+
+  const msg = fail === 0 ? '🎉 كل اختبارات Bulk Pipeline نجحت ('+pass+'/'+cases.length+')'
                           : '⚠️ فشل '+fail+' من '+cases.length+' اختبار';
   console.log('%c'+msg, fail === 0 ? STYLE.okSum : STYLE.failSum);
   if(failures.length) console.table(failures);
@@ -13486,6 +14088,11 @@ if(location.hostname === 'localhost' || location.hostname === '127.0.0.1'){
       console.log('%c🧪 تشغيل اختبارات Assignment Helpers (DEV mode)...',
         'background:#1a5fa8;color:#fff;padding:6px 12px;border-radius:6px;font-weight:bold');
       window._testAssignmentHelpers();
+    }
+    if(typeof window._testBulkPipeline === 'function'){
+      console.log('%c🧪 تشغيل اختبارات Bulk Pipeline (DEV mode)...',
+        'background:#1a5fa8;color:#fff;padding:6px 12px;border-radius:6px;font-weight:bold');
+      window._testBulkPipeline();
     }
     console.log('%c💡 لاختبار showActionModal يدوياً: _testActionModal("warning"|"error"|"success"|"info"|"split")',
       'color:#1a5fa8');
