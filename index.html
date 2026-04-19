@@ -124,13 +124,177 @@ body.ltr .section-title{border-right:none;border-left:4px solid #c8971a;padding-
 .info-block ul,.info-block ol,.company-text ul,.company-text ol{margin:0 0 8px 0;padding-right:20px}
 body.ltr .info-block ul,body.ltr .info-block ol,body.ltr .company-text ul,body.ltr .company-text ol{padding-right:0;padding-left:20px}
 .info-block h1,.info-block h2,.info-block h3,.company-text h1,.company-text h2,.company-text h3{margin:10px 0 6px 0;font-weight:700}
+
+/* ===== Surveys Section ===== */
+.surveys-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #f0e0b0}
+.surveys-header-content{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.surveys-icon{flex-shrink:0;width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#3d2000,#c8971a);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 2px 8px rgba(61,32,0,.18)}
+.surveys-header h2{font-size:15px;font-weight:800;color:#3d2000;margin:0;line-height:1.3}
+.surveys-header p{font-size:11px;color:#888;margin:2px 0 0}
+.surveys-count-badge{flex-shrink:0;min-width:26px;height:26px;padding:0 8px;background:linear-gradient(135deg,#b8860b,#8b6508);color:#fff;font-size:12px;font-weight:800;border-radius:13px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(139,101,8,.3)}
+
+.surveys-grid{display:grid;grid-template-columns:1fr;gap:12px}
+
+.survey-card{display:flex;flex-direction:column;background:#fff;border:1.5px solid #f0e0b0;border-radius:14px;padding:16px;transition:transform .2s,box-shadow .2s,border-color .2s;box-shadow:0 1px 4px rgba(61,32,0,.05)}
+.survey-card:hover,.survey-card:active{transform:translateY(-2px);box-shadow:0 6px 18px rgba(61,32,0,.12);border-color:#c8971a}
+.survey-card-emoji{font-size:36px;line-height:1;margin-bottom:8px}
+.survey-card-body{flex:1;margin-bottom:12px}
+.survey-card-title{font-size:15px;font-weight:800;color:#3d2000;margin:0 0 4px;line-height:1.4}
+.survey-card-desc{font-size:12px;color:#6b5a45;line-height:1.6;margin:0 0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.survey-card-meta{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:#8b6508;font-weight:600}
+.meta-item{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:#fdf8f0;border:1px solid #f0e0b0;border-radius:20px}
+.meta-icon{font-size:13px}
+
+.btn-start-survey{display:block;width:100%;padding:12px 16px;background:linear-gradient(135deg,#b8860b,#8b6508);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;touch-action:manipulation;transition:opacity .15s,transform .1s;box-shadow:0 3px 10px rgba(139,101,8,.25)}
+.btn-start-survey:active{opacity:.9;transform:scale(.98)}
+
+.surveys-empty{padding:30px 20px;text-align:center;color:#888}
+.surveys-empty .empty-icon{font-size:64px;margin-bottom:12px;opacity:.6}
+.surveys-empty h3{font-size:14px;font-weight:700;color:#6b5a45;margin:0 0 6px}
+.surveys-empty p{font-size:12px;color:#999;margin:0;line-height:1.6}
+
+.surveys-loading{padding:30px 20px;text-align:center;color:#888}
+.surveys-loading .loading-spinner{width:32px;height:32px;margin:0 auto 10px;border:3px solid #f0e0b0;border-top-color:#c8971a;border-radius:50%;animation:surveySpin .8s linear infinite}
+.surveys-loading p{font-size:12px;color:#999;margin:0}
+@keyframes surveySpin{to{transform:rotate(360deg)}}
+
+@media (min-width:640px){
+  .surveys-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media (min-width:900px){
+  .surveys-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+/* ===== Surveys Popup ===== */
+.surveys-popup-overlay{position:fixed;inset:0;background:rgba(61,32,0,.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;animation:popupFadeIn .3s ease-out}
+@keyframes popupFadeIn{from{opacity:0}to{opacity:1}}
+.surveys-popup-container{background:#fff;border-radius:20px;padding:28px 22px 22px;max-width:440px;width:100%;max-height:85vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:popupScaleIn .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popupScaleIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.surveys-popup-close{position:absolute;top:12px;left:12px;width:32px;height:32px;border:none;background:#f5f5f5;border-radius:50%;font-size:14px;color:#666;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;touch-action:manipulation;font-family:inherit}
+.surveys-popup-close:hover,.surveys-popup-close:active{background:#e0e0e0}
+.surveys-popup-icon{font-size:56px;text-align:center;margin-bottom:12px;animation:bellRing 1.2s ease-in-out}
+@keyframes bellRing{0%,100%{transform:rotate(0)}10%,30%,50%{transform:rotate(-15deg)}20%,40%,60%{transform:rotate(15deg)}70%{transform:rotate(0)}}
+.surveys-popup-greeting{font-size:20px;font-weight:800;color:#3d2000;margin:0 0 6px;text-align:center;line-height:1.3}
+.surveys-popup-subtitle{font-size:13px;color:#6b5a45;margin:0 0 18px;text-align:center;line-height:1.5}
+.surveys-popup-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;max-height:280px;overflow-y:auto}
+.surveys-popup-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fdf8f0;border:1.5px solid #f0e0b0;border-radius:10px;transition:border-color .15s}
+.surveys-popup-item:hover{border-color:#c8971a}
+.surveys-popup-item-emoji{font-size:24px;flex-shrink:0}
+.surveys-popup-item-content{flex:1;min-width:0}
+.surveys-popup-item-title{font-size:13px;font-weight:700;color:#3d2000;margin:0 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.surveys-popup-item-meta{font-size:11px;color:#8b6508}
+.surveys-popup-actions{display:flex;gap:10px}
+.surveys-popup-btn-primary{flex:2;padding:13px;background:linear-gradient(135deg,#b8860b,#8b6508);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;touch-action:manipulation;transition:opacity .15s,transform .1s;box-shadow:0 3px 10px rgba(139,101,8,.3)}
+.surveys-popup-btn-primary:active{opacity:.9;transform:scale(.98)}
+.surveys-popup-btn-secondary{flex:1;padding:13px;background:#f5f5f5;color:#666;border:1.5px solid #e0e0e0;border-radius:12px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;touch-action:manipulation;transition:background .15s}
+.surveys-popup-btn-secondary:active{background:#e8e8e8}
+@media (max-width:480px){
+  .surveys-popup-container{padding:22px 18px 18px}
+  .surveys-popup-greeting{font-size:18px}
+  .surveys-popup-icon{font-size:48px}
+}
+
+/* ===== Survey Taker Modal (3C) ===== */
+.survey-taker-overlay{position:fixed;inset:0;background:rgba(61,32,0,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:10001;padding:16px;animation:stFadeIn .3s ease-out}
+@keyframes stFadeIn{from{opacity:0}to{opacity:1}}
+.survey-taker-container{background:#fff;border-radius:24px;width:100%;max-width:560px;max-height:90vh;display:flex;flex-direction:column;position:relative;box-shadow:0 25px 70px rgba(0,0,0,.35);overflow:hidden;animation:stScaleIn .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes stScaleIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.survey-taker-close{position:absolute;top:14px;left:14px;width:34px;height:34px;border:none;background:rgba(0,0,0,.05);border-radius:50%;font-size:15px;color:#666;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:background .15s;font-family:inherit}
+.survey-taker-close:hover,.survey-taker-close:active{background:rgba(0,0,0,.12)}
+.survey-taker-progress-wrap{padding:20px 24px 12px;border-bottom:1px solid #f0e0b0}
+.survey-taker-progress-label{font-size:12px;color:#6b5a45;font-weight:600;margin-bottom:8px;text-align:center}
+.survey-taker-progress-bar{height:8px;background:#fdf8f0;border-radius:4px;overflow:hidden;border:1px solid #f0e0b0}
+.survey-taker-progress-fill{height:100%;background:linear-gradient(90deg,#b8860b,#c8971a);border-radius:3px;transition:width .4s ease-out}
+.survey-taker-content{flex:1;overflow-y:auto;padding:28px 24px}
+.survey-screen{text-align:center;padding:20px 10px}
+.survey-screen-emoji{font-size:72px;margin-bottom:16px;line-height:1}
+.survey-screen h2{font-size:22px;font-weight:800;color:#3d2000;margin:0 0 10px}
+.survey-screen p{font-size:14px;color:#6b5a45;line-height:1.7;margin:0 0 24px;white-space:pre-line}
+.survey-screen-btn{padding:14px 32px;background:linear-gradient(135deg,#b8860b,#8b6508);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 12px rgba(139,101,8,.3);transition:transform .1s,opacity .15s}
+.survey-screen-btn:active{transform:scale(.97);opacity:.9}
+.survey-screen-btn:disabled{opacity:.6;cursor:not-allowed}
+.question-wrap{animation:qFadeIn .3s ease-out}
+@keyframes qFadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.question-title{font-size:18px;font-weight:700;color:#3d2000;margin:0 0 20px;line-height:1.5}
+.question-required{color:#c00;font-weight:900}
+.rating-wrapper{margin:20px 0}
+.rating-scale-labels{display:flex;justify-content:space-between;max-width:280px;margin:0 auto 6px;padding:0 10px;direction:ltr}
+.scale-label{font-size:11px;color:#999;font-weight:600}
+.scale-label.scale-low{color:#dc2626}
+.scale-label.scale-high{color:#059669}
+.rating-group{display:flex;justify-content:center;gap:6px;margin:0;direction:ltr}
+.rating-star{font-size:42px;cursor:pointer;color:#e0d0a8;transition:transform .15s,color .15s;user-select:none}
+.rating-star:hover,.rating-star.active{color:#fbbf24;transform:scale(1.1)}
+.rating-star:active{transform:scale(.95)}
+.rating-current-label{text-align:center;font-size:15px;font-weight:700;color:#3d2000;margin-top:10px;min-height:22px;transition:color .3s}
+.rating-wrapper[data-rating="1"] .rating-current-label{color:#dc2626}
+.rating-wrapper[data-rating="2"] .rating-current-label{color:#f59e0b}
+.rating-wrapper[data-rating="3"] .rating-current-label{color:#3b82f6}
+.rating-wrapper[data-rating="4"] .rating-current-label{color:#10b981}
+.rating-wrapper[data-rating="5"] .rating-current-label{color:#059669}
+.yesno-group{display:flex;gap:12px;justify-content:center;margin:20px 0}
+.yesno-btn{flex:1;max-width:180px;padding:20px;border:2px solid #e0d0a8;border-radius:14px;background:#fff;font-family:inherit;font-size:15px;font-weight:700;color:#3d2000;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .2s}
+.yesno-btn .yesno-icon{font-size:32px}
+.yesno-btn:hover{border-color:#c8971a;background:#fdf8f0}
+.yesno-btn.selected.yes{border-color:#10b981;background:#d1fae5;color:#065f46}
+.yesno-btn.selected.no{border-color:#ef4444;background:#fee2e2;color:#991b1b}
+.options-group{display:flex;flex-direction:column;gap:10px;margin:16px 0}
+.option-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border:2px solid #e0d0a8;border-radius:12px;background:#fff;cursor:pointer;transition:all .15s}
+.option-item:hover{border-color:#c8971a;background:#fdf8f0}
+.option-item.selected{border-color:#c8971a;background:#fef9ed}
+.option-checkbox{width:22px;height:22px;border:2px solid #c8971a;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.option-item.checkbox .option-checkbox{border-radius:6px}
+.option-item.selected .option-checkbox{background:#c8971a}
+.option-item.selected .option-checkbox::after{content:'✓';color:#fff;font-weight:900;font-size:14px}
+.option-label{flex:1;font-size:14px;color:#3d2000;font-weight:500}
+.textarea-wrap{margin:16px 0}
+.survey-textarea{width:100%;min-height:120px;padding:14px;border:2px solid #e0d0a8;border-radius:12px;font-family:inherit;font-size:14px;color:#3d2000;resize:vertical;box-sizing:border-box;transition:border-color .15s,box-shadow .15s}
+.survey-textarea:focus{outline:none;border-color:#c8971a;box-shadow:0 0 0 3px rgba(200,151,26,.15)}
+.survey-taker-nav{padding:16px 24px;border-top:1px solid #f0e0b0;display:flex;gap:12px;background:#fdfaf3}
+.survey-nav-btn{flex:1;padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .15s}
+.survey-nav-prev{background:#f5f5f5;color:#666;border:1.5px solid #e0e0e0;flex:.6}
+.survey-nav-prev:hover{background:#e8e8e8}
+.survey-nav-prev:disabled{opacity:.4;cursor:not-allowed}
+.survey-nav-next,.survey-nav-submit{background:linear-gradient(135deg,#b8860b,#8b6508);color:#fff;box-shadow:0 3px 10px rgba(139,101,8,.25)}
+.survey-nav-next:active,.survey-nav-submit:active{transform:scale(.97)}
+.survey-nav-submit{background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 3px 10px rgba(5,150,105,.3)}
+.survey-nav-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.survey-error{background:#fee2e2;border:1px solid #fecaca;color:#991b1b;padding:10px 14px;border-radius:10px;font-size:13px;margin-top:12px;text-align:center}
+@media (max-width:480px){
+  .survey-taker-container{border-radius:20px;max-height:95vh}
+  .survey-taker-content{padding:22px 18px}
+  .question-title{font-size:16px}
+  .rating-star{font-size:36px}
+  .survey-screen-emoji{font-size:60px}
+  .survey-screen h2{font-size:19px}
+}
+
+/* Exit Confirm Modal */
+.exit-confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:10002;padding:20px;animation:exitFadeIn .25s ease-out}
+@keyframes exitFadeIn{from{opacity:0}to{opacity:1}}
+.exit-confirm-container{background:#fff;border-radius:20px;padding:28px 24px 22px;max-width:400px;width:100%;text-align:center;box-shadow:0 25px 70px rgba(0,0,0,.4);animation:exitScaleIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes exitScaleIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.exit-confirm-icon{font-size:52px;margin-bottom:12px;animation:exitIconShake .6s ease-in-out}
+@keyframes exitIconShake{0%,100%{transform:rotate(0)}25%{transform:rotate(-10deg)}75%{transform:rotate(10deg)}}
+.exit-confirm-title{font-size:18px;font-weight:800;color:#3d2000;margin:0 0 8px;line-height:1.4}
+.exit-confirm-msg{font-size:13px;color:#6b5a45;margin:0 0 22px;line-height:1.6}
+.exit-confirm-actions{display:flex;flex-direction:column;gap:10px}
+.exit-btn{padding:13px;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:transform .1s,opacity .15s,background .15s}
+.exit-btn-cancel{background:linear-gradient(135deg,#b8860b,#8b6508);color:#fff;box-shadow:0 3px 10px rgba(139,101,8,.3)}
+.exit-btn-cancel:active{transform:scale(.97)}
+.exit-btn-confirm{background:#f5f5f5;color:#991b1b;border:1.5px solid #fecaca}
+.exit-btn-confirm:hover{background:#fee2e2}
+.exit-btn-confirm:active{transform:scale(.97)}
+@media (max-width:480px){
+  .exit-confirm-container{padding:22px 18px 18px}
+  .exit-confirm-title{font-size:16px}
+  .exit-confirm-icon{font-size:44px}
+}
 .contact-card{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px;margin-bottom:10px}
 .contact-name{font-size:14px;font-weight:600;color:#166534;margin-bottom:8px}
 .contact-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;background:#25d366;color:#fff;border-radius:10px;text-decoration:none;font-size:13px;font-weight:500;margin-top:6px;touch-action:manipulation;text-align:center}
 .contact-btn:active{opacity:.85}
 .company-text{font-size:13px;line-height:1.8;color:#444;margin-bottom:12px}
-.survey-btn{display:block;width:100%;padding:13px;background:linear-gradient(135deg,#b8860b,#8b6508);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:500;text-align:center;text-decoration:none;margin-bottom:10px;touch-action:manipulation}
-.survey-btn:active{opacity:.85}
 .whatsapp-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:#25d366;color:#fff;border-radius:12px;font-size:14px;font-weight:500;text-decoration:none;touch-action:manipulation}
 .whatsapp-btn:active{opacity:.85}
 @media(min-width:500px){
@@ -154,6 +318,44 @@ body.ltr .info-block ul,body.ltr .info-block ol,body.ltr .company-text ul,body.l
   #result-screen{padding:24px 28px 60px}
 }
 
+/* ===== إخفاء Google Translate Widget UI ===== */
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+.skiptranslate {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+}
+body {
+  top: 0 !important;
+  position: static !important;
+}
+html {
+  top: 0 !important;
+}
+.goog-tooltip,
+.goog-tooltip:hover,
+.goog-te-balloon-frame {
+  display: none !important;
+}
+.goog-text-highlight {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.goog-logo-link,
+.goog-te-gadget-simple img,
+.goog-te-gadget-icon,
+.goog-te-gadget {
+  display: none !important;
+}
+font {
+  font-family: inherit !important;
+}
+iframe.goog-te-menu-frame,
+iframe.goog-te-banner-frame {
+  display: none !important;
+}
 
 </style>
 
@@ -217,20 +419,65 @@ body.ltr .info-block ul,body.ltr .info-block ol,body.ltr .company-text ul,body.l
 </div>
 
 
+<!-- مودال تأكيد إغلاق الاستبيان -->
+<div id="survey-exit-confirm" class="exit-confirm-overlay" style="display:none">
+  <div class="exit-confirm-container">
+    <div class="exit-confirm-icon">⚠️</div>
+    <h3 class="exit-confirm-title" id="t-survey-exit-title">هل تريد إغلاق الاستبيان؟</h3>
+    <p class="exit-confirm-msg" id="t-survey-exit-msg">إجاباتك لن تُحفظ وستضطر للبدء من جديد.</p>
+    <div class="exit-confirm-actions">
+      <button class="exit-btn exit-btn-cancel" id="t-survey-exit-continue" onclick="cancelExitSurvey()">↩️ متابعة الإجابة</button>
+      <button class="exit-btn exit-btn-confirm" id="t-survey-exit-confirm-btn" onclick="confirmExitSurvey()">خروج بدون حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- مودال عرض/إجابة الاستبيان (المرحلة 3C) -->
+<div id="survey-taker-overlay" class="survey-taker-overlay" style="display:none">
+  <div class="survey-taker-container">
+    <button class="survey-taker-close" id="survey-taker-close-btn" onclick="closeSurveyTaker()" aria-label="إغلاق">✕</button>
+    <div class="survey-taker-progress-wrap" id="survey-taker-progress-wrap" style="display:none">
+      <div class="survey-taker-progress-label"><span id="survey-taker-progress-text">السؤال 1 من 5</span></div>
+      <div class="survey-taker-progress-bar"><div class="survey-taker-progress-fill" id="survey-taker-progress-fill" style="width:0%"></div></div>
+    </div>
+    <div id="survey-taker-content" class="survey-taker-content"></div>
+    <div id="survey-taker-nav" class="survey-taker-nav" style="display:none">
+      <button class="survey-nav-btn survey-nav-prev" id="survey-btn-prev" onclick="surveyNavPrev()">← السابق</button>
+      <button class="survey-nav-btn survey-nav-next" id="survey-btn-next" onclick="surveyNavNext()">التالي →</button>
+      <button class="survey-nav-btn survey-nav-submit" id="survey-btn-submit" onclick="submitSurvey()" style="display:none">إرسال ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- نافذة الاستبيانات (المرحلة 3B) -->
+<div id="surveys-popup-overlay" class="surveys-popup-overlay" style="display:none" onclick="dismissSurveysPopup(event)">
+  <div class="surveys-popup-container" onclick="event.stopPropagation()">
+    <button class="surveys-popup-close" id="surveys-popup-close-btn" onclick="dismissSurveysPopup()" aria-label="إغلاق">✕</button>
+    <div class="surveys-popup-icon">🔔</div>
+    <h2 class="surveys-popup-greeting"><span id="surveys-popup-hello">مرحباً</span> <span id="surveys-popup-name"></span> <span id="surveys-popup-emoji">👋</span></h2>
+    <p class="surveys-popup-subtitle" id="surveys-popup-subtitle">📋 لديك استبيان جديد متاح</p>
+    <div id="surveys-popup-list" class="surveys-popup-list"></div>
+    <div class="surveys-popup-actions">
+      <button class="surveys-popup-btn-primary" id="surveys-popup-start-btn" onclick="startFirstSurveyFromPopup()">ابدأ الآن ←</button>
+      <button class="surveys-popup-btn-secondary" id="surveys-popup-later-btn" onclick="dismissSurveysPopup()">لاحقاً</button>
+    </div>
+  </div>
+</div>
+
 <!-- شاشة الموافقة -->
 <div id="haj-consent-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:20px;padding:32px;max-width:420px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
     <div style="font-size:44px;margin-bottom:14px">🕋</div>
-    <h2 style="font-size:18px;font-weight:700;color:#3d2000;margin-bottom:10px">الوصول إلى بيانات الحجز</h2>
-    <p style="font-size:13px;color:#666;line-height:1.8;margin-bottom:20px">هذه البوابة تعرض بيانات مشتركة خاصة بحجاج <span id="consent-company"></span>. المعلومات المعروضة تخصك فقط بعد تسجيل الدخول.</p>
+    <h2 id="t-consent-title" style="font-size:18px;font-weight:700;color:#3d2000;margin-bottom:10px">الوصول إلى بيانات الحجز</h2>
+    <p id="t-consent-msg" style="font-size:13px;color:#666;line-height:1.8;margin-bottom:20px">هذه البوابة تعرض بيانات مشتركة خاصة بحجاج <span id="consent-company"></span>. المعلومات المعروضة تخصك فقط بعد تسجيل الدخول.</p>
     <div style="background:#fffbf0;border:1.5px solid #f0e0b0;border-radius:12px;padding:14px;margin-bottom:22px;text-align:right">
       <div style="font-size:12px;color:#666;line-height:1.8">
-        🔒 بياناتك محمية ولا تُشارك مع حجاج آخرين<br>
-        📋 قد تظهر تعاميم وإشعارات من إدارة الحملة
+        <span id="t-consent-protected">🔒 بياناتك محمية ولا تُشارك مع حجاج آخرين</span><br>
+        <span id="t-consent-announcements">📋 قد تظهر تعاميم وإشعارات من إدارة الحملة</span>
       </div>
     </div>
-    <button onclick="acceptHajConsent()" style="width:100%;padding:14px;background:linear-gradient(135deg,#b8860b,#8b6508);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px">✅ أفهم وأوافق</button>
-    <button onclick="rejectHajConsent()" style="width:100%;padding:11px;background:#f5f5f5;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:#888">❌ إلغاء</button>
+    <button id="t-consent-accept" onclick="acceptHajConsent()" style="width:100%;padding:14px;background:linear-gradient(135deg,#b8860b,#8b6508);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px">✅ أفهم وأوافق</button>
+    <button id="t-consent-reject" onclick="rejectHajConsent()" style="width:100%;padding:11px;background:#f5f5f5;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:#888">❌ إلغاء</button>
   </div>
 </div>
 
@@ -251,7 +498,7 @@ body.ltr .info-block ul,body.ltr .info-block ol,body.ltr .company-text ul,body.l
     </div>
     <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer;font-size:14px;color:#555;justify-content:center">
       <input type="checkbox" id="remember-me" style="width:16px;height:16px;cursor:pointer">
-      تذكر بياناتي
+      <span id="t-remember-me">تذكر بياناتي</span>
     </label>
     <div id="error-msg" style="display:none;color:#c00;background:#fff0f0;border:1px solid #ffcccc;border-radius:8px;padding:10px;margin-bottom:12px;text-align:center;font-size:14px">
       ❌ رقم الهوية أو رقم الحجز غير صحيح
@@ -286,7 +533,7 @@ body.ltr .info-block ul,body.ltr .info-block ol,body.ltr .company-text ul,body.l
   <div class="extra-section" id="announcements-section">
     <div class="section-title"><span id="r-ann-title">📢 التعاميم والتعليمات</span></div>
     <div id="announcements-list">
-      <div id="ann-empty" style="text-align:center;padding:20px;color:#bbb;font-size:13px">لا توجد تعاميم حالياً</div>
+      <div id="ann-empty" style="text-align:center;padding:20px;color:#bbb;font-size:13px"><span id="t-ann-empty">لا توجد تعاميم حالياً</span></div>
     </div>
   </div>
 
@@ -326,16 +573,16 @@ body.ltr .info-block ul,body.ltr .info-block ol,body.ltr .company-text ul,body.l
 
   <!-- التطعيمات -->
   <div class="extra-section" id="sec-vaccines">
-    <div class="section-title">💉 التطعيمات الخاصة بموسم الحج</div>
+    <div class="section-title" id="t-vaccines-title">💉 التطعيمات الخاصة بموسم الحج</div>
     <div class="info-block" id="r-vaccines-content">
-      <strong>متى يجب علي أخذ تطعيمات الحج؟</strong><br>
-      يُنصح بأخذ التطعيمات قبل موسم الحج بـ <strong>4 إلى 6 أسابيع</strong> على الأقل لضمان فاعليتها الكاملة. وتشمل التطعيمات المطلوبة:<br>
-      🔹 تطعيم الحمى الشوكية (إلزامي)<br>
-      🔹 تطعيم كوفيد-19<br>
-      🔹 تطعيم الإنفلونزا الموسمية<br>
-      🔹 تطعيم التهاب الكبد A وB<br>
-      🔹 تطعيم شلل الأطفال (لبعض الجنسيات)<br><br>
-      ⚠️ تأكد من مراجعة طبيبك أو أقرب مركز صحي للحصول على التوصيات المناسبة لحالتك.
+      <strong id="t-vaccines-when-title">متى يجب علي أخذ تطعيمات الحج؟</strong><br>
+      <span id="t-vaccines-when-body">يُنصح بأخذ التطعيمات قبل موسم الحج بـ <strong>4 إلى 6 أسابيع</strong> على الأقل لضمان فاعليتها الكاملة. وتشمل التطعيمات المطلوبة:</span><br>
+      🔹 <span id="t-vaccine-meningitis">تطعيم الحمى الشوكية (إلزامي)</span><br>
+      🔹 <span id="t-vaccine-covid">تطعيم كوفيد-19</span><br>
+      🔹 <span id="t-vaccine-flu">تطعيم الإنفلونزا الموسمية</span><br>
+      🔹 <span id="t-vaccine-hepatitis">تطعيم التهاب الكبد A وB</span><br>
+      🔹 <span id="t-vaccine-polio">تطعيم شلل الأطفال (لبعض الجنسيات)</span><br><br>
+      <span id="t-vaccines-warn">⚠️ تأكد من مراجعة طبيبك أو أقرب مركز صحي للحصول على التوصيات المناسبة لحالتك.</span>
     </div>
   </div>
 
@@ -343,8 +590,8 @@ body.ltr .info-block ul,body.ltr .info-block ol,body.ltr .company-text ul,body.l
   <div class="extra-section" id="sec-sheikh">
     <div class="section-title"><span id="r-sheikh-title">🕋 التواصل مع الدعاة</span></div>
     <div class="info-block" id="r-sheikh-content" style="background:#f0f9ff;border-color:#bae6fd;color:#0c4a6e">
-      أخي الحاج / أختي الحاجة 🕋<br>
-      تقبل الله طاعتكم، في حال وجود استفسارات دينية يمكنك التواصل مع الدعاة الخاصين بالحملة:
+      <span id="t-sheikh-greeting">أخي الحاج / أختي الحاجة 🕋</span><br>
+      <span id="t-sheikh-intro">تقبل الله طاعتكم، في حال وجود استفسارات دينية يمكنك التواصل مع الدعاة الخاصين بالحملة:</span>
     </div>
     <div id="r-sheikh-cards">
       <div class="info-block" id="r-sheikh-empty" style="text-align:center;color:#888;background:#f9f9f9;border-color:#e5e5e5">
@@ -355,30 +602,46 @@ body.ltr .info-block ul,body.ltr .info-block ol,body.ltr .company-text ul,body.l
 
   <!-- معلومات الشركة -->
   <div class="extra-section" id="sec-company">
-    <div class="section-title">🏢 معلومات عن الشركة</div>
+    <div class="section-title" id="t-company-section-title">🏢 معلومات عن الشركة</div>
     <div class="company-text">
       <div style="margin-bottom:10px;font-weight:600"><span id="company-name-inline"></span></div>
       <div id="r-company-content">
-        إحدى الشركات الرائدة والمتميزة في خدمة حجاج الداخل، نسعى دائماً لرضى الحاج من خلال خدماتنا المتميزة. منذ تأسيس الشركة ونحن نتطور لنكون الأفضل في خدمة حجاج الداخل بفريق عمل لديهم الخبرة لإدارة وتنظيم الحجاج إلكترونياً وميدانياً.<br><br>
-        🏅 مصرحة من وزارة الحج بتصريح رقم <strong>10011</strong><br><br>
-        نسعد بخدمتكم دائماً 🙏
+        <span id="t-company-about">إحدى الشركات الرائدة والمتميزة في خدمة حجاج الداخل، نسعى دائماً لرضى الحاج من خلال خدماتنا المتميزة. منذ تأسيس الشركة ونحن نتطور لنكون الأفضل في خدمة حجاج الداخل بفريق عمل لديهم الخبرة لإدارة وتنظيم الحجاج إلكترونياً وميدانياً.</span><br><br>
+        <span id="t-company-license">🏅 مصرحة من وزارة الحج بتصريح رقم <strong>10011</strong></span><br><br>
+        <span id="t-company-serving">نسعد بخدمتكم دائماً 🙏</span>
       </div>
     </div>
   </div>
 
-  <!-- تقييم واستبيان -->
+  <!-- الاستبيانات -->
   <div class="extra-section" id="sec-survey">
-    <div class="section-title"><span id="r-survey-title">⭐ تقييم الحملة وتعبئة استبيان</span></div>
-    <div class="info-block" style="background:#fdf4ff;border-color:#e9d5ff;color:#6b21a8;text-align:center">
-      <span id="r-survey-msg">سيتم رفع الاستبيان في وقت لاحق، شكراً لاهتمامكم 🙏</span>
+    <div class="surveys-header">
+      <div class="surveys-header-content">
+        <div class="surveys-icon">📋</div>
+        <div>
+          <h2 id="surveys-section-title">الاستبيانات المتاحة</h2>
+          <p id="surveys-subtitle">نحن نقدّر رأيك ومشاركتك</p>
+        </div>
+      </div>
+      <div class="surveys-count-badge" id="surveys-count-badge" style="display:none">0</div>
     </div>
+    <div id="surveys-loading" class="surveys-loading">
+      <div class="loading-spinner"></div>
+      <p id="t-surveys-loading">جاري تحميل الاستبيانات...</p>
+    </div>
+    <div id="surveys-empty-state" class="surveys-empty" style="display:none">
+      <div class="empty-icon">✨</div>
+      <h3 id="t-surveys-empty-title">لا توجد استبيانات متاحة حالياً</h3>
+      <p id="t-surveys-empty-msg">نشكر مشاركتك. ستظهر الاستبيانات الجديدة هنا عند توفرها.</p>
+    </div>
+    <div id="surveys-list" class="surveys-grid"></div>
   </div>
 
   <!-- استفسارات وطلبات -->
   <div class="extra-section" id="sec-whatsapp">
     <div class="section-title"><span id="r-whatsapp-title">📞 للاستفسارات والطلبات</span></div>
     <div class="info-block" id="r-whatsapp-content" style="margin-bottom:12px">
-      يمكنكم التواصل معنا مباشرة على واتساب لإرسال طلباتكم، نعتز بخدمتكم.
+      <span id="t-whatsapp-intro">يمكنكم التواصل معنا مباشرة على واتساب لإرسال طلباتكم، نعتز بخدمتكم.</span>
     </div>
     <a class="whatsapp-btn" id="r-whatsapp-link" href="#" target="_blank" style="display:none">
       <span>💬</span> <span id="r-whatsapp-btn">تواصل معنا على واتساب</span>
@@ -412,7 +675,76 @@ const LANGS = {
     
     minaSeat:'موقع جلوسك في مخيم منى', arafatSeat:'موقع جلوسك في مخيم عرفات', muzdalifahSeat:'موقع جلوسك في مخيم مزدلفة', fawjNum:'رقم الفوج الخاص بك', busNum:'رقم الحافلة الخاصة بك', supervisorTitle:'المشرف الخاص بك', supervisorNone:'لم يتم تعيين مشرف بعد', supervisorContact:'تواصل مع مشرفك على واتساب', announcementsTitle:'📢 التعاميم', sheikhTitle:'🕋 التواصل مع الدعاة', companyTitle:'🏢 معلومات الشركة', surveyTitle:'⭐ الاستبيان', surveyMsg:'سيتم إتاحة الاستبيان قريباً، شكراً لاهتمامكم.', whatsappBtn:'💬 تواصل معنا على واتساب', mapsMina:'📍 خريطة منى', mapsArafat:'📍 خريطة عرفات', mapsTitle:'مواقع الحملة'
   ,
-    annTitle:'📢 التعاميم والتعليمات', mapsTitle:'📍 مواقع الحملة بالمشاعر المقدسة', seatsTitle:'📍 مواقع جلوسك بالمشاعر المقدسة', minaBtnTxt:'موقع الحملة في منى', muzdalifahBtnTxt:'موقع الحملة في مزدلفة', arafatBtnTxt:'موقع الحملة في عرفات', transportTitle:'🚌 معلومات الفوج والحافلة', supervisorTitle2:'👤 المشرف الخاص بك', surveyTitle2:'⭐ تقييم الحملة وتعبئة استبيان', surveyMsg2:'سيتم رفع الاستبيان في وقت لاحق، شكراً لاهتمامكم 🙏', whatsappTitle:'📞 للاستفسارات والطلبات', whatsappBtnTxt:'تواصل معنا على واتساب'
+    annTitle:'📢 التعاميم والتعليمات', mapsTitle:'📍 مواقع الحملة بالمشاعر المقدسة', seatsTitle:'📍 مواقع جلوسك بالمشاعر المقدسة', minaBtnTxt:'موقع الحملة في منى', muzdalifahBtnTxt:'موقع الحملة في مزدلفة', arafatBtnTxt:'موقع الحملة في عرفات', transportTitle:'🚌 معلومات الفوج والحافلة', supervisorTitle2:'👤 المشرف الخاص بك', surveyTitle2:'⭐ تقييم الحملة وتعبئة استبيان', surveyMsg2:'سيتم رفع الاستبيان في وقت لاحق، شكراً لاهتمامكم 🙏', whatsappTitle:'📞 للاستفسارات والطلبات', whatsappBtnTxt:'تواصل معنا على واتساب',
+    // ===== Phase 1 — i18n extensions =====
+    surveyExitTitle:'هل تريد إغلاق الاستبيان؟',
+    surveyExitMsg:'إجاباتك لن تُحفظ وستضطر للبدء من جديد.',
+    surveyExitContinue:'↩️ متابعة الإجابة',
+    surveyExitConfirm:'خروج بدون حفظ',
+    surveyClose:'إغلاق',
+    surveyQProgress:'السؤال {n} من {total}',
+    surveyBtnPrev:'← السابق',
+    surveyBtnNext:'التالي →',
+    surveyBtnSubmit:'إرسال ✓',
+    surveySubmitting:'⏳ جاري الإرسال...',
+    surveyRetry:'🔄 إعادة المحاولة',
+    surveySubmitFail:'❌ فشل الإرسال. حاول مرة أخرى.',
+    surveysPopupSingle:'📋 لديك استبيان جديد متاح',
+    surveysPopupMulti:'📋 لديك {n} استبيانات جديدة متاحة',
+    surveysPopupStart:'ابدأ الآن ←',
+    surveysPopupLater:'لاحقاً',
+    surveysSectionTitle:'الاستبيانات المتاحة',
+    surveysSectionSub:'نحن نقدّر رأيك ومشاركتك',
+    surveysLoading:'جاري تحميل الاستبيانات...',
+    surveysEmptyTitle:'لا توجد استبيانات متاحة حالياً',
+    surveysEmptyMsg:'نشكر مشاركتك. ستظهر الاستبيانات الجديدة هنا عند توفرها.',
+    surveyUnavailable:'الاستبيان غير متاح',
+    surveyNoQuestions:'لا توجد أسئلة في هذا الاستبيان',
+    surveyOpenError:'حدث خطأ أثناء فتح الاستبيان',
+    surveyStartAnswer:'ابدأ الإجابة ←',
+    surveyWordQ1:'سؤال', surveyWordQN:'أسئلة', surveyWordMin1:'دقيقة', surveyWordMinN:'دقائق',
+    ratingPoor:'ضعيف', ratingFair:'مقبول', ratingGood:'جيد', ratingVeryGood:'جيد جداً', ratingExcellent:'ممتاز',
+    surveyRequired:'⚠️ هذا السؤال مطلوب',
+    surveyThanksTitle:'شكراً لك!',
+    surveyDefaultThanks:'شكراً لك! تم إرسال إجاباتك بنجاح.',
+    surveyDefaultWelcome:'نشكرك على وقتك لمشاركتنا رأيك',
+    yesLabel:'نعم', noLabel:'لا',
+    textPlaceholder:'اكتب إجابتك هنا...',
+    surveyCardStart:'ابدأ الآن ←',
+    pilgrimFallback:'حاجنا الكريم',
+    greetingSuffix:'👋',
+    vaccinesTitle:'💉 التطعيمات الخاصة بموسم الحج',
+    vaccinesWhenTitle:'متى يجب علي أخذ تطعيمات الحج؟',
+    vaccinesWhenBody:'يُنصح بأخذ التطعيمات قبل موسم الحج بـ <strong>4 إلى 6 أسابيع</strong> على الأقل لضمان فاعليتها الكاملة. وتشمل التطعيمات المطلوبة:',
+    vaccineMeningitis:'تطعيم الحمى الشوكية (إلزامي)',
+    vaccineCovid:'تطعيم كوفيد-19',
+    vaccineFlu:'تطعيم الإنفلونزا الموسمية',
+    vaccineHepatitis:'تطعيم التهاب الكبد A وB',
+    vaccinePolio:'تطعيم شلل الأطفال (لبعض الجنسيات)',
+    vaccinesWarn:'⚠️ تأكد من مراجعة طبيبك أو أقرب مركز صحي للحصول على التوصيات المناسبة لحالتك.',
+    companySectionTitle:'🏢 معلومات عن الشركة',
+    companyAbout:'إحدى الشركات الرائدة والمتميزة في خدمة حجاج الداخل، نسعى دائماً لرضى الحاج من خلال خدماتنا المتميزة. منذ تأسيس الشركة ونحن نتطور لنكون الأفضل في خدمة حجاج الداخل بفريق عمل لديهم الخبرة لإدارة وتنظيم الحجاج إلكترونياً وميدانياً.',
+    companyLicense:'🏅 مصرحة من وزارة الحج بتصريح رقم <strong>10011</strong>',
+    companyServing:'نسعد بخدمتكم دائماً 🙏',
+    licenseInlineLabel:'ترخيص رقم:',
+    licenseTitleLabel:'ترخيص',
+    consentTitle:'الوصول إلى بيانات الحجز',
+    consentMsg:'هذه البوابة تعرض بيانات مشتركة خاصة بحجاج {company}. المعلومات المعروضة تخصك فقط بعد تسجيل الدخول.',
+    consentProtected:'🔒 بياناتك محمية ولا تُشارك مع حجاج آخرين',
+    consentAnnouncements:'📋 قد تظهر تعاميم وإشعارات من إدارة الحملة',
+    consentAccept:'✅ أفهم وأوافق',
+    consentReject:'❌ إلغاء',
+    rememberMe:'تذكر بياناتي',
+    tagline:'🤝 نعتز بخدمتكم',
+    idPlaceholder:'هنا رقم الهوية',
+    bookingPlaceholder:'هنا رقم الحجز',
+    loginVerifying:'⏳ جاري التحقق...',
+    sheikhGreeting:'أخي الحاج / أختي الحاجة 🕋',
+    sheikhIntro:'تقبل الله طاعتكم، في حال وجود استفسارات دينية يمكنك التواصل مع الدعاة الخاصين بالحملة:',
+    sheikhEmpty:'لم يتم إضافة دعاة بعد — يمكنك التواصل مع المشرف الخاص بك',
+    announcementsEmpty:'لا توجد تعاميم حالياً',
+    whatsappIntro:'يمكنكم التواصل معنا مباشرة على واتساب لإرسال طلباتكم، نعتز بخدمتكم.',
+    annLabelInfo:'معلومة', annLabelWarn:'تنبيه', annLabelUrgent:'عاجل', annLabelSuccess:'إيجابي'
   },
   en: {
     name:'English', dir:'ltr', flag:'🇬🇧',
@@ -431,7 +763,76 @@ const LANGS = {
     
     minaSeat:'Your seat in Mina Camp', arafatSeat:'Your seat in Arafat Camp', muzdalifahSeat:'Your seat in Muzdalifah Camp', fawjNum:'Your Group Number', busNum:'Your Bus Number', supervisorTitle:'Your Supervisor', supervisorNone:'No supervisor assigned yet', supervisorContact:'Contact your supervisor on WhatsApp', announcementsTitle:'📢 Announcements', sheikhTitle:'🕋 Scholars', companyTitle:'🏢 Company Information', surveyTitle:'⭐ Survey', surveyMsg:'The survey will be available soon. Thank you for your interest.', whatsappBtn:'💬 Contact us on WhatsApp', mapsMina:'📍 Mina Map', mapsArafat:'📍 Arafat Map', mapsTitle:'Camp Locations'
   ,
-    annTitle:'📢 Announcements & Instructions', mapsTitle:'📍 Camp Locations at Holy Sites', seatsTitle:'📍 Your Seating Locations at Holy Sites', minaBtnTxt:'Camp location in Mina', muzdalifahBtnTxt:'Camp location in Muzdalifah', arafatBtnTxt:'Camp location in Arafat', transportTitle:'🚌 Group & Bus Information', supervisorTitle2:'👤 Your Supervisor', surveyTitle2:'⭐ Camp Evaluation Survey', surveyMsg2:'The survey will be uploaded later, thank you for your interest 🙏', whatsappTitle:'📞 For Inquiries & Requests', whatsappBtnTxt:'Contact us on WhatsApp'
+    annTitle:'📢 Announcements & Instructions', mapsTitle:'📍 Camp Locations at Holy Sites', seatsTitle:'📍 Your Seating Locations at Holy Sites', minaBtnTxt:'Camp location in Mina', muzdalifahBtnTxt:'Camp location in Muzdalifah', arafatBtnTxt:'Camp location in Arafat', transportTitle:'🚌 Group & Bus Information', supervisorTitle2:'👤 Your Supervisor', surveyTitle2:'⭐ Camp Evaluation Survey', surveyMsg2:'The survey will be uploaded later, thank you for your interest 🙏', whatsappTitle:'📞 For Inquiries & Requests', whatsappBtnTxt:'Contact us on WhatsApp',
+    // ===== Phase 1 — i18n extensions =====
+    surveyExitTitle:'Close the survey?',
+    surveyExitMsg:'Your answers will not be saved and you will have to start over.',
+    surveyExitContinue:'↩️ Continue Answering',
+    surveyExitConfirm:'Exit Without Saving',
+    surveyClose:'Close',
+    surveyQProgress:'Question {n} of {total}',
+    surveyBtnPrev:'← Previous',
+    surveyBtnNext:'Next →',
+    surveyBtnSubmit:'Submit ✓',
+    surveySubmitting:'⏳ Submitting...',
+    surveyRetry:'🔄 Retry',
+    surveySubmitFail:'❌ Submission failed. Please try again.',
+    surveysPopupSingle:'📋 You have a new survey available',
+    surveysPopupMulti:'📋 You have {n} new surveys available',
+    surveysPopupStart:'Start Now →',
+    surveysPopupLater:'Later',
+    surveysSectionTitle:'Available Surveys',
+    surveysSectionSub:'We value your feedback and participation',
+    surveysLoading:'Loading surveys...',
+    surveysEmptyTitle:'No surveys available right now',
+    surveysEmptyMsg:'Thank you for your participation. New surveys will appear here when available.',
+    surveyUnavailable:'Survey is not available',
+    surveyNoQuestions:'No questions in this survey',
+    surveyOpenError:'An error occurred while opening the survey',
+    surveyStartAnswer:'Start Answering →',
+    surveyWordQ1:'question', surveyWordQN:'questions', surveyWordMin1:'minute', surveyWordMinN:'minutes',
+    ratingPoor:'Poor', ratingFair:'Fair', ratingGood:'Good', ratingVeryGood:'Very Good', ratingExcellent:'Excellent',
+    surveyRequired:'⚠️ This question is required',
+    surveyThanksTitle:'Thank you!',
+    surveyDefaultThanks:'Thank you! Your answers have been submitted successfully.',
+    surveyDefaultWelcome:'Thank you for taking the time to share your opinion with us',
+    yesLabel:'Yes', noLabel:'No',
+    textPlaceholder:'Write your answer here...',
+    surveyCardStart:'Start Now →',
+    pilgrimFallback:'Dear Pilgrim',
+    greetingSuffix:'👋',
+    vaccinesTitle:'💉 Hajj Season Vaccinations',
+    vaccinesWhenTitle:'When should I take Hajj vaccinations?',
+    vaccinesWhenBody:'It is recommended to take vaccinations at least <strong>4 to 6 weeks</strong> before the Hajj season for full effectiveness. Required vaccinations include:',
+    vaccineMeningitis:'Meningococcal vaccine (mandatory)',
+    vaccineCovid:'COVID-19 vaccine',
+    vaccineFlu:'Seasonal flu vaccine',
+    vaccineHepatitis:'Hepatitis A and B vaccine',
+    vaccinePolio:'Polio vaccine (for some nationalities)',
+    vaccinesWarn:'⚠️ Be sure to consult your doctor or the nearest health center for the appropriate recommendations for your condition.',
+    companySectionTitle:'🏢 About the Company',
+    companyAbout:'One of the leading and distinguished companies in serving domestic pilgrims. We always strive for pilgrim satisfaction through our outstanding services. Since our founding, we have evolved to become the best in serving domestic pilgrims with an experienced team managing and organizing pilgrims electronically and on the ground.',
+    companyLicense:'🏅 Licensed by the Ministry of Hajj under license number <strong>10011</strong>',
+    companyServing:'Always pleased to serve you 🙏',
+    licenseInlineLabel:'License No.:',
+    licenseTitleLabel:'License',
+    consentTitle:'Access to Booking Data',
+    consentMsg:'This portal displays shared data for pilgrims of {company}. The displayed information belongs to you only after logging in.',
+    consentProtected:'🔒 Your data is protected and not shared with other pilgrims',
+    consentAnnouncements:'📋 Announcements and notifications from the campaign management may appear',
+    consentAccept:'✅ I Understand and Agree',
+    consentReject:'❌ Cancel',
+    rememberMe:'Remember me',
+    tagline:'🤝 Proud to serve you',
+    idPlaceholder:'Enter your ID number',
+    bookingPlaceholder:'Enter your booking number',
+    loginVerifying:'⏳ Verifying...',
+    sheikhGreeting:'Dear Pilgrim 🕋',
+    sheikhIntro:'May Allah accept your obedience. For any religious inquiries, you may contact the campaign scholars:',
+    sheikhEmpty:'No scholars have been added yet — you can contact your supervisor',
+    announcementsEmpty:'No announcements at the moment',
+    whatsappIntro:'You can contact us directly on WhatsApp to send your requests. We are proud to serve you.',
+    annLabelInfo:'Info', annLabelWarn:'Warning', annLabelUrgent:'Urgent', annLabelSuccess:'Positive'
   },
   ur: {
     name:'اردو', dir:'rtl', flag:'🇵🇰',
@@ -450,7 +851,76 @@ const LANGS = {
     
     minaSeat:'منیٰ کیمپ میں آپ کی نشست', arafatSeat:'عرفات کیمپ میں آپ کی نشست', muzdalifahSeat:'مزدلفہ کیمپ میں آپ کی نشست', fawjNum:'آپ کا گروپ نمبر', busNum:'آپ کی بس نمبر', supervisorTitle:'آپ کا نگران', supervisorNone:'ابھی کوئی نگران مقرر نہیں', supervisorContact:'واٹس ایپ پر نگران سے رابطہ کریں', announcementsTitle:'📢 اعلانات', sheikhTitle:'🕋 علماء سے رابطہ', companyTitle:'🏢 کمپنی کی معلومات', surveyTitle:'⭐ سروے', surveyMsg:'سروے جلد دستیاب ہوگا، آپ کی دلچسپی کا شکریہ۔', whatsappBtn:'💬 واٹس ایپ پر ہم سے رابطہ کریں', mapsMina:'📍 منیٰ نقشہ', mapsArafat:'📍 عرفات نقشہ', mapsTitle:'کیمپ مقامات'
   ,
-    annTitle:'📢 اعلانات اور ہدایات', mapsTitle:'📍 مقدس مقامات پر کیمپ کے مقامات', seatsTitle:'📍 مقدس مقامات پر آپ کی نشستیں', minaBtnTxt:'منیٰ میں کیمپ کا مقام', muzdalifahBtnTxt:'مزدلفہ میں کیمپ کا مقام', arafatBtnTxt:'عرفات میں کیمپ کا مقام', transportTitle:'🚌 گروپ اور بس کی معلومات', supervisorTitle2:'👤 آپ کا نگران', surveyTitle2:'⭐ کیمپ کا جائزہ سروے', surveyMsg2:'سروے بعد میں اپلوڈ کیا جائے گا، آپ کی دلچسپی کا شکریہ 🙏', whatsappTitle:'📞 استفسارات اور درخواستوں کے لیے', whatsappBtnTxt:'واٹس ایپ پر ہم سے رابطہ کریں'
+    annTitle:'📢 اعلانات اور ہدایات', mapsTitle:'📍 مقدس مقامات پر کیمپ کے مقامات', seatsTitle:'📍 مقدس مقامات پر آپ کی نشستیں', minaBtnTxt:'منیٰ میں کیمپ کا مقام', muzdalifahBtnTxt:'مزدلفہ میں کیمپ کا مقام', arafatBtnTxt:'عرفات میں کیمپ کا مقام', transportTitle:'🚌 گروپ اور بس کی معلومات', supervisorTitle2:'👤 آپ کا نگران', surveyTitle2:'⭐ کیمپ کا جائزہ سروے', surveyMsg2:'سروے بعد میں اپلوڈ کیا جائے گا، آپ کی دلچسپی کا شکریہ 🙏', whatsappTitle:'📞 استفسارات اور درخواستوں کے لیے', whatsappBtnTxt:'واٹس ایپ پر ہم سے رابطہ کریں',
+    // ===== Phase 1 — i18n extensions =====
+    surveyExitTitle:'سروے بند کریں؟',
+    surveyExitMsg:'آپ کے جوابات محفوظ نہیں ہوں گے اور آپ کو دوبارہ شروع کرنا پڑے گا۔',
+    surveyExitContinue:'↩️ جواب جاری رکھیں',
+    surveyExitConfirm:'بغیر محفوظ کیے خارج ہوں',
+    surveyClose:'بند کریں',
+    surveyQProgress:'سوال {n} از {total}',
+    surveyBtnPrev:'← پچھلا',
+    surveyBtnNext:'اگلا →',
+    surveyBtnSubmit:'جمع کریں ✓',
+    surveySubmitting:'⏳ جمع ہو رہا ہے...',
+    surveyRetry:'🔄 دوبارہ کوشش کریں',
+    surveySubmitFail:'❌ جمع کرنے میں ناکامی۔ براہ کرم دوبارہ کوشش کریں۔',
+    surveysPopupSingle:'📋 آپ کے لیے ایک نیا سروے دستیاب ہے',
+    surveysPopupMulti:'📋 آپ کے لیے {n} نئے سروے دستیاب ہیں',
+    surveysPopupStart:'ابھی شروع کریں ←',
+    surveysPopupLater:'بعد میں',
+    surveysSectionTitle:'دستیاب سروے',
+    surveysSectionSub:'ہم آپ کی رائے اور شرکت کو اہمیت دیتے ہیں',
+    surveysLoading:'سروے لوڈ ہو رہے ہیں...',
+    surveysEmptyTitle:'فی الحال کوئی سروے دستیاب نہیں',
+    surveysEmptyMsg:'آپ کی شرکت کا شکریہ۔ جب نئے سروے دستیاب ہوں گے تو یہاں ظاہر ہوں گے۔',
+    surveyUnavailable:'سروے دستیاب نہیں',
+    surveyNoQuestions:'اس سروے میں کوئی سوال نہیں',
+    surveyOpenError:'سروے کھولنے میں خرابی پیش آئی',
+    surveyStartAnswer:'جواب دینا شروع کریں ←',
+    surveyWordQ1:'سوال', surveyWordQN:'سوالات', surveyWordMin1:'منٹ', surveyWordMinN:'منٹ',
+    ratingPoor:'کمزور', ratingFair:'قابل قبول', ratingGood:'اچھا', ratingVeryGood:'بہت اچھا', ratingExcellent:'بہترین',
+    surveyRequired:'⚠️ یہ سوال لازمی ہے',
+    surveyThanksTitle:'شکریہ!',
+    surveyDefaultThanks:'شکریہ! آپ کے جوابات کامیابی کے ساتھ جمع ہو گئے۔',
+    surveyDefaultWelcome:'اپنی رائے ہمارے ساتھ شیئر کرنے کے لیے آپ کے وقت کا شکریہ',
+    yesLabel:'ہاں', noLabel:'نہیں',
+    textPlaceholder:'اپنا جواب یہاں لکھیں...',
+    surveyCardStart:'ابھی شروع کریں ←',
+    pilgrimFallback:'عزیز حاجی',
+    greetingSuffix:'👋',
+    vaccinesTitle:'💉 حج سیزن کے ٹیکے',
+    vaccinesWhenTitle:'میں حج کے ٹیکے کب لگواؤں؟',
+    vaccinesWhenBody:'یہ سفارش کی جاتی ہے کہ حج سیزن سے کم از کم <strong>4 سے 6 ہفتے</strong> پہلے ٹیکے لگوائے جائیں تاکہ مکمل اثر ہو۔ ضروری ٹیکوں میں شامل ہیں:',
+    vaccineMeningitis:'گردن توڑ بخار کا ٹیکہ (لازمی)',
+    vaccineCovid:'کوویڈ-19 کا ٹیکہ',
+    vaccineFlu:'موسمی فلو کا ٹیکہ',
+    vaccineHepatitis:'ہیپاٹائٹس A اور B کا ٹیکہ',
+    vaccinePolio:'پولیو کا ٹیکہ (کچھ قومیتوں کے لیے)',
+    vaccinesWarn:'⚠️ اپنی حالت کے مطابق مناسب مشورے کے لیے اپنے ڈاکٹر یا قریبی صحت مرکز سے رجوع کریں۔',
+    companySectionTitle:'🏢 کمپنی کے بارے میں معلومات',
+    companyAbout:'اندرون ملک حجاج کی خدمت میں ایک معروف اور ممتاز کمپنی۔ ہم اپنی نمایاں خدمات کے ذریعے حاجی کی خوشنودی کے لیے ہمیشہ کوشاں ہیں۔ کمپنی کے قیام سے ہی ہم ایک تجربہ کار ٹیم کے ساتھ الیکٹرانک اور میدانی طور پر حجاج کے انتظامات کے لیے مسلسل ترقی کر رہے ہیں۔',
+    companyLicense:'🏅 وزارت حج کی جانب سے لائسنس نمبر <strong>10011</strong> کے تحت منظور شدہ',
+    companyServing:'ہمیشہ آپ کی خدمت کے لیے حاضر 🙏',
+    licenseInlineLabel:'لائسنس نمبر:',
+    licenseTitleLabel:'لائسنس',
+    consentTitle:'بکنگ کے ڈیٹا تک رسائی',
+    consentMsg:'یہ پورٹل {company} کے حجاج کے لیے مشترکہ ڈیٹا دکھاتا ہے۔ لاگ ان کے بعد دکھائی گئی معلومات صرف آپ سے متعلق ہیں۔',
+    consentProtected:'🔒 آپ کا ڈیٹا محفوظ ہے اور دوسرے حجاج کے ساتھ شیئر نہیں کیا جاتا',
+    consentAnnouncements:'📋 انتظامیہ کی جانب سے اعلانات اور اطلاعات ظاہر ہو سکتی ہیں',
+    consentAccept:'✅ میں سمجھتا ہوں اور متفق ہوں',
+    consentReject:'❌ منسوخ',
+    rememberMe:'میری تفصیلات یاد رکھیں',
+    tagline:'🤝 آپ کی خدمت پر فخر',
+    idPlaceholder:'یہاں شناختی نمبر درج کریں',
+    bookingPlaceholder:'یہاں بکنگ نمبر درج کریں',
+    loginVerifying:'⏳ تصدیق ہو رہی ہے...',
+    sheikhGreeting:'عزیز حاجی 🕋',
+    sheikhIntro:'اللہ آپ کی اطاعت قبول فرمائے، کسی بھی مذہبی سوال کے لیے آپ کیمپ کے علماء سے رابطہ کر سکتے ہیں:',
+    sheikhEmpty:'ابھی تک کوئی عالم شامل نہیں ہوا — آپ اپنے نگران سے رابطہ کر سکتے ہیں',
+    announcementsEmpty:'فی الحال کوئی اعلان نہیں',
+    whatsappIntro:'آپ اپنی درخواستیں بھیجنے کے لیے براہ راست واٹس ایپ پر ہم سے رابطہ کر سکتے ہیں، ہمیں آپ کی خدمت پر فخر ہے۔',
+    annLabelInfo:'معلومات', annLabelWarn:'انتباہ', annLabelUrgent:'فوری', annLabelSuccess:'مثبت'
   },
   bn: {
     name:'বাংলা', dir:'ltr', flag:'🇧🇩',
@@ -469,7 +939,76 @@ const LANGS = {
     
     minaSeat:'মিনা ক্যাম্পে আপনার আসন', arafatSeat:'আরাফাত ক্যাম্পে আপনার আসন', muzdalifahSeat:'মুযদালিফা ক্যাম্পে আপনার আসন', fawjNum:'আপনার গ্রুপ নম্বর', busNum:'আপনার বাস নম্বর', supervisorTitle:'আপনার তত্ত্বাবধায়ক', supervisorNone:'এখনো কোনো তত্ত্বাবধায়ক নিযুক্ত হয়নি', supervisorContact:'হোয়াটসঅ্যাপে তত্ত্বাবধায়কের সাথে যোগাযোগ করুন', announcementsTitle:'📢 ঘোষণা', sheikhTitle:'🕋 আলেমদের সাথে যোগাযোগ', companyTitle:'🏢 কোম্পানির তথ্য', surveyTitle:'⭐ জরিপ', surveyMsg:'জরিপ শীঘ্রই পাওয়া যাবে, আপনার আগ্রহের জন্য ধন্যবাদ।', whatsappBtn:'💬 হোয়াটসঅ্যাপে আমাদের সাথে যোগাযোগ করুন', mapsMina:'📍 মিনার মানচিত্র', mapsArafat:'📍 আরাফাতের মানচিত্র', mapsTitle:'ক্যাম্পের অবস্থান'
   ,
-    annTitle:'📢 ঘোষণা ও নির্দেশনা', mapsTitle:'📍 পবিত্র স্থানে ক্যাম্পের অবস্থান', seatsTitle:'📍 পবিত্র স্থানে আপনার আসনের অবস্থান', minaBtnTxt:'মিনায় ক্যাম্পের অবস্থান', muzdalifahBtnTxt:'মুযদালিফায় ক্যাম্পের অবস্থান', arafatBtnTxt:'আরাফাতে ক্যাম্পের অবস্থান', transportTitle:'🚌 গ্রুপ ও বাসের তথ্য', supervisorTitle2:'👤 আপনার তত্ত্বাবধায়ক', surveyTitle2:'⭐ ক্যাম্প মূল্যায়ন জরিপ', surveyMsg2:'জরিপটি পরে আপলোড করা হবে, আপনার আগ্রহের জন্য ধন্যবাদ 🙏', whatsappTitle:'📞 জিজ্ঞাসা ও অনুরোধের জন্য', whatsappBtnTxt:'হোয়াটসঅ্যাপে আমাদের সাথে যোগাযোগ করুন'
+    annTitle:'📢 ঘোষণা ও নির্দেশনা', mapsTitle:'📍 পবিত্র স্থানে ক্যাম্পের অবস্থান', seatsTitle:'📍 পবিত্র স্থানে আপনার আসনের অবস্থান', minaBtnTxt:'মিনায় ক্যাম্পের অবস্থান', muzdalifahBtnTxt:'মুযদালিফায় ক্যাম্পের অবস্থান', arafatBtnTxt:'আরাফাতে ক্যাম্পের অবস্থান', transportTitle:'🚌 গ্রুপ ও বাসের তথ্য', supervisorTitle2:'👤 আপনার তত্ত্বাবধায়ক', surveyTitle2:'⭐ ক্যাম্প মূল্যায়ন জরিপ', surveyMsg2:'জরিপটি পরে আপলোড করা হবে, আপনার আগ্রহের জন্য ধন্যবাদ 🙏', whatsappTitle:'📞 জিজ্ঞাসা ও অনুরোধের জন্য', whatsappBtnTxt:'হোয়াটসঅ্যাপে আমাদের সাথে যোগাযোগ করুন',
+    // ===== Phase 1 — i18n extensions =====
+    surveyExitTitle:'জরিপটি বন্ধ করবেন?',
+    surveyExitMsg:'আপনার উত্তরগুলি সংরক্ষিত হবে না এবং আপনাকে আবার শুরু করতে হবে।',
+    surveyExitContinue:'↩️ উত্তর চালিয়ে যান',
+    surveyExitConfirm:'সংরক্ষণ ছাড়াই বের হন',
+    surveyClose:'বন্ধ করুন',
+    surveyQProgress:'প্রশ্ন {n} এর {total}',
+    surveyBtnPrev:'← পূর্ববর্তী',
+    surveyBtnNext:'পরবর্তী →',
+    surveyBtnSubmit:'জমা দিন ✓',
+    surveySubmitting:'⏳ জমা দেওয়া হচ্ছে...',
+    surveyRetry:'🔄 পুনরায় চেষ্টা',
+    surveySubmitFail:'❌ জমা দিতে ব্যর্থ। অনুগ্রহ করে আবার চেষ্টা করুন।',
+    surveysPopupSingle:'📋 আপনার জন্য একটি নতুন জরিপ উপলব্ধ আছে',
+    surveysPopupMulti:'📋 আপনার জন্য {n}টি নতুন জরিপ উপলব্ধ আছে',
+    surveysPopupStart:'এখনই শুরু করুন →',
+    surveysPopupLater:'পরে',
+    surveysSectionTitle:'উপলব্ধ জরিপ',
+    surveysSectionSub:'আমরা আপনার মতামত ও অংশগ্রহণকে মূল্য দিই',
+    surveysLoading:'জরিপ লোড হচ্ছে...',
+    surveysEmptyTitle:'এই মুহূর্তে কোনো জরিপ উপলব্ধ নেই',
+    surveysEmptyMsg:'আপনার অংশগ্রহণের জন্য ধন্যবাদ। নতুন জরিপ উপলব্ধ হলে এখানে দেখানো হবে।',
+    surveyUnavailable:'জরিপটি উপলব্ধ নয়',
+    surveyNoQuestions:'এই জরিপে কোনো প্রশ্ন নেই',
+    surveyOpenError:'জরিপ খুলতে সমস্যা হয়েছে',
+    surveyStartAnswer:'উত্তর দেওয়া শুরু করুন →',
+    surveyWordQ1:'প্রশ্ন', surveyWordQN:'প্রশ্ন', surveyWordMin1:'মিনিট', surveyWordMinN:'মিনিট',
+    ratingPoor:'দুর্বল', ratingFair:'মাঝারি', ratingGood:'ভালো', ratingVeryGood:'খুব ভালো', ratingExcellent:'চমৎকার',
+    surveyRequired:'⚠️ এই প্রশ্নটি আবশ্যক',
+    surveyThanksTitle:'ধন্যবাদ!',
+    surveyDefaultThanks:'ধন্যবাদ! আপনার উত্তরগুলি সফলভাবে জমা হয়েছে।',
+    surveyDefaultWelcome:'আপনার মতামত আমাদের সাথে ভাগ করে নেওয়ার জন্য আপনার সময়ের জন্য ধন্যবাদ',
+    yesLabel:'হ্যাঁ', noLabel:'না',
+    textPlaceholder:'এখানে আপনার উত্তর লিখুন...',
+    surveyCardStart:'এখনই শুরু করুন →',
+    pilgrimFallback:'প্রিয় হাজী',
+    greetingSuffix:'👋',
+    vaccinesTitle:'💉 হজ মৌসুমের টিকা',
+    vaccinesWhenTitle:'আমি কখন হজের টিকা নেব?',
+    vaccinesWhenBody:'পূর্ণ কার্যকারিতার জন্য হজ মৌসুমের অন্তত <strong>4 থেকে 6 সপ্তাহ</strong> আগে টিকা নেওয়ার পরামর্শ দেওয়া হয়। প্রয়োজনীয় টিকাগুলির মধ্যে রয়েছে:',
+    vaccineMeningitis:'মেনিনজাইটিসের টিকা (বাধ্যতামূলক)',
+    vaccineCovid:'কোভিড-১৯ টিকা',
+    vaccineFlu:'মৌসুমী ফ্লু টিকা',
+    vaccineHepatitis:'হেপাটাইটিস A ও B টিকা',
+    vaccinePolio:'পোলিও টিকা (কিছু জাতীয়তার জন্য)',
+    vaccinesWarn:'⚠️ আপনার অবস্থার জন্য যথাযথ পরামর্শের জন্য আপনার ডাক্তার বা নিকটস্থ স্বাস্থ্যকেন্দ্রের সাথে পরামর্শ করুন।',
+    companySectionTitle:'🏢 কোম্পানি সম্পর্কে',
+    companyAbout:'দেশীয় হাজীদের সেবায় একটি শীর্ষস্থানীয় ও বিশিষ্ট কোম্পানি। আমরা আমাদের উৎকৃষ্ট সেবার মাধ্যমে হাজীর সন্তুষ্টির জন্য সর্বদা প্রচেষ্টা চালিয়ে যাই। প্রতিষ্ঠা থেকেই আমরা অভিজ্ঞ দল নিয়ে ইলেকট্রনিক ও মাঠপর্যায়ে হাজীদের ব্যবস্থাপনায় ক্রমাগত উন্নতি করছি।',
+    companyLicense:'🏅 হজ মন্ত্রণালয় কর্তৃক লাইসেন্স নম্বর <strong>10011</strong>-এর অধীনে অনুমোদিত',
+    companyServing:'আপনার সেবা দিতে পেরে সর্বদা আনন্দিত 🙏',
+    licenseInlineLabel:'লাইসেন্স নং:',
+    licenseTitleLabel:'লাইসেন্স',
+    consentTitle:'বুকিং ডেটা অ্যাক্সেস',
+    consentMsg:'এই পোর্টাল {company}-এর হাজীদের জন্য শেয়ার করা ডেটা প্রদর্শন করে। লগইন করার পর প্রদর্শিত তথ্য শুধুমাত্র আপনার।',
+    consentProtected:'🔒 আপনার ডেটা সুরক্ষিত এবং অন্যান্য হাজীদের সাথে শেয়ার করা হয় না',
+    consentAnnouncements:'📋 ক্যাম্প ব্যবস্থাপনা থেকে ঘোষণা ও বিজ্ঞপ্তি প্রদর্শিত হতে পারে',
+    consentAccept:'✅ আমি বুঝেছি এবং সম্মত',
+    consentReject:'❌ বাতিল',
+    rememberMe:'আমার তথ্য মনে রাখুন',
+    tagline:'🤝 আপনার সেবায় গর্বিত',
+    idPlaceholder:'আইডি নম্বর এখানে লিখুন',
+    bookingPlaceholder:'বুকিং নম্বর এখানে লিখুন',
+    loginVerifying:'⏳ যাচাই করা হচ্ছে...',
+    sheikhGreeting:'প্রিয় হাজী 🕋',
+    sheikhIntro:'আল্লাহ আপনার ইবাদত কবুল করুন। কোনো ধর্মীয় জিজ্ঞাসার জন্য আপনি ক্যাম্পের আলেমদের সাথে যোগাযোগ করতে পারেন:',
+    sheikhEmpty:'এখনো কোনো আলেম যুক্ত হননি — আপনি আপনার তত্ত্বাবধায়কের সাথে যোগাযোগ করতে পারেন',
+    announcementsEmpty:'এই মুহূর্তে কোনো ঘোষণা নেই',
+    whatsappIntro:'আপনি আপনার অনুরোধ পাঠাতে সরাসরি হোয়াটসঅ্যাপে আমাদের সাথে যোগাযোগ করতে পারেন। আপনার সেবা দিতে পেরে আমরা গর্বিত।',
+    annLabelInfo:'তথ্য', annLabelWarn:'সতর্কতা', annLabelUrgent:'জরুরী', annLabelSuccess:'ইতিবাচক'
   },
   fr: {
     name:'Français', dir:'ltr', flag:'🇫🇷',
@@ -512,7 +1051,76 @@ const LANGS = {
     surveyTitle2:'⭐ Enquête evaluation du camp',
     surveyMsg2:'Enquête disponible bientôt, merci de votre intérêt 🙏',
     whatsappTitle:'📞 Pour les demandes et renseignements',
-    whatsappBtnTxt:'Contactez-nous sur WhatsApp'
+    whatsappBtnTxt:'Contactez-nous sur WhatsApp',
+    // ===== Phase 1 — i18n extensions =====
+    surveyExitTitle:'Fermer le sondage ?',
+    surveyExitMsg:'Vos réponses ne seront pas enregistrées et vous devrez recommencer.',
+    surveyExitContinue:'↩️ Continuer',
+    surveyExitConfirm:'Quitter sans enregistrer',
+    surveyClose:'Fermer',
+    surveyQProgress:'Question {n} sur {total}',
+    surveyBtnPrev:'← Précédent',
+    surveyBtnNext:'Suivant →',
+    surveyBtnSubmit:'Envoyer ✓',
+    surveySubmitting:'⏳ Envoi en cours...',
+    surveyRetry:'🔄 Réessayer',
+    surveySubmitFail:"❌ Échec de l'envoi. Veuillez réessayer.",
+    surveysPopupSingle:'📋 Un nouveau sondage est disponible pour vous',
+    surveysPopupMulti:'📋 {n} nouveaux sondages sont disponibles pour vous',
+    surveysPopupStart:'Commencer maintenant →',
+    surveysPopupLater:'Plus tard',
+    surveysSectionTitle:'Sondages disponibles',
+    surveysSectionSub:'Nous apprécions votre avis et votre participation',
+    surveysLoading:'Chargement des sondages...',
+    surveysEmptyTitle:'Aucun sondage disponible pour le moment',
+    surveysEmptyMsg:"Merci de votre participation. Les nouveaux sondages apparaîtront ici lorsqu'ils seront disponibles.",
+    surveyUnavailable:'Sondage non disponible',
+    surveyNoQuestions:'Aucune question dans ce sondage',
+    surveyOpenError:"Erreur lors de l'ouverture du sondage",
+    surveyStartAnswer:'Commencer à répondre →',
+    surveyWordQ1:'question', surveyWordQN:'questions', surveyWordMin1:'minute', surveyWordMinN:'minutes',
+    ratingPoor:'Faible', ratingFair:'Passable', ratingGood:'Bien', ratingVeryGood:'Très bien', ratingExcellent:'Excellent',
+    surveyRequired:'⚠️ Cette question est obligatoire',
+    surveyThanksTitle:'Merci !',
+    surveyDefaultThanks:'Merci ! Vos réponses ont été envoyées avec succès.',
+    surveyDefaultWelcome:'Merci de prendre le temps de partager votre avis avec nous',
+    yesLabel:'Oui', noLabel:'Non',
+    textPlaceholder:'Écrivez votre réponse ici...',
+    surveyCardStart:'Commencer maintenant →',
+    pilgrimFallback:'Cher pèlerin',
+    greetingSuffix:'👋',
+    vaccinesTitle:'💉 Vaccinations pour la saison du Hajj',
+    vaccinesWhenTitle:'Quand dois-je faire les vaccins du Hajj ?',
+    vaccinesWhenBody:'Il est recommandé de faire les vaccins au moins <strong>4 à 6 semaines</strong> avant la saison du Hajj pour une efficacité complète. Les vaccins requis incluent :',
+    vaccineMeningitis:'Vaccin contre la méningite (obligatoire)',
+    vaccineCovid:'Vaccin contre la COVID-19',
+    vaccineFlu:'Vaccin contre la grippe saisonnière',
+    vaccineHepatitis:'Vaccin contre hépatite A et B',
+    vaccinePolio:'Vaccin contre la polio (pour certaines nationalités)',
+    vaccinesWarn:'⚠️ Veuillez consulter votre médecin ou le centre de santé le plus proche pour les recommandations appropriées à votre situation.',
+    companySectionTitle:'🏢 À propos de la société',
+    companyAbout:"L'une des sociétés leaders et distinguées dans le service des pèlerins nationaux. Nous nous efforçons toujours de satisfaire le pèlerin grâce à nos services remarquables. Depuis sa création, notre société évolue pour devenir la meilleure au service des pèlerins avec une équipe expérimentée pour la gestion électronique et sur le terrain.",
+    companyLicense:'🏅 Autorisée par le Ministère du Hajj sous le numéro de licence <strong>10011</strong>',
+    companyServing:'Heureux de vous servir 🙏',
+    licenseInlineLabel:'Licence n° :',
+    licenseTitleLabel:'Licence',
+    consentTitle:'Accès aux données de réservation',
+    consentMsg:"Ce portail affiche des données partagées pour les pèlerins de {company}. Les informations affichées ne vous concernent qu'après connexion.",
+    consentProtected:"🔒 Vos données sont protégées et ne sont pas partagées avec d'autres pèlerins",
+    consentAnnouncements:'📋 Des annonces et notifications de la direction peuvent apparaître',
+    consentAccept:"✅ Je comprends et j'accepte",
+    consentReject:'❌ Annuler',
+    rememberMe:'Se souvenir de moi',
+    tagline:'🤝 Fiers de vous servir',
+    idPlaceholder:"Saisissez votre numéro d'identité",
+    bookingPlaceholder:'Saisissez votre numéro de réservation',
+    loginVerifying:'⏳ Vérification...',
+    sheikhGreeting:'Cher pèlerin 🕋',
+    sheikhIntro:"Qu'Allah accepte votre obéissance. Pour toute question religieuse, vous pouvez contacter les savants du camp :",
+    sheikhEmpty:"Aucun savant n'a encore été ajouté — vous pouvez contacter votre superviseur",
+    announcementsEmpty:'Aucune annonce pour le moment',
+    whatsappIntro:'Vous pouvez nous contacter directement sur WhatsApp pour envoyer vos demandes. Nous sommes fiers de vous servir.',
+    annLabelInfo:'Info', annLabelWarn:'Avertissement', annLabelUrgent:'Urgent', annLabelSuccess:'Positif'
   },
   zh: {
     name:'中文', dir:'ltr', flag:'🇨🇳',
@@ -531,9 +1139,158 @@ const LANGS = {
     
     minaSeat:'您在米纳营地的座位', arafatSeat:'您在阿拉法特营地的座位', muzdalifahSeat:'您在穆兹达利法营地的座位', fawjNum:'您的团队编号', busNum:'您的巴士编号', supervisorTitle:'您的监督员', supervisorNone:'尚未分配监督员', supervisorContact:'在WhatsApp上联系您的监督员', announcementsTitle:'📢 公告', sheikhTitle:'🕋 联系学者', companyTitle:'🏢 公司信息', surveyTitle:'⭐ 调查', surveyMsg:'调查即将开放，感谢您的关注。', whatsappBtn:'💬 在WhatsApp上联系我们', mapsMina:'📍 米纳地图', mapsArafat:'📍 阿拉法特地图', mapsTitle:'营地位置'
   ,
-    annTitle:'📢 公告与说明', mapsTitle:'📍 圣地营地位置', seatsTitle:'📍 您在圣地的座位位置', minaBtnTxt:'米纳营地位置', muzdalifahBtnTxt:'穆兹达利法营地位置', arafatBtnTxt:'阿拉法特营地位置', transportTitle:'🚌 团队与巴士信息', supervisorTitle2:'👤 您的监督员', surveyTitle2:'⭐ 营地评估调查', surveyMsg2:'调查将稍后上传，感谢您的关注 🙏', whatsappTitle:'📞 咨询与请求', whatsappBtnTxt:'在WhatsApp上联系我们'
+    annTitle:'📢 公告与说明', mapsTitle:'📍 圣地营地位置', seatsTitle:'📍 您在圣地的座位位置', minaBtnTxt:'米纳营地位置', muzdalifahBtnTxt:'穆兹达利法营地位置', arafatBtnTxt:'阿拉法特营地位置', transportTitle:'🚌 团队与巴士信息', supervisorTitle2:'👤 您的监督员', surveyTitle2:'⭐ 营地评估调查', surveyMsg2:'调查将稍后上传，感谢您的关注 🙏', whatsappTitle:'📞 咨询与请求', whatsappBtnTxt:'在WhatsApp上联系我们',
+    // ===== Phase 1 — i18n extensions =====
+    surveyExitTitle:'关闭调查吗？',
+    surveyExitMsg:'您的答案将不会被保存，您需要重新开始。',
+    surveyExitContinue:'↩️ 继续回答',
+    surveyExitConfirm:'不保存退出',
+    surveyClose:'关闭',
+    surveyQProgress:'第 {n} 个问题，共 {total} 个',
+    surveyBtnPrev:'← 上一个',
+    surveyBtnNext:'下一个 →',
+    surveyBtnSubmit:'提交 ✓',
+    surveySubmitting:'⏳ 正在提交...',
+    surveyRetry:'🔄 重试',
+    surveySubmitFail:'❌ 提交失败。请重试。',
+    surveysPopupSingle:'📋 您有新的调查问卷',
+    surveysPopupMulti:'📋 您有 {n} 份新的调查问卷',
+    surveysPopupStart:'立即开始 →',
+    surveysPopupLater:'稍后',
+    surveysSectionTitle:'可用调查',
+    surveysSectionSub:'我们重视您的意见和参与',
+    surveysLoading:'正在加载调查...',
+    surveysEmptyTitle:'目前没有可用的调查',
+    surveysEmptyMsg:'感谢您的参与。新的调查将在可用时显示在此处。',
+    surveyUnavailable:'调查不可用',
+    surveyNoQuestions:'此调查中没有问题',
+    surveyOpenError:'打开调查时出错',
+    surveyStartAnswer:'开始回答 →',
+    surveyWordQ1:'问题', surveyWordQN:'问题', surveyWordMin1:'分钟', surveyWordMinN:'分钟',
+    ratingPoor:'差', ratingFair:'一般', ratingGood:'好', ratingVeryGood:'很好', ratingExcellent:'优秀',
+    surveyRequired:'⚠️ 此问题为必答',
+    surveyThanksTitle:'谢谢！',
+    surveyDefaultThanks:'谢谢！您的答案已成功提交。',
+    surveyDefaultWelcome:'感谢您抽出时间与我们分享您的意见',
+    yesLabel:'是', noLabel:'否',
+    textPlaceholder:'在此处输入您的答案...',
+    surveyCardStart:'立即开始 →',
+    pilgrimFallback:'尊敬的朝觉者',
+    greetingSuffix:'👋',
+    vaccinesTitle:'💉 朝觐季节疫苗接种',
+    vaccinesWhenTitle:'我应该何时接种朝觐疫苗？',
+    vaccinesWhenBody:'建议在朝觐季节前至少 <strong>4 至 6 周</strong> 接种疫苗以达到完全效果。必需的疫苗包括：',
+    vaccineMeningitis:'脑膜炎疫苗（强制）',
+    vaccineCovid:'新冠疫苗',
+    vaccineFlu:'季节性流感疫苗',
+    vaccineHepatitis:'甲型和乙型肝炎疫苗',
+    vaccinePolio:'脊髓灰质炎疫苗（某些国籍需要）',
+    vaccinesWarn:'⚠️ 请务必咨询您的医生或最近的医疗中心，以获得适合您情况的建议。',
+    companySectionTitle:'🏢 关于公司',
+    companyAbout:'我们是国内朝觐者服务领域领先且卓越的公司之一。我们始终致力于通过优质的服务让朝觐者满意。自公司成立以来，我们不断发展，凭借经验丰富的团队通过电子方式和现场管理朝觐者，成为服务国内朝觐者的最佳选择。',
+    companyLicense:'🏅 由朝觐部授权，许可证号 <strong>10011</strong>',
+    companyServing:'随时乐意为您服务 🙏',
+    licenseInlineLabel:'许可证号：',
+    licenseTitleLabel:'许可证',
+    consentTitle:'访问预订数据',
+    consentMsg:'此门户显示 {company} 朝觐者的共享数据。登录后显示的信息仅属于您。',
+    consentProtected:'🔒 您的数据受到保护，不会与其他朝觐者共享',
+    consentAnnouncements:'📋 可能会显示来自活动管理的公告和通知',
+    consentAccept:'✅ 我理解并同意',
+    consentReject:'❌ 取消',
+    rememberMe:'记住我的信息',
+    tagline:'🤝 为您服务，我们感到自豪',
+    idPlaceholder:'在此输入身份证号',
+    bookingPlaceholder:'在此输入预订号',
+    loginVerifying:'⏳ 正在验证...',
+    sheikhGreeting:'尊敬的朝觐者 🕋',
+    sheikhIntro:'愿真主接受您的服从。如有任何宗教问题，您可以联系营地的学者：',
+    sheikhEmpty:'尚未添加学者 — 您可以联系您的监督员',
+    announcementsEmpty:'目前没有公告',
+    whatsappIntro:'您可以直接通过 WhatsApp 联系我们发送您的请求。我们以为您服务为荣。',
+    annLabelInfo:'信息', annLabelWarn:'警告', annLabelUrgent:'紧急', annLabelSuccess:'正面'
   }
 };
+
+// Helper: translation getter with param substitution (e.g. t('surveyQProgress',{n:1,total:5}))
+function t(key, params) {
+  const L = LANGS[currentLang] || LANGS.ar;
+  let s = (L && L[key] != null) ? L[key] : (LANGS.ar[key] != null ? LANGS.ar[key] : key);
+  if (params && typeof s === 'string') {
+    Object.keys(params).forEach(k => { s = s.split('{'+k+'}').join(params[k]); });
+  }
+  return s;
+}
+
+// ===== Google Translate integration (المحتوى الديناميكي) =====
+// ربط أكواد اللغات الداخلية بأكواد Google
+const GT_LANG_MAP = { ar:'', en:'en', ur:'ur', bn:'bn', fr:'fr', zh:'zh-CN' };
+
+// تفعيل/تغيير ترجمة Google برمجياً
+function triggerGoogleTranslate(langCode) {
+  const target = (GT_LANG_MAP[langCode] != null) ? GT_LANG_MAP[langCode] : langCode;
+  const attempt = (retries = 15) => {
+    const combo = document.querySelector('.goog-te-combo');
+    if (combo) {
+      combo.value = target;
+      combo.dispatchEvent(new Event('change'));
+    } else if (retries > 0) {
+      setTimeout(() => attempt(retries - 1), 400);
+    }
+  };
+  attempt();
+}
+
+// منع ترجمة العناصر المترجمة يدوياً من LANGS
+function markNoTranslate() {
+  // العناصر التي لها id يبدأ بـ l- أو t- أو r-mina/r-maps/… (المترجمة من LANGS)
+  const selectors = [
+    '[id^="l-"]',
+    '[id^="t-"]',
+    '#h-title','#h-sub','#r-back-txt','#r-status-title','#r-timeline-title',
+    '#r-ann-title','#r-maps-title','#r-mina-btn','#r-muzdalifah-btn','#r-arafat-btn',
+    '#r-seats-title','#r-sheikh-title','#r-transport-title','#r-supervisor-title',
+    '#r-whatsapp-title','#r-whatsapp-btn','#surveys-section-title','#surveys-subtitle',
+    '#surveys-popup-hello','#surveys-popup-emoji','#surveys-popup-subtitle',
+    '#surveys-popup-start-btn','#surveys-popup-later-btn','#surveys-popup-close-btn',
+    '#survey-btn-prev','#survey-btn-next','#survey-btn-submit','#survey-taker-close-btn',
+    '#error-msg','#lang-select','#inp-id','#inp-booking'
+  ];
+  document.querySelectorAll(selectors.join(',')).forEach(el => {
+    el.classList.add('notranslate');
+    el.setAttribute('translate', 'no');
+  });
+  // منع ترجمة أي placeholder
+  document.querySelectorAll('input[placeholder]').forEach(el => {
+    el.setAttribute('translate', 'no');
+  });
+  // أرقام وأيقونات
+  document.querySelectorAll('.phone-number, .booking-number, .id-number, [data-no-translate]').forEach(el => {
+    el.classList.add('notranslate');
+  });
+  document.querySelectorAll('code, pre').forEach(el => el.classList.add('notranslate'));
+}
+
+// إخفاء أي عنصر Google يظهر فجأة
+function hideGoogleElements() {
+  const banner = document.querySelector('.goog-te-banner-frame');
+  if (banner) banner.style.display = 'none';
+  if (document.body) document.body.style.top = '0';
+  document.querySelectorAll('.goog-tooltip').forEach(x => x.style.display = 'none');
+}
+
+// MutationObserver لمراقبة إضافة عناصر Google
+const googleObserver = new MutationObserver(() => hideGoogleElements());
+if (document.body) {
+  try { googleObserver.observe(document.body, { childList: true, subtree: true }); } catch(e){}
+  markNoTranslate();
+} else {
+  document.addEventListener('DOMContentLoaded', () => {
+    try { googleObserver.observe(document.body, { childList: true, subtree: true }); } catch(e){}
+    markNoTranslate();
+  });
+}
+setInterval(hideGoogleElements, 1000);
 
 // Map nationality to lang
 const NAT_LANG_MAP = {};
@@ -600,7 +1357,7 @@ function applyCompanyName(name, license) {
   if(titleEl) {
     let title = L.hTitle;
     if(c) title += ' — ' + c;
-    if(c && lic) title += ' · ترخيص ' + lic;
+    if(c && lic) title += ' · ' + t('licenseTitleLabel') + ' ' + lic;
     titleEl.textContent = title;
   }
 
@@ -620,7 +1377,7 @@ function applyCompanyName(name, license) {
       ribbonEl.appendChild(line1);
       if(lic) {
         const line2 = document.createElement('div');
-        line2.textContent = 'ترخيص رقم: ' + lic;
+        line2.textContent = t('licenseInlineLabel') + ' ' + lic;
         line2.style.fontSize = '0.75em';
         line2.style.fontWeight = '500';
         line2.style.opacity = '0.85';
@@ -664,19 +1421,106 @@ function setLang(code, skipResult=false) {
   _s('r-sheikh-title',     L.sheikhTitle);
   _s('r-transport-title',  L.transportTitle);
   _s('r-supervisor-title', L.supervisorTitle2);
-  _s('r-survey-title',     L.surveyTitle2);
-  _s('r-survey-msg',       L.surveyMsg2);
   _s('r-whatsapp-title',   L.whatsappTitle);
   _s('r-whatsapp-btn',     L.whatsappBtnTxt);
+
+  // Phase 1 i18n — الأقسام الجديدة
+  // شاشة الموافقة
+  _s('t-consent-title',        L.consentTitle);
+  _s('t-consent-protected',    L.consentProtected);
+  _s('t-consent-announcements',L.consentAnnouncements);
+  _s('t-consent-accept',       L.consentAccept);
+  _s('t-consent-reject',       L.consentReject);
+  const consentMsgEl = document.getElementById('t-consent-msg');
+  if(consentMsgEl) {
+    consentMsgEl.innerHTML = (L.consentMsg || '').split('{company}').join('<span id="consent-company"></span>');
+  }
+  // تسجيل الدخول
+  _s('t-remember-me',          L.rememberMe);
+  const tagEl = document.getElementById('l-tagline');
+  if(tagEl) tagEl.textContent = L.tagline;
+  // مودال خروج الاستبيان
+  _s('t-survey-exit-title',    L.surveyExitTitle);
+  _s('t-survey-exit-msg',      L.surveyExitMsg);
+  _s('t-survey-exit-continue', L.surveyExitContinue);
+  _s('t-survey-exit-confirm-btn', L.surveyExitConfirm);
+  // مودال الاستبيان
+  const closeBtn = document.getElementById('survey-taker-close-btn');
+  if(closeBtn) closeBtn.setAttribute('aria-label', L.surveyClose);
+  const popCloseBtn = document.getElementById('surveys-popup-close-btn');
+  if(popCloseBtn) popCloseBtn.setAttribute('aria-label', L.surveyClose);
+  _s('survey-btn-prev',        L.surveyBtnPrev);
+  _s('survey-btn-next',        L.surveyBtnNext);
+  _s('survey-btn-submit',      L.surveyBtnSubmit);
+  // نافذة الاستبيانات المنبثقة
+  const popHello = {ar:'مرحباً', en:'Hello', ur:'خوش آمدید', bn:'স্বাগতম', fr:'Bonjour', zh:'你好'}[code] || 'مرحباً';
+  _s('surveys-popup-hello',    popHello);
+  _s('surveys-popup-start-btn', L.surveysPopupStart);
+  _s('surveys-popup-later-btn', L.surveysPopupLater);
+  // قسم الاستبيانات
+  _s('surveys-section-title',  L.surveysSectionTitle);
+  _s('surveys-subtitle',       L.surveysSectionSub);
+  _s('t-surveys-loading',      L.surveysLoading);
+  _s('t-surveys-empty-title',  L.surveysEmptyTitle);
+  _s('t-surveys-empty-msg',    L.surveysEmptyMsg);
+  // التطعيمات
+  _s('t-vaccines-title',       L.vaccinesTitle);
+  _s('t-vaccines-when-title',  L.vaccinesWhenTitle);
+  const vWhen = document.getElementById('t-vaccines-when-body');
+  if(vWhen) vWhen.innerHTML = L.vaccinesWhenBody;
+  _s('t-vaccine-meningitis',   L.vaccineMeningitis);
+  _s('t-vaccine-covid',        L.vaccineCovid);
+  _s('t-vaccine-flu',          L.vaccineFlu);
+  _s('t-vaccine-hepatitis',    L.vaccineHepatitis);
+  _s('t-vaccine-polio',        L.vaccinePolio);
+  _s('t-vaccines-warn',        L.vaccinesWarn);
+  // الدعاة
+  _s('t-sheikh-greeting',      L.sheikhGreeting);
+  _s('t-sheikh-intro',         L.sheikhIntro);
+  const shEmpty = document.getElementById('r-sheikh-empty');
+  if(shEmpty) shEmpty.textContent = L.sheikhEmpty;
+  // الشركة
+  _s('t-company-section-title', L.companySectionTitle);
+  _s('t-company-about',         L.companyAbout);
+  const cLic = document.getElementById('t-company-license');
+  if(cLic) cLic.innerHTML = L.companyLicense;
+  _s('t-company-serving',       L.companyServing);
+  // واتساب / تعاميم
+  _s('t-whatsapp-intro',        L.whatsappIntro);
+  _s('t-ann-empty',             L.announcementsEmpty);
 
   // تحديث placeholders
   const inpId = document.getElementById('inp-id');
   const inpBk = document.getElementById('inp-booking');
-  if(inpId) inpId.placeholder = L.idLabel;
-  if(inpBk) inpBk.placeholder = L.bookingLabel;
+  if(inpId) inpId.placeholder = L.idPlaceholder || L.idLabel;
+  if(inpBk) inpBk.placeholder = L.bookingPlaceholder || L.bookingLabel;
+
+  // إعادة ملء اسم الشركة في span الذي تم إنشاؤه من جديد داخل consent
+  applyCompanyName(window._portalCompany || '', window._portalLicense || '');
+
+  // إعادة رسم المحتوى الديناميكي باللغة الجديدة
+  try { if (typeof loadAnnouncements === 'function') loadAnnouncements(); } catch(e){}
+  try { if (window._currentPilgrim && typeof loadAvailableSurveys === 'function') loadAvailableSurveys(); } catch(e){}
+
+  // حفظ اللغة المختارة
+  try { localStorage.setItem('userSelectedLang', code); } catch(e) {}
+
+  // تمييز عناصر LANGS بـ notranslate + تفعيل Google Translate للمحتوى الديناميكي
+  try { markNoTranslate(); } catch(e){}
+  try { triggerGoogleTranslate(code); } catch(e){}
 
   if (currentRecord && !skipResult) showResult(currentRecord);
 }
+
+// استرجاع اللغة المحفوظة في localStorage (قبل أي اكتشاف جنسية)
+(function restoreSavedLang(){
+  try {
+    const saved = localStorage.getItem('userSelectedLang');
+    if (saved && LANGS[saved] && saved !== currentLang) {
+      setLang(saved, true);
+    }
+  } catch(e) {}
+})();
 
 function clearError(){document.getElementById('error-msg').style.display='none'}
 function enterLogin(e){if(e.key==='Enter')doLogin()}
@@ -692,7 +1536,7 @@ async function doLogin(){
   // إظهار مؤشر التحميل
   const btn = document.getElementById('l-btn');
   const origText = btn.textContent;
-  btn.textContent = '⏳ جاري التحقق...';
+  btn.textContent = t('loginVerifying');
   btn.disabled = true;
 
   try {
@@ -701,6 +1545,7 @@ async function doLogin(){
     if(window.DB) {
       const pilgrim = await window.DB.Pilgrims.findByBookingAndId(bk, id);
       if(pilgrim) {
+        window._currentPilgrim = pilgrim;
         // تحويل أعمدة Supabase لتنسيق البيانات المعروف
         rec = {
           'رقم الحجز': pilgrim.booking_num,
@@ -907,6 +1752,9 @@ async function showResult(r){
 
   // إعادة تطبيق إعدادات الإظهار/الإخفاء على العناصر الجديدة (بطاقات r-seats وغيرها)
   applyVisibilitySettings();
+
+  // تحميل الاستبيانات المتاحة للحاج
+  setTimeout(() => loadAvailableSurveys(), 300);
 }
 
 
@@ -990,7 +1838,7 @@ async function applyPortalSettings() {
       el.style.background = `linear-gradient(135deg,${c1},${c2})`);
     document.querySelectorAll('.company-top').forEach(el =>
       el.style.background = `linear-gradient(135deg,${c1},${c2})`);
-    document.querySelectorAll('.survey-btn').forEach(el =>
+    document.querySelectorAll('.btn-start-survey').forEach(el =>
       el.style.background = `linear-gradient(135deg,${c1},${c2})`);
     document.querySelectorAll('.map-btn').forEach(el => {
       el.style.borderColor = c2; el.style.color = c1;
@@ -1006,7 +1854,7 @@ async function applyPortalSettings() {
       .section-title { border-right-color:${c2}!important; }
       .header { border-bottom-color:${c2}!important; }
       .map-btn { border-color:${c2}!important; color:${c1}!important; }
-      .survey-btn,.whatsapp-btn:not([href*="wa.me"]) { background:linear-gradient(135deg,${c1},${c2})!important; }
+      .btn-start-survey,.whatsapp-btn:not([href*="wa.me"]) { background:linear-gradient(135deg,${c1},${c2})!important; }
       .announcement-badge { background:${c2}!important; }
       .tl-badge-done { border-color:${c1}!important; }
     `;
@@ -1185,12 +2033,497 @@ applyVisibilitySettings();
 // التعاميم تُحمَّل من Supabase مباشرة
 const STATIC_ANNOUNCEMENTS = [];
 
+// ===== نظام الاستبيانات (المرحلة 3A) =====
+function _escapeHTML(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function _isSurveyAvailable(survey, responses) {
+  // 1. المفتاح الرئيسي: active
+  if (!survey.active) return false;
+
+  const now = new Date();
+
+  // 2. فحص وقت البداية
+  if (survey.start_date && now < new Date(survey.start_date)) return false;
+
+  // 3. فحص وقت النهاية
+  if (survey.end_date && now > new Date(survey.end_date)) return false;
+
+  // 4. فلترة التكرار
+  const answered = responses.filter(r => r.survey_id === survey.id);
+  if (!answered.length) return true;
+  const type = survey.repeat_type || 'once';
+  if (type === 'once') return false;
+  const last = answered[0]; // responses مرتبة DESC
+  const lastDate = new Date(last.submitted_at);
+  if (type === 'daily') {
+    return lastDate.toDateString() !== now.toDateString();
+  }
+  if (type === 'weekly') {
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
+    return (now - lastDate) > weekMs;
+  }
+  return true; // default: متاح (دفاع آمن)
+}
+
+function _buildSurveyCardHTML(survey, questionCount) {
+  const emoji = survey.icon || survey.emoji || '📋';
+  const title = _escapeHTML(survey.title || '');
+  const desc = _escapeHTML(survey.description || '');
+  const estimatedMin = Math.max(1, Math.ceil(questionCount * 0.5));
+  const qWord = questionCount === 1 ? t('surveyWordQ1') : t('surveyWordQN');
+  const mWord = estimatedMin === 1 ? t('surveyWordMin1') : t('surveyWordMinN');
+  return `
+    <div class="survey-card" data-survey-id="${survey.id}">
+      <div class="survey-card-emoji">${emoji}</div>
+      <div class="survey-card-body">
+        <h3 class="survey-card-title">${title}</h3>
+        ${desc ? `<p class="survey-card-desc">${desc}</p>` : ''}
+        <div class="survey-card-meta">
+          <span class="meta-item"><span class="meta-icon">❓</span><span>${questionCount} ${qWord}</span></span>
+          <span class="meta-item"><span class="meta-icon">⏱️</span><span>~${estimatedMin} ${mWord}</span></span>
+        </div>
+      </div>
+      <button class="btn-start-survey" onclick="startSurvey(${survey.id})">${t('surveyCardStart')}</button>
+    </div>`;
+}
+
+async function loadAvailableSurveys() {
+  const section = document.getElementById('sec-survey');
+  const listEl = document.getElementById('surveys-list');
+  const emptyEl = document.getElementById('surveys-empty-state');
+  const loadingEl = document.getElementById('surveys-loading');
+  const badgeEl = document.getElementById('surveys-count-badge');
+  if (!section || !listEl || !window.DB || !window._currentPilgrim) return;
+
+  loadingEl.style.display = 'block';
+  listEl.innerHTML = '';
+  emptyEl.style.display = 'none';
+  badgeEl.style.display = 'none';
+
+  try {
+    const [allSurveys, responses] = await Promise.all([
+      window.DB.Surveys.getActive(),
+      window.DB.Surveys.getResponsesByPilgrim(window._currentPilgrim.id)
+    ]);
+
+    const available = allSurveys.filter(s => _isSurveyAvailable(s, responses));
+
+    if (!available.length) {
+      loadingEl.style.display = 'none';
+      emptyEl.style.display = 'block';
+      return;
+    }
+
+    // جلب عدد الأسئلة لكل استبيان متاح بالتوازي
+    const questionsLists = await Promise.all(
+      available.map(s => window.DB.Surveys.getQuestions(s.id).catch(() => []))
+    );
+
+    // إضافة _questionCount لكل استبيان (للاستخدام في المودال)
+    available.forEach((s, i) => { s._questionCount = questionsLists[i].length; });
+
+    loadingEl.style.display = 'none';
+    badgeEl.textContent = available.length;
+    badgeEl.style.display = 'inline-flex';
+    listEl.innerHTML = available.map((s, i) => _buildSurveyCardHTML(s, questionsLists[i].length)).join('');
+
+    // إظهار نافذة الاستبيانات المنبثقة (3B)
+    const fullName = (window._currentPilgrim && window._currentPilgrim.name) || '';
+    const firstName = fullName.trim().split(/\s+/)[0] || t('pilgrimFallback');
+    setTimeout(() => showSurveysPopup(available, firstName), 500);
+  } catch (e) {
+    console.error('Error loading surveys:', e);
+    loadingEl.style.display = 'none';
+    emptyEl.style.display = 'block';
+  }
+}
+
+// ===== المرحلة 3C: مودال الاستبيان (عرض/إجابة/إرسال) =====
+window._surveyTaker = {
+  survey: null, questions: [], answers: {}, currentIndex: -1, phase: 'welcome'
+};
+
+async function startSurvey(surveyId) {
+  try {
+    dismissSurveysPopup();
+    const surveys = await window.DB.Surveys.getActive();
+    const survey = surveys.find(s => s.id === surveyId);
+    if (!survey) { alert(t('surveyUnavailable')); return; }
+    const questions = await window.DB.Surveys.getQuestions(surveyId);
+    if (!questions || !questions.length) { alert(t('surveyNoQuestions')); return; }
+
+    window._surveyTaker.survey = survey;
+    window._surveyTaker.questions = questions;
+    window._surveyTaker.answers = {};
+    window._surveyTaker.currentIndex = -1;
+    window._surveyTaker.phase = 'welcome';
+
+    document.getElementById('survey-taker-overlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    renderSurveyWelcome();
+  } catch (e) {
+    console.error('Error starting survey:', e);
+    alert(t('surveyOpenError'));
+  }
+}
+
+function closeSurveyTaker(force) {
+  const st = window._surveyTaker;
+  const allowEdit = st.survey && st.survey.allow_edit;
+  // force أو شاشة الشكر/الترحيب → إغلاق مباشر بدون تأكيد
+  if (force || st.phase === 'thanks' || st.phase === 'welcome') {
+    _forceCloseSurvey();
+    return;
+  }
+  // في منتصف الإجابة ومع إجابات موجودة وبدون allow_edit → مودال تأكيد
+  if (st.phase === 'questions' && Object.keys(st.answers).length > 0 && !allowEdit) {
+    document.getElementById('survey-exit-confirm').style.display = 'flex';
+    return;
+  }
+  _forceCloseSurvey();
+}
+
+function _forceCloseSurvey() {
+  document.getElementById('survey-taker-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+  window._surveyTaker = { survey: null, questions: [], answers: {}, currentIndex: -1, phase: 'welcome' };
+}
+
+function cancelExitSurvey() {
+  document.getElementById('survey-exit-confirm').style.display = 'none';
+}
+
+function confirmExitSurvey() {
+  document.getElementById('survey-exit-confirm').style.display = 'none';
+  _forceCloseSurvey();
+}
+
+function renderSurveyWelcome() {
+  const st = window._surveyTaker;
+  const content = document.getElementById('survey-taker-content');
+  document.getElementById('survey-taker-progress-wrap').style.display = 'none';
+  document.getElementById('survey-taker-nav').style.display = 'none';
+
+  const emoji = st.survey.icon || st.survey.emoji || '📋';
+  const title = _escapeHTML(st.survey.title || '');
+  const welcome = st.survey.welcome_message || t('surveyDefaultWelcome');
+  const qCount = st.questions.length;
+  const estMin = Math.max(1, Math.ceil(qCount * 0.5));
+  const qWord = qCount === 1 ? t('surveyWordQ1') : t('surveyWordQN');
+  const mWord = estMin === 1 ? t('surveyWordMin1') : t('surveyWordMinN');
+
+  content.innerHTML = `
+    <div class="survey-screen">
+      <div class="survey-screen-emoji">${emoji}</div>
+      <h2>${title}</h2>
+      <p>${_escapeHTML(welcome)}</p>
+      <div style="font-size:12px;color:#999;margin:16px 0 20px">
+        ❓ ${qCount} ${qWord} · ⏱️ ~${estMin} ${mWord}
+      </div>
+      <button class="survey-screen-btn" onclick="startSurveyQuestions()">${t('surveyStartAnswer')}</button>
+    </div>`;
+}
+
+function startSurveyQuestions() {
+  const st = window._surveyTaker;
+  st.phase = 'questions';
+  st.currentIndex = 0;
+  renderCurrentQuestion();
+}
+
+function _isYesNoOptions(opts) {
+  if (!Array.isArray(opts) || opts.length !== 2) return false;
+  const s = opts.map(x => String(x).trim());
+  return (s[0] === 'نعم' && s[1] === 'لا') || (s[0] === 'لا' && s[1] === 'نعم');
+}
+
+function renderCurrentQuestion() {
+  const st = window._surveyTaker;
+  const q = st.questions[st.currentIndex];
+  if (!q) return;
+
+  const content = document.getElementById('survey-taker-content');
+  const nav = document.getElementById('survey-taker-nav');
+  const progressWrap = document.getElementById('survey-taker-progress-wrap');
+  const progressFill = document.getElementById('survey-taker-progress-fill');
+  const progressText = document.getElementById('survey-taker-progress-text');
+  const btnPrev = document.getElementById('survey-btn-prev');
+  const btnNext = document.getElementById('survey-btn-next');
+  const btnSubmit = document.getElementById('survey-btn-submit');
+
+  // Progress bar (إذا show_progress غير false)
+  if (st.survey.show_progress !== false) {
+    progressWrap.style.display = 'block';
+    const pct = ((st.currentIndex + 1) / st.questions.length) * 100;
+    progressFill.style.width = pct + '%';
+    progressText.textContent = t('surveyQProgress', {n: st.currentIndex + 1, total: st.questions.length});
+  } else {
+    progressWrap.style.display = 'none';
+  }
+
+  // Navigation
+  nav.style.display = 'flex';
+  btnPrev.disabled = false;
+  btnPrev.style.display = (st.currentIndex === 0) ? 'none' : 'block';
+  const isLast = (st.currentIndex === st.questions.length - 1);
+  btnNext.style.display = isLast ? 'none' : 'block';
+  btnSubmit.style.display = isLast ? 'block' : 'none';
+  btnSubmit.disabled = false;
+  btnSubmit.textContent = t('surveyBtnSubmit');
+
+  const title = _escapeHTML(q.question_text || '');
+  const required = q.required !== false;
+  const currentAnswer = st.answers[q.id];
+  const type = q.question_type;
+  const opts = Array.isArray(q.options) ? q.options : [];
+
+  let body = '';
+  if (type === 'rating') {
+    const current = currentAnswer || 0;
+    const ratingLabels = { 1:t('ratingPoor'), 2:t('ratingFair'), 3:t('ratingGood'), 4:t('ratingVeryGood'), 5:t('ratingExcellent') };
+    const currentLabel = current > 0 ? ratingLabels[current] : '';
+    body = `
+      <div class="rating-wrapper" data-rating="${current}">
+        <div class="rating-scale-labels">
+          <span class="scale-label scale-low">${t('ratingPoor')}</span>
+          <span class="scale-label scale-high">${t('ratingExcellent')}</span>
+        </div>
+        <div class="rating-group">
+          ${[1,2,3,4,5].map(i =>
+            `<span class="rating-star ${i <= current ? 'active' : ''}" onclick="selectRating(${q.id}, ${i})" data-value="${i}">★</span>`
+          ).join('')}
+        </div>
+        <div class="rating-current-label" id="rating-label-${q.id}">${currentLabel}</div>
+      </div>`;
+  } else if (type === 'single') {
+    if (_isYesNoOptions(opts)) {
+      // UX خاص للنعم/لا
+      body = `<div class="yesno-group">
+        <button class="yesno-btn yes ${currentAnswer === 'نعم' ? 'selected' : ''}" onclick="selectSingle(${q.id}, 'نعم')">
+          <span class="yesno-icon">✅</span><span>${t('yesLabel')}</span>
+        </button>
+        <button class="yesno-btn no ${currentAnswer === 'لا' ? 'selected' : ''}" onclick="selectSingle(${q.id}, 'لا')">
+          <span class="yesno-icon">❌</span><span>${t('noLabel')}</span>
+        </button>
+      </div>`;
+    } else {
+      body = `<div class="options-group">${
+        opts.map(opt => {
+          const s = String(opt);
+          const sel = currentAnswer === s;
+          return `<div class="option-item radio ${sel ? 'selected' : ''}" onclick="selectSingle(${q.id}, ${JSON.stringify(s).replace(/"/g, '&quot;')})">
+            <div class="option-checkbox"></div>
+            <div class="option-label">${_escapeHTML(s)}</div>
+          </div>`;
+        }).join('')
+      }</div>`;
+    }
+  } else if (type === 'multiple') {
+    const selected = Array.isArray(currentAnswer) ? currentAnswer : [];
+    body = `<div class="options-group">${
+      opts.map(opt => {
+        const s = String(opt);
+        const sel = selected.includes(s);
+        return `<div class="option-item checkbox ${sel ? 'selected' : ''}" onclick="toggleMultiple(${q.id}, ${JSON.stringify(s).replace(/"/g, '&quot;')})">
+          <div class="option-checkbox"></div>
+          <div class="option-label">${_escapeHTML(s)}</div>
+        </div>`;
+      }).join('')
+    }</div>`;
+  } else { // text
+    const val = currentAnswer || '';
+    body = `<div class="textarea-wrap">
+      <textarea class="survey-textarea" id="text-${q.id}" placeholder="${t('textPlaceholder')}" oninput="updateTextAnswer(${q.id}, this.value)">${_escapeHTML(val)}</textarea>
+    </div>`;
+  }
+
+  content.innerHTML = `
+    <div class="question-wrap">
+      <h3 class="question-title">${title}${required ? ' <span class="question-required">*</span>' : ''}</h3>
+      ${body}
+      <div id="question-error-${q.id}" style="display:none"></div>
+    </div>`;
+}
+
+function selectRating(qid, value) {
+  window._surveyTaker.answers[qid] = value;
+  renderCurrentQuestion();
+}
+function selectSingle(qid, value) {
+  window._surveyTaker.answers[qid] = value;
+  renderCurrentQuestion();
+}
+function toggleMultiple(qid, value) {
+  const st = window._surveyTaker;
+  if (!Array.isArray(st.answers[qid])) st.answers[qid] = [];
+  const idx = st.answers[qid].indexOf(value);
+  if (idx > -1) st.answers[qid].splice(idx, 1);
+  else st.answers[qid].push(value);
+  renderCurrentQuestion();
+}
+function updateTextAnswer(qid, value) {
+  window._surveyTaker.answers[qid] = value;
+}
+
+function validateCurrentQuestion() {
+  const st = window._surveyTaker;
+  const q = st.questions[st.currentIndex];
+  if (q.required === false) return true;
+  const answer = st.answers[q.id];
+  const type = q.question_type;
+  let valid = true;
+  if (type === 'rating') valid = (typeof answer === 'number' && answer >= 1);
+  else if (type === 'single') valid = (typeof answer === 'string' && answer.length > 0);
+  else if (type === 'multiple') valid = (Array.isArray(answer) && answer.length > 0);
+  else valid = (typeof answer === 'string' && answer.trim().length > 0);
+
+  if (!valid) {
+    const errEl = document.getElementById('question-error-' + q.id);
+    if (errEl) {
+      errEl.innerHTML = '<div class="survey-error">' + t('surveyRequired') + '</div>';
+      errEl.style.display = 'block';
+      setTimeout(() => { errEl.style.display = 'none'; }, 3000);
+    }
+  }
+  return valid;
+}
+
+function surveyNavPrev() {
+  const st = window._surveyTaker;
+  if (st.currentIndex > 0) {
+    st.currentIndex--;
+    renderCurrentQuestion();
+  }
+}
+function surveyNavNext() {
+  if (!validateCurrentQuestion()) return;
+  const st = window._surveyTaker;
+  if (st.currentIndex < st.questions.length - 1) {
+    st.currentIndex++;
+    renderCurrentQuestion();
+  }
+}
+
+async function submitSurvey() {
+  if (!validateCurrentQuestion()) return;
+  const st = window._surveyTaker;
+  const btnSubmit = document.getElementById('survey-btn-submit');
+  btnSubmit.disabled = true;
+  btnSubmit.textContent = t('surveySubmitting');
+
+  try {
+    const pilgrim = window._currentPilgrim || {};
+    const isAnon = !!st.survey.anonymous;
+    const payload = {
+      survey_id: st.survey.id,
+      pilgrim_id: pilgrim.id,
+      pilgrim_booking: isAnon ? null : (pilgrim.booking_num || null),
+      pilgrim_name: isAnon ? null : (pilgrim.name || null),
+      response_date: new Date().toISOString().slice(0, 10),
+      answers: st.answers
+    };
+    await window.DB.Surveys.submitResponse(payload);
+    renderSurveyThanks();
+    setTimeout(() => loadAvailableSurveys(), 500);
+  } catch (e) {
+    console.error('Submit error:', e);
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = t('surveyRetry');
+    const q = st.questions[st.currentIndex];
+    const errEl = document.getElementById('question-error-' + q.id);
+    if (errEl) {
+      errEl.innerHTML = '<div class="survey-error">' + t('surveySubmitFail') + '</div>';
+      errEl.style.display = 'block';
+    }
+  }
+}
+
+function renderSurveyThanks() {
+  const st = window._surveyTaker;
+  st.phase = 'thanks';
+  document.getElementById('survey-taker-progress-wrap').style.display = 'none';
+  document.getElementById('survey-taker-nav').style.display = 'none';
+  const thanks = st.survey.thanks_message || t('surveyDefaultThanks');
+  document.getElementById('survey-taker-content').innerHTML = `
+    <div class="survey-screen">
+      <div class="survey-screen-emoji">✅</div>
+      <h2>${t('surveyThanksTitle')}</h2>
+      <p>${_escapeHTML(thanks)}</p>
+      <button class="survey-screen-btn" onclick="closeSurveyTaker(true)">${t('surveyClose')}</button>
+    </div>`;
+}
+
+// ===== نافذة الاستبيانات المنبثقة (المرحلة 3B) =====
+window._availableSurveys = [];
+window._surveysPopupShown = false;
+
+function showSurveysPopup(surveys, pilgrimName) {
+  if (!surveys || !surveys.length) return;
+  if (window._surveysPopupShown) return; // منع العرض مرتين في نفس الجلسة
+  window._availableSurveys = surveys;
+
+  const overlay = document.getElementById('surveys-popup-overlay');
+  const nameEl = document.getElementById('surveys-popup-name');
+  const subtitleEl = document.getElementById('surveys-popup-subtitle');
+  const listEl = document.getElementById('surveys-popup-list');
+  if (!overlay || !listEl) return;
+
+  if (nameEl) nameEl.textContent = pilgrimName || t('pilgrimFallback');
+  if (subtitleEl) {
+    subtitleEl.textContent = surveys.length === 1
+      ? t('surveysPopupSingle')
+      : t('surveysPopupMulti', {n: surveys.length});
+  }
+
+  listEl.innerHTML = surveys.map(s => {
+    const emoji = s.icon || s.emoji || '📋';
+    const title = _escapeHTML(s.title || '');
+    const qCount = s._questionCount || 0;
+    const min = Math.max(1, Math.ceil(qCount * 0.5));
+    const qWord = qCount === 1 ? t('surveyWordQ1') : t('surveyWordQN');
+    const mWord = min === 1 ? t('surveyWordMin1') : t('surveyWordMinN');
+    return `
+      <div class="surveys-popup-item">
+        <div class="surveys-popup-item-emoji">${emoji}</div>
+        <div class="surveys-popup-item-content">
+          <div class="surveys-popup-item-title">${title}</div>
+          <div class="surveys-popup-item-meta">❓ ${qCount} ${qWord} · ⏱️ ~${min} ${mWord}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  window._surveysPopupShown = true;
+}
+
+function dismissSurveysPopup(event) {
+  if (event && event.target && !event.target.classList.contains('surveys-popup-overlay')) {
+    return;
+  }
+  const overlay = document.getElementById('surveys-popup-overlay');
+  if (overlay) overlay.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function startFirstSurveyFromPopup() {
+  const surveys = window._availableSurveys || [];
+  const overlay = document.getElementById('surveys-popup-overlay');
+  if (overlay) overlay.style.display = 'none';
+  document.body.style.overflow = '';
+  if (!surveys.length) return;
+  startSurvey(surveys[0].id);
+}
+
 async function loadAnnouncements() {
   const annTypesHaj = {
-    info:    { color: '#1a5fa8', bg: '#e8f0fd', icon: 'ℹ️',  label: 'معلومة' },
-    warning: { color: '#a86b00', bg: '#fdf5e0', icon: '⚠️', label: 'تنبيه'  },
-    urgent:  { color: '#c00',    bg: '#fde8e8', icon: '🚨', label: 'عاجل'   },
-    success: { color: '#1a7a1a', bg: '#e8f8e8', icon: '✅', label: 'إيجابي' },
+    info:    { color: '#1a5fa8', bg: '#e8f0fd', icon: 'ℹ️',  label: t('annLabelInfo') },
+    warning: { color: '#a86b00', bg: '#fdf5e0', icon: '⚠️', label: t('annLabelWarn')  },
+    urgent:  { color: '#c00',    bg: '#fde8e8', icon: '🚨', label: t('annLabelUrgent')},
+    success: { color: '#1a7a1a', bg: '#e8f8e8', icon: '✅', label: t('annLabelSuccess') },
   };
   const list = document.getElementById('announcements-list');
   const empty = document.getElementById('ann-empty');
@@ -1221,12 +2554,12 @@ async function loadAnnouncements() {
       }
     }
     // لا توجد تعاميم
-    list.innerHTML = '<div id="ann-empty" style="text-align:center;padding:20px;color:#bbb;font-size:13px">لا توجد تعاميم حالياً</div>';
+    list.innerHTML = '<div id="ann-empty" style="text-align:center;padding:20px;color:#bbb;font-size:13px"><span id="t-ann-empty">' + t('announcementsEmpty') + '</span></div>';
   } catch(e) {
     if(STATIC_ANNOUNCEMENTS && STATIC_ANNOUNCEMENTS.length > 0) {
       await loadAnnouncements(); // retry with static only
     } else {
-      list.innerHTML = '<div id="ann-empty" style="text-align:center;padding:20px;color:#bbb;font-size:13px">لا توجد تعاميم حالياً</div>';
+      list.innerHTML = '<div id="ann-empty" style="text-align:center;padding:20px;color:#bbb;font-size:13px"><span id="t-ann-empty">' + t('announcementsEmpty') + '</span></div>';
     }
   }
 }
@@ -1244,5 +2577,20 @@ if(savedId && savedBk){
   document.getElementById('remember-me').checked = true;
 }
 </script>
+
+<!-- Google Translate Widget (مخفي - نتحكم به برمجياً) -->
+<div id="google_translate_element" style="display:none;position:absolute;top:-9999px"></div>
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'ar',
+    includedLanguages: 'ar,en,ur,bn,fr,zh-CN,tr,id,ms,hi',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay: false,
+    multilanguagePage: false
+  }, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>

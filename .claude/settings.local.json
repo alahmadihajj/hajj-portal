@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(awk NR>=391 && NR<=398 {if\\(length\\($0\\)>200\\) print NR\": [LONG LINE, \" length\\($0\\) \" chars] first 80: \" substr\\($0,1,80\\); else print NR\": \"$0} *)",
+      "Bash(awk NR==393 {if\\(length\\($0\\)>200\\) print NR\": [LONG, \"length\\($0\\)\"]: \"substr\\($0,1,100\\)} *)",
+      "Bash(curl -I \"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2\")",
+      "Bash(git -C \"C:\\\\Users\\\\ahmad\\\\Desktop\\\\hajj-portal\" log --oneline admin.html)",
+      "Bash(awk '/id=\"admin-panel\"/{start=NR} end && NR>end{print NR\": \"$0; exit} /^<\\\\/div>$/{end=NR}' \"C:\\\\Users\\\\ahmad\\\\Desktop\\\\hajj-portal\\\\admin.html\")",
+      "Bash(node --check supabase.js)",
+      "Bash(node --check config.js)",
+      "Bash(node -e ' *)",
+      "Bash(node *)"
+    ]
+  }
+}

@@ -248,16 +248,30 @@ const Surveys = {
       .eq('active', true)
       .order('display_order', { ascending: true });
     if (error) throw error;
-    return data || [];
+    const now = new Date();
+    return (data || []).filter(s => {
+      if (s.start_date && new Date(s.start_date) > now) return false;
+      if (s.end_date && new Date(s.end_date) <= now) return false;
+      return true;
+    });
   },
   async getById(id) {
     const { data, error } = await _db.from('surveys').select('*').eq('id', id).single();
     if (error) return null;
     return data;
   },
+  async create(data) {
+    const { data: inserted, error } = await _db.from('surveys').insert(data).select().single();
+    if (error) throw error;
+    return inserted;
+  },
   async update(id, updates) {
     const payload = { ...updates, updated_at: new Date().toISOString() };
     const { error } = await _db.from('surveys').update(payload).eq('id', id);
+    if (error) throw error;
+  },
+  async delete(id) {
+    const { error } = await _db.from('surveys').delete().eq('id', id);
     if (error) throw error;
   },
   async getQuestions(surveyId) {
@@ -310,6 +324,15 @@ const Surveys = {
     const { data, error } = await q;
     if (error) return null;
     return data && data.length ? data : null;
+  },
+  async getResponsesByPilgrim(pilgrimId) {
+    const { data, error } = await _db
+      .from('survey_responses')
+      .select('*')
+      .eq('pilgrim_id', pilgrimId)
+      .order('submitted_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
   },
   async getStats(surveyId) {
     const [questions, responses] = await Promise.all([
