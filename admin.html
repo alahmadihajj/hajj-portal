@@ -285,6 +285,135 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
 .modal-box{background:#fff;border-radius:16px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
 
+/* ===== showActionModal — تنبيه احترافي موحّد (v15.4) ===== */
+.am-overlay{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.6);
+  display:flex; align-items:center; justify-content:center;
+  z-index:9999999;
+  padding:20px;
+  animation:amFade .2s ease;
+}
+.am-overlay.am-leaving{animation:amFadeOut .18s ease forwards}
+@keyframes amFade   { from{opacity:0} to{opacity:1} }
+@keyframes amFadeOut{ from{opacity:1} to{opacity:0} }
+@keyframes amRise   { from{opacity:0;transform:translateY(14px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+.am-box{
+  background:var(--surface, #fff);
+  border-radius:16px;
+  padding:28px 24px 20px;
+  width:100%; max-width:520px;
+  max-height:90vh; overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);
+  position:relative;
+  text-align:center;
+  animation:amRise .25s cubic-bezier(.2,.8,.2,1);
+  outline:none;
+}
+.am-box:focus-visible{box-shadow:0 20px 60px rgba(0,0,0,.35), 0 0 0 3px var(--gold, #c8971a)}
+.am-close{
+  position:absolute; top:10px; left:10px;
+  width:32px; height:32px;
+  background:transparent; border:none;
+  font-size:18px; color:#888; cursor:pointer;
+  border-radius:8px;
+  transition:background .15s ease, color .15s ease;
+}
+.am-close:hover{background:#f5f5f5; color:#3d2000}
+.am-icon{
+  font-size:44px; line-height:1;
+  margin-bottom:12px;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:72px; height:72px; border-radius:50%;
+  margin-left:auto; margin-right:auto;
+}
+.am-icon-warning{background:rgba(192,112,0,.12); color:#c07000}
+.am-icon-error  {background:rgba(204,0,0,.12);   color:#c00}
+.am-icon-success{background:rgba(46,125,50,.12); color:#2e7d32}
+.am-icon-info   {background:rgba(26,95,168,.12); color:#1a5fa8}
+.am-title{
+  font-size:17px; font-weight:800;
+  color:var(--brown, #3d2000);
+  margin:0 0 8px;
+  line-height:1.4;
+}
+.am-desc{
+  font-size:13.5px; color:#666;
+  line-height:1.7;
+  margin:0 0 16px;
+}
+.am-items{
+  list-style:none; padding:0;
+  margin:0 0 18px;
+  background:var(--surface-2, #fafafa);
+  border:1px solid var(--border, #e0d5c5);
+  border-radius:10px;
+  overflow:hidden;
+  text-align:right;
+}
+.am-item{
+  display:flex; align-items:center; gap:8px;
+  padding:10px 14px;
+  font-size:13px;
+  border-bottom:1px solid var(--border-light, #f0e8d8);
+}
+.am-item:last-child{border-bottom:none}
+.am-item-ic{font-size:16px; flex-shrink:0}
+.am-item-lbl{font-weight:700; color:var(--brown, #3d2000)}
+.am-item-val{color:#555; flex:1}
+.am-actions{
+  display:flex; flex-wrap:wrap; gap:8px;
+  justify-content:center;
+  margin-top:4px;
+}
+.am-btn{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:11px 20px;
+  border:none; border-radius:10px;
+  font-size:13.5px; font-weight:700; font-family:inherit;
+  cursor:pointer;
+  transition:background .18s ease, transform .1s ease, box-shadow .18s ease;
+  min-height:44px;
+}
+.am-btn:active{transform:scale(.97)}
+.am-btn-primary{
+  background:linear-gradient(135deg, var(--brown, #3d2000), var(--gold, #c8971a));
+  color:#fff;
+  box-shadow:0 3px 10px rgba(200,151,26,.3);
+}
+.am-btn-primary:hover{box-shadow:0 5px 16px rgba(200,151,26,.45)}
+.am-btn-secondary{
+  background:var(--surface-2, #fff8e8);
+  color:var(--brown, #7a4500);
+  border:1.5px solid var(--gold, #c8971a);
+}
+.am-btn-secondary:hover{background:#fff3d4}
+.am-btn-cancel{
+  background:#f5f5f5; color:#555;
+  border:1px solid var(--border, #e0d5c5);
+}
+.am-btn-cancel:hover{background:#eaeaea}
+.am-btn-color-success{background:#2e7d32!important; color:#fff!important; border:none!important; box-shadow:0 3px 10px rgba(46,125,50,.3)}
+.am-btn-color-danger {background:#c00!important;    color:#fff!important; border:none!important; box-shadow:0 3px 10px rgba(204,0,0,.3)}
+.am-btn-color-warning{background:#c07000!important; color:#fff!important; border:none!important; box-shadow:0 3px 10px rgba(192,112,0,.3)}
+.am-btn-color-info   {background:#1a5fa8!important; color:#fff!important; border:none!important; box-shadow:0 3px 10px rgba(26,95,168,.3)}
+.am-btn-ic{font-size:15px; line-height:1}
+
+@media (max-width:600px){
+  .am-overlay{align-items:flex-end; padding:0}
+  .am-box{
+    max-width:100%;
+    border-radius:18px 18px 0 0;
+    padding:24px 20px 16px;
+    max-height:92vh;
+  }
+  .am-icon{width:64px; height:64px; font-size:38px}
+  .am-title{font-size:16px}
+  .am-desc{font-size:13px}
+  .am-actions{flex-direction:column; gap:8px}
+  .am-btn{width:100%; justify-content:center; min-height:48px; font-size:14px}
+}
+
 /* Readonly form fields */
 .readonly-field{
   background:#f5f5f5!important;
@@ -7691,7 +7820,96 @@ function showConfirm(msg, title='تأكيد', okText='نعم', okColor='#c00', i
   });
 }
 
-// ===== تسكين الحجاج =====
+/**
+ * Modal تنبيه احترافي موحّد — يدعم عدة أزرار + قائمة تفصيلية + أنواع دلالية.
+ * يُستخدم في v15.5+ لفحوصات الجنس/السعة/تفكيك الحجز.
+ *
+ * @param {Object} opts
+ * @param {string} opts.title               — العنوان الرئيسي
+ * @param {string} [opts.description]       — وصف إضافي اختياري
+ * @param {'warning'|'error'|'success'|'info'} [opts.type='warning']
+ * @param {string} [opts.icon]              — emoji مخصّص (يغلب الافتراضي)
+ * @param {Array<{label,value,icon}|string>} [opts.items]  — قائمة تفصيلية (bullet list)
+ * @param {Array<{label, value, color, emoji, variant}>} opts.actions
+ *        - label: نص الزر
+ *        - value: القيمة المُرجَعة (null = إلغاء)
+ *        - color: 'brand'|'success'|'danger'|'warning'|'neutral' (default: neutral)
+ *        - emoji: أيقونة اختيارية في بداية الزر
+ *        - variant: 'primary'|'secondary'|'cancel' (تأثير بصري)
+ * @returns {Promise<*>} قيمة الزر المختار، أو null للإلغاء (ESC/overlay/X)
+ */
+function showActionModal(opts){
+  return new Promise(resolve => {
+    const o = opts || {};
+    const type = o.type || 'warning';
+    const defaultIcons = { warning:'⚠️', error:'❌', success:'✅', info:'ℹ️' };
+    const icon = o.icon || defaultIcons[type] || '⚠️';
+    const esc = (s) => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    const itemsHtml = Array.isArray(o.items) && o.items.length
+      ? `<ul class="am-items">${o.items.map(it => {
+          if(typeof it === 'string') return `<li class="am-item"><span class="am-item-val">${esc(it)}</span></li>`;
+          const lbl = it.label ? `<span class="am-item-lbl">${esc(it.label)}</span>` : '';
+          const val = it.value ? `<span class="am-item-val">${esc(it.value)}</span>` : '';
+          const ic  = it.icon ? `<span class="am-item-ic" aria-hidden="true">${esc(it.icon)}</span>` : '';
+          return `<li class="am-item">${ic}${lbl}${val}</li>`;
+        }).join('')}</ul>`
+      : '';
+
+    const actions = (o.actions && o.actions.length) ? o.actions : [{label:'إغلاق', value:null, variant:'cancel'}];
+    const actionsHtml = actions.map((a, i) => {
+      const variant = a.variant || 'neutral';
+      const color   = a.color   || '';
+      const em = a.emoji ? `<span class="am-btn-ic" aria-hidden="true">${esc(a.emoji)}</span>` : '';
+      return `<button class="am-btn am-btn-${variant}${color?' am-btn-color-'+color:''}" data-idx="${i}" type="button">${em}<span>${esc(a.label)}</span></button>`;
+    }).join('');
+
+    const overlay = document.createElement('div');
+    overlay.className = 'am-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-live', type === 'error' || type === 'warning' ? 'assertive' : 'polite');
+    overlay.innerHTML = `
+      <div class="am-box am-type-${type}" tabindex="-1">
+        <button class="am-close" aria-label="إغلاق" type="button">✕</button>
+        <div class="am-icon am-icon-${type}">${esc(icon)}</div>
+        <h3 class="am-title">${esc(o.title||'')}</h3>
+        ${o.description ? `<p class="am-desc">${esc(o.description)}</p>` : ''}
+        ${itemsHtml}
+        <div class="am-actions">${actionsHtml}</div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const close = (val) => {
+      document.removeEventListener('keydown', onKey);
+      overlay.classList.add('am-leaving');
+      setTimeout(() => { overlay.remove(); resolve(val); }, 180);
+    };
+    const onKey = (e) => {
+      if(e.key === 'Escape'){ e.preventDefault(); close(null); }
+      else if(e.key === 'Enter'){
+        const primary = overlay.querySelector('.am-btn-primary');
+        if(primary){ e.preventDefault(); primary.click(); }
+      }
+    };
+    document.addEventListener('keydown', onKey);
+
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) close(null); });
+    overlay.querySelector('.am-close').addEventListener('click', () => close(null));
+    overlay.querySelectorAll('.am-btn').forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        const a = actions[idx];
+        close(a ? a.value : null);
+      });
+    });
+
+    // Focus — الزر الأول primary، أو الصندوق نفسه
+    setTimeout(() => {
+      const primary = overlay.querySelector('.am-btn-primary') || overlay.querySelector('.am-box');
+      if(primary) primary.focus();
+    }, 30);
+  });
+}
 async function openPilgrimAssign(pilgrimId) {
   // تحميل الأفواج والحافلات والمخيمات
   const [groups, buses, camps, sysusers] = await Promise.all([
@@ -8941,6 +9159,250 @@ function _summarizeUpdates(updates, excludeKeys){
     if(label) labels.add(label);
   });
   return [...labels].join('، ');
+}
+
+// =====================================================================
+// v15.4 — Validation Helpers لنظام التسكين الموحّد
+// تُستخدم في v15.5 (single-save) و v16.0 (bulk paths). هنا فقط التعريف.
+// =====================================================================
+
+/**
+ * جنس الحاج بصيغة موحّدة.
+ * @returns {'M'|'F'|null}
+ */
+function _genderOf(p){
+  const g = String(p?.['الجنس'] || '').trim().toLowerCase();
+  if(!g) return null;
+  if(['أنثى','أنثي','انثى','انثي','female','f'].includes(g)) return 'F';
+  if(['ذكر','male','m'].includes(g)) return 'M';
+  return null;
+}
+
+/**
+ * فحص تطابق جنس الحاج مع نوع المخيم.
+ * مخيم بلا camp_type → يقبل الجميع.
+ * @returns {boolean}
+ */
+function _campMatchesGenderGlobal(campType, pilgrimGender){
+  if(!campType) return true;
+  if(!pilgrimGender) return true; // نقبل عند غياب البيانات
+  if(campType === 'نساء') return pilgrimGender === 'F';
+  if(campType === 'رجال') return pilgrimGender === 'M';
+  return true;
+}
+
+/**
+ * جميع الحجاج في نفس الحجز (بما فيهم الحاج نفسه).
+ * wrapper فوق getRelatedPilgrims لتضمين الأصل.
+ * @returns {Array<Object>}
+ */
+function _getBookingMates(pilgrimId){
+  const me = ALL_DATA.find(p => String(p['_supabase_id']) === String(pilgrimId));
+  if(!me) return [];
+  return [me, ...getRelatedPilgrims(me)];
+}
+
+/**
+ * يجمع مصفوفة pilgrimIds في Map حسب رقم الحجز (أو booking_ref).
+ * @returns {Map<string, Array<Object>>}  // bookingKey → pilgrim objects
+ */
+function _groupByBooking(ids){
+  const map = new Map();
+  (ids || []).forEach(id => {
+    const p = ALL_DATA.find(x => String(x['_supabase_id']) === String(id));
+    if(!p) return;
+    const key = String(p['booking_ref'] || p['رقم الحجز'] || id);
+    if(!map.has(key)) map.set(key, []);
+    map.get(key).push(p);
+  });
+  return map;
+}
+
+/**
+ * فرز قائمة pilgrimIds للتسكين: booking_ref → gender (M→F) → الاسم.
+ * @returns {Array<number>} ids بعد الفرز
+ */
+function _sortPilgrimsForAssignment(ids){
+  const list = (ids || []).map(id => ALL_DATA.find(p => String(p['_supabase_id']) === String(id))).filter(Boolean);
+  list.sort((a, b) => {
+    const ka = String(a['booking_ref'] || a['رقم الحجز'] || '');
+    const kb = String(b['booking_ref'] || b['رقم الحجز'] || '');
+    if(ka !== kb) return ka.localeCompare(kb, 'ar', { numeric: true });
+    const ga = _genderOf(a) || 'Z';
+    const gb = _genderOf(b) || 'Z';
+    if(ga !== gb) return ga === 'M' ? -1 : 1; // ذكور أولاً
+    return String(a['اسم الحاج']||'').localeCompare(String(b['اسم الحاج']||''), 'ar');
+  });
+  return list.map(p => p['_supabase_id']);
+}
+
+/**
+ * الأسرّة المتاحة في مخيم معيّن، مرتّبة تصاعدياً.
+ * ⚠️ يقرأ camps من window._campsCache — يجب تعبئتها قبل الاستدعاء:
+ *    window._campsCache = await getCamps();  (سيُضاف في v15.5)
+ * @param {string} campNum
+ * @param {'mina'|'arafat'} loc
+ * @param {Array<number>} [excludeIds] — حجاج يُهمَل شغلهم للسرير (للـ bulk self-exclusion)
+ * @returns {Array<{num: number, key: string}>}
+ */
+function _getAvailableBedsInCamp(campNum, loc, excludeIds){
+  const fk  = loc === 'mina' ? 'mina_camp' : 'arafat_camp';
+  const bk  = loc === 'mina' ? 'mina_bed'  : 'arafat_bed';
+  const ex  = new Set((excludeIds || []).map(String));
+  const camps = window._campsCache || [];
+  const camp = camps.find(c => (c.camp_num || c.name) === campNum);
+  const cap = parseInt(camp?.capacity) || 0;
+  const booked = new Set();
+  ALL_DATA.forEach(x => {
+    if(x[fk] !== campNum || !x[bk]) return;
+    if(ex.has(String(x['_supabase_id']))) return;
+    booked.add(_normalizeBedId(x[bk], campNum));
+  });
+  const out = [];
+  for(let i = 1; i <= cap; i++){
+    const key = campNum + '-' + i;
+    if(!booked.has(key)) out.push({ num: i, key });
+  }
+  return out;
+}
+
+/**
+ * توزيع أسرّة متتالية لمجموعة حجاج مرتّبة.
+ * يحاول إعطاء أسرّة متتالية لنفس الحجز.
+ * @param {string} campNum
+ * @param {'mina'|'arafat'} loc
+ * @param {Array<number>} orderedIds — ids مرتّبة بالفعل (استخدم _sortPilgrimsForAssignment)
+ * @returns {{assignments: Map<id, bedKey>, nonContiguous: boolean, shortage: number}}
+ */
+function _autoAssignBedsSequential(campNum, loc, orderedIds){
+  const available = _getAvailableBedsInCamp(campNum, loc, orderedIds);
+  const assignments = new Map();
+  const total = orderedIds.length;
+  let nonContiguous = false;
+  // محاولة: ابحث عن نافذة متتالية بحجم كل مجموعة حجز
+  const byBooking = _groupByBooking(orderedIds);
+  let bedsUsed = new Set();
+  byBooking.forEach((pilgrims, bookingKey) => {
+    const needed = pilgrims.length;
+    // ابحث عن نافذة متتالية من `needed` أسرّة متاحة وغير مستخدمة
+    let windowStart = -1;
+    for(let i = 0; i <= available.length - needed; i++){
+      let ok = true;
+      for(let j = 0; j < needed; j++){
+        const a = available[i + j];
+        if(!a || bedsUsed.has(a.key)) { ok = false; break; }
+        if(j > 0 && a.num !== available[i + j - 1].num + 1) { ok = false; break; }
+      }
+      if(ok){ windowStart = i; break; }
+    }
+    if(windowStart >= 0){
+      pilgrims.forEach((p, idx) => {
+        const bed = available[windowStart + idx];
+        assignments.set(p['_supabase_id'], bed.key);
+        bedsUsed.add(bed.key);
+      });
+    } else {
+      // لا يوجد نافذة متتالية — أعطِ أي أسرّة متاحة
+      nonContiguous = true;
+      const remaining = available.filter(a => !bedsUsed.has(a.key));
+      pilgrims.forEach((p, idx) => {
+        const bed = remaining[idx];
+        if(bed){
+          assignments.set(p['_supabase_id'], bed.key);
+          bedsUsed.add(bed.key);
+        }
+      });
+    }
+  });
+  const shortage = total - assignments.size;
+  return { assignments, nonContiguous, shortage };
+}
+
+/**
+ * فحص سعة المخيم لقائمة حجاج (يراعي الذين هم أصلاً في المخيم نفسه).
+ * @returns {{ok: boolean, needed: number, available: number, capacity: number}}
+ */
+function _checkBulkCapacity(ids, campNum, loc){
+  const available = _getAvailableBedsInCamp(campNum, loc, ids);
+  const camps = window._campsCache || [];
+  const camp = camps.find(c => (c.camp_num || c.name) === campNum);
+  const capacity = parseInt(camp?.capacity) || 0;
+  return { ok: available.length >= ids.length, needed: ids.length, available: available.length, capacity };
+}
+
+/**
+ * فحص الجنس: هل كل المحدَّدين يتوافقون مع نوع المخيم؟
+ * @returns {{ok: boolean, mismatches: Array<{id, name, gender}>}}
+ */
+function _checkBulkGender(ids, camp){
+  const campType = camp?.camp_type || '';
+  if(!campType) return { ok: true, mismatches: [] };
+  const mismatches = [];
+  (ids || []).forEach(id => {
+    const p = ALL_DATA.find(x => String(x['_supabase_id']) === String(id));
+    if(!p) return;
+    const g = _genderOf(p);
+    if(!_campMatchesGenderGlobal(campType, g)){
+      mismatches.push({ id, name: p['اسم الحاج']||'—', gender: g==='M'?'ذكر':g==='F'?'أنثى':'—' });
+    }
+  });
+  return { ok: mismatches.length === 0, mismatches };
+}
+
+/**
+ * فحص تفكيك الحجز: هل التحديد يفكّك مجموعات حجز؟
+ * @returns {{ok: boolean, splits: Array<{bookingKey, selectedCount, totalCount, missingIds, missingDetails}>}}
+ */
+function _checkBookingIntegrity(ids){
+  const selectedSet = new Set((ids || []).map(String));
+  const seen = new Set();
+  const splits = [];
+  (ids || []).forEach(id => {
+    const p = ALL_DATA.find(x => String(x['_supabase_id']) === String(id));
+    if(!p) return;
+    const key = String(p['booking_ref'] || p['رقم الحجز'] || '');
+    if(!key || seen.has(key)) return;
+    seen.add(key);
+    const mates = _getBookingMates(id); // يشمل نفسه
+    if(mates.length <= 1) return; // حاج وحده — لا مجموعة
+    const missing = mates.filter(m => !selectedSet.has(String(m['_supabase_id'])));
+    if(missing.length > 0){
+      splits.push({
+        bookingKey: key,
+        selectedCount: mates.length - missing.length,
+        totalCount: mates.length,
+        missingIds: missing.map(m => m['_supabase_id']),
+        missingDetails: missing.map(m => ({
+          id: m['_supabase_id'],
+          name: m['اسم الحاج']||'—',
+          currentCamp: m['mina_camp'] || m['arafat_camp'] || 'غير مُسكَّن'
+        }))
+      });
+    }
+  });
+  return { ok: splits.length === 0, splits };
+}
+
+/**
+ * تزامن بيانات المشرف من sys_users حسب رقم الحافلة.
+ * @param {string|number} busNum
+ * @param {Array<Object>} sysusers — من DB.SysUsers.getAll (cache خارجي أفضل)
+ * @returns {{supervisor_name: string, supervisor_phone: string}|null}
+ */
+function _syncSupervisorForBus(busNum, sysusers){
+  if(!busNum || !Array.isArray(sysusers)) return null;
+  const sup = sysusers.find(u => u.role === 'supervisor' && String(u.group_num) === String(busNum));
+  if(!sup) return null;
+  return { supervisor_name: sup.name || '', supervisor_phone: sup.phone || '' };
+}
+
+/**
+ * تزامن بيانات المشرف من sys_users حسب رقم الفوج.
+ * في النظام الحالي group_num في sys_users يُمثّل الحافلة — نفس منطق _syncSupervisorForBus.
+ * يُبقَى منفصلاً ليكون قابلاً للتخصيص مستقبلاً.
+ */
+function _syncSupervisorForGroup(groupNum, sysusers){
+  return _syncSupervisorForBus(groupNum, sysusers);
 }
 
 // أداة اختبار regression لـ _normalizeBedId — شغّلها في console: _testNormalizer()
@@ -12610,8 +13072,83 @@ if(location.hostname === 'localhost' || location.hostname === '127.0.0.1'){
         'background:#1a5fa8;color:#fff;padding:6px 12px;border-radius:6px;font-weight:bold');
       window._testNormalizer();
     }
+    // إتاحة زر اختبار showActionModal في console (DEV فقط)
+    if(typeof window._testActionModal === 'undefined'){
+      console.log('%c💡 لاختبار showActionModal يدوياً: _testActionModal("warning"|"error"|"success"|"info"|"split")',
+        'color:#1a5fa8');
+    }
   }, 1500);
 }
+
+/**
+ * أداة اختبار showActionModal يدوياً — DEV فقط.
+ * استخدام: _testActionModal('warning') — يعرض modal بكل أنواعه للفحص البصري.
+ */
+window._testActionModal = async function(scenario){
+  scenario = scenario || 'warning';
+  const scenarios = {
+    warning: {
+      type:'warning',
+      title:'تنبيه: جنس غير مطابق',
+      description:'المخيم 201 مخصص للنساء، لكن التحديد يشمل حجاجاً من الذكور.',
+      items: [
+        { icon:'🏕️', label:'المخيم:', value:'201 (نساء)' },
+        { icon:'⚠️', label:'حجاج مخالفون:', value:'3 ذكور' },
+        { icon:'✓',  label:'حجاج متطابقون:',value:'7 إناث' }
+      ],
+      actions: [
+        { label:'تطبيق على الإناث فقط (7)', value:'filtered', emoji:'✅', variant:'primary' },
+        { label:'إلغاء',                     value:null,       emoji:'❌', variant:'cancel' }
+      ]
+    },
+    error: {
+      type:'error',
+      title:'سعة المخيم غير كافية',
+      description:'عدد الحجاج المحدَّدين يتجاوز الأسرّة المتاحة.',
+      items:[
+        { icon:'📊', label:'المطلوب:', value:'10 أسرّة' },
+        { icon:'🛏️', label:'المتاح:',  value:'6 أسرّة' }
+      ],
+      actions: [
+        { label:'تخفيض العدد',  value:'reduce', emoji:'📉', variant:'primary', color:'warning' },
+        { label:'إلغاء',         value:null,     emoji:'❌', variant:'cancel' }
+      ]
+    },
+    success: {
+      type:'success',
+      title:'تم التسكين بنجاح',
+      description:'8 حجاج تم تسكينهم في مخيم 201 بأسرّة متتالية (3 إلى 10).',
+      actions:[{label:'حسناً', value:'ok', variant:'primary', color:'success'}]
+    },
+    info: {
+      type:'info',
+      title:'معلومة',
+      description:'هذه رسالة معلومة بسيطة بدون عناصر تفصيلية.',
+      actions:[{label:'فهمت', value:'ok', variant:'primary', color:'info'}]
+    },
+    split: {
+      type:'warning',
+      title:'تفكيك مجموعة الحجز #12345',
+      description:'هذه المجموعة مكوَّنة من 8 حجاج، وأنت تُسكّن 5 منهم فقط. باقي المجموعة في مواقع مختلفة.',
+      items:[
+        { icon:'👨‍👩‍👧', label:'مجموع الحجز:',     value:'8 حجاج' },
+        { icon:'✅',      label:'سيُسكَّنون الآن:',  value:'5 حجاج' },
+        { icon:'🏕️',      label:'في مخيم 205:',    value:'2 حجاج' },
+        { icon:'❓',      label:'غير مُسكَّنين:',    value:'1 حاج' }
+      ],
+      actions:[
+        { label:'تحديد كل المجموعة',    value:'select-all', emoji:'🔄', variant:'primary' },
+        { label:'متابعة (تفكيك)',        value:'continue',   emoji:'⚠️', variant:'secondary' },
+        { label:'إلغاء',                 value:null,         emoji:'❌', variant:'cancel' }
+      ]
+    }
+  };
+  const cfg = scenarios[scenario] || scenarios.warning;
+  console.log('%c🧪 showActionModal: ' + scenario, 'color:#1a5fa8;font-weight:bold');
+  const result = await showActionModal(cfg);
+  console.log('%c→ returned:', 'color:#2e7d32', result);
+  return result;
+};
 
 </script>
 </body>
