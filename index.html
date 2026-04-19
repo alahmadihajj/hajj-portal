@@ -318,66 +318,6 @@ body.ltr .info-block ul,body.ltr .info-block ol,body.ltr .company-text ul,body.l
   #result-screen{padding:24px 28px 60px}
 }
 
-/* ===== إخفاء Google Translate Widget UI ===== */
-.goog-te-banner-frame,
-.goog-te-banner-frame.skiptranslate,
-.skiptranslate {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-}
-body {
-  top: 0 !important;
-  position: static !important;
-}
-html {
-  top: 0 !important;
-}
-.goog-tooltip,
-.goog-tooltip:hover,
-.goog-te-balloon-frame {
-  display: none !important;
-}
-.goog-text-highlight {
-  background-color: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-.goog-logo-link,
-.goog-te-gadget-simple img,
-.goog-te-gadget-icon,
-.goog-te-gadget {
-  display: none !important;
-}
-font {
-  font-family: inherit !important;
-}
-iframe.goog-te-menu-frame,
-iframe.goog-te-banner-frame {
-  display: none !important;
-}
-
-/* الـ widget container خارج الشاشة (ليس display:none) كي ينشئ Google الـ combo */
-#google_translate_element {
-  position: fixed !important;
-  top: -100px !important;
-  left: -9999px !important;
-  width: 1px !important;
-  height: 1px !important;
-  overflow: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  z-index: -1 !important;
-  visibility: hidden !important;
-}
-
-/* إخفاء gadget UI بدون إزالته من DOM */
-.goog-te-gadget,
-.goog-te-gadget-simple {
-  visibility: hidden !important;
-  height: 0 !important;
-}
-
 </style>
 
 <style id="portal-dynamic-style"></style>
@@ -428,7 +368,7 @@ iframe.goog-te-banner-frame {
     </div>
   </div>
   <div class="lang-switcher" style="display:flex;align-items:center;gap:8px">
-    <select id="lang-select" onchange="setLang(this.value)"></select>
+    <select id="lang-select" onchange="setLang(this.value, false, true)"></select>
     <button id="logout-btn" onclick="goBack()" style="display:none;background:none;border:1.5px solid #c8971a;border-radius:8px;cursor:pointer;padding:5px 8px;touch-action:manipulation;line-height:1;vertical-align:middle" title="تسجيل الخروج">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -1233,6 +1173,12 @@ const LANGS = {
   }
 };
 
+// استرجاع قفل اللغة من localStorage فوراً (قبل أي استدعاء setLang)
+try {
+  const _savedLockedLang = localStorage.getItem('userSelectedLang');
+  if (_savedLockedLang) window._userLockedLang = _savedLockedLang;
+} catch(e) {}
+
 // Helper: translation getter with param substitution (e.g. t('surveyQProgress',{n:1,total:5}))
 function t(key, params) {
   const L = LANGS[currentLang] || LANGS.ar;
@@ -1243,75 +1189,81 @@ function t(key, params) {
   return s;
 }
 
-// ===== Google Translate integration (المحتوى الديناميكي) =====
-// ربط أكواد اللغات الداخلية بأكواد Google
-const GT_LANG_MAP = { ar:'', en:'en', ur:'ur', bn:'bn', fr:'fr', zh:'zh-CN' };
+// ===== MyMemory Translation System (المحتوى الديناميكي) =====
+const _translationCache = {};
 
-// تفعيل/تغيير ترجمة Google برمجياً
-function triggerGoogleTranslate(langCode) {
-  const target = (GT_LANG_MAP[langCode] != null) ? GT_LANG_MAP[langCode] : langCode;
-  const attempt = (retries = 15) => {
-    const combo = document.querySelector('.goog-te-combo');
-    if (combo) {
-      combo.value = target;
-      combo.dispatchEvent(new Event('change'));
-    } else if (retries > 0) {
-      setTimeout(() => attempt(retries - 1), 400);
-    }
-  };
-  attempt();
+function _loadTranslationCache() {
+  try {
+    const saved = localStorage.getItem('mymemory_cache');
+    if (saved) Object.assign(_translationCache, JSON.parse(saved));
+  } catch(e) {}
 }
 
-// منع ترجمة العناصر المترجمة يدوياً من LANGS
-function markNoTranslate() {
-  // العناصر التي لها id يبدأ بـ l- أو t- أو r-mina/r-maps/… (المترجمة من LANGS)
+function _saveTranslationCache() {
+  try {
+    localStorage.setItem('mymemory_cache', JSON.stringify(_translationCache));
+  } catch(e) {}
+}
+
+_loadTranslationCache();
+
+async function translateTextMyMemory(text, targetLang) {
+  if (!text || text.trim().length === 0) return text;
+  if (targetLang === 'ar') return text;
+
+  const cacheKey = `${targetLang}_${text.substring(0, 100)}`;
+  if (_translationCache[cacheKey]) return _translationCache[cacheKey];
+
+  try {
+    const response = await fetch(
+      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=ar|${targetLang}`
+    );
+    const data = await response.json();
+    const translated = (data && data.responseData && data.responseData.translatedText) || text;
+
+    _translationCache[cacheKey] = translated;
+    _saveTranslationCache();
+
+    return translated;
+  } catch(e) {
+    console.error('Translation error:', e);
+    return text;
+  }
+}
+
+async function translatePageDynamic(targetLang) {
+  if (targetLang === 'ar') {
+    document.querySelectorAll('[data-original-text]').forEach(el => {
+      el.textContent = el.getAttribute('data-original-text');
+    });
+    return;
+  }
+
   const selectors = [
-    '[id^="l-"]',
-    '[id^="t-"]',
-    '#h-title','#h-sub','#r-back-txt','#r-status-title','#r-timeline-title',
-    '#r-ann-title','#r-maps-title','#r-mina-btn','#r-muzdalifah-btn','#r-arafat-btn',
-    '#r-seats-title','#r-sheikh-title','#r-transport-title','#r-supervisor-title',
-    '#r-whatsapp-title','#r-whatsapp-btn','#surveys-section-title','#surveys-subtitle',
-    '#surveys-popup-hello','#surveys-popup-emoji','#surveys-popup-subtitle',
-    '#surveys-popup-start-btn','#surveys-popup-later-btn','#surveys-popup-close-btn',
-    '#survey-btn-prev','#survey-btn-next','#survey-btn-submit','#survey-taker-close-btn',
-    '#error-msg','#lang-select','#inp-id','#inp-booking'
+    '.announcement-content',
+    '.announcement-title',
+    '#r-company-content',
+    '#r-vaccines-content',
+    '#r-sheikh-content',
+    '.survey-card-title',
+    '.survey-card-desc',
+    '#r-whatsapp-content'
   ];
-  document.querySelectorAll(selectors.join(',')).forEach(el => {
-    el.classList.add('notranslate');
-    el.setAttribute('translate', 'no');
-  });
-  // منع ترجمة أي placeholder
-  document.querySelectorAll('input[placeholder]').forEach(el => {
-    el.setAttribute('translate', 'no');
-  });
-  // أرقام وأيقونات
-  document.querySelectorAll('.phone-number, .booking-number, .id-number, [data-no-translate]').forEach(el => {
-    el.classList.add('notranslate');
-  });
-  document.querySelectorAll('code, pre').forEach(el => el.classList.add('notranslate'));
-}
 
-// إخفاء أي عنصر Google يظهر فجأة
-function hideGoogleElements() {
-  const banner = document.querySelector('.goog-te-banner-frame');
-  if (banner) banner.style.display = 'none';
-  if (document.body) document.body.style.top = '0';
-  document.querySelectorAll('.goog-tooltip').forEach(x => x.style.display = 'none');
+  for (const selector of selectors) {
+    const elements = document.querySelectorAll(selector);
+    for (const el of elements) {
+      if (!el.hasAttribute('data-original-text')) {
+        el.setAttribute('data-original-text', el.textContent);
+      }
+      const originalText = el.getAttribute('data-original-text').trim();
+      if (originalText.length > 0 && originalText.length < 500) {
+        const translated = await translateTextMyMemory(originalText, targetLang);
+        el.textContent = translated;
+      }
+    }
+  }
 }
-
-// MutationObserver لمراقبة إضافة عناصر Google
-const googleObserver = new MutationObserver(() => hideGoogleElements());
-if (document.body) {
-  try { googleObserver.observe(document.body, { childList: true, subtree: true }); } catch(e){}
-  markNoTranslate();
-} else {
-  document.addEventListener('DOMContentLoaded', () => {
-    try { googleObserver.observe(document.body, { childList: true, subtree: true }); } catch(e){}
-    markNoTranslate();
-  });
-}
-setInterval(hideGoogleElements, 1000);
 
 // Map nationality to lang
 const NAT_LANG_MAP = {};
@@ -1413,7 +1365,20 @@ function applyCompanyName(name, license) {
   }
 }
 
-function setLang(code, skipResult=false) {
+function setLang(code, skipResult=false, isUserChoice=false) {
+  // منع الرجوع التلقائي إذا المستخدم اختار لغة
+  if (window._userLockedLang && !isUserChoice) {
+    if (code !== window._userLockedLang) {
+      console.log('[i18n] 🔒 blocked auto setLang to', code, '— locked to', window._userLockedLang);
+      return;
+    }
+  }
+  // إذا كان اختيار يدوي من المستخدم، اقفل اللغة
+  if (isUserChoice) {
+    window._userLockedLang = code;
+    try { localStorage.setItem('userSelectedLang', code); } catch(e) {}
+    console.log('[i18n] 🔐 user locked language to', code);
+  }
   currentLang = code;
   const L = LANGS[code];
   document.getElementById('lang-select').value = code;
@@ -1523,12 +1488,13 @@ function setLang(code, skipResult=false) {
   try { if (typeof loadAnnouncements === 'function') loadAnnouncements(); } catch(e){}
   try { if (window._currentPilgrim && typeof loadAvailableSurveys === 'function') loadAvailableSurveys(); } catch(e){}
 
-  // حفظ اللغة المختارة
-  try { localStorage.setItem('userSelectedLang', code); } catch(e) {}
-
-  // تمييز عناصر LANGS بـ notranslate + تفعيل Google Translate للمحتوى الديناميكي
-  try { markNoTranslate(); } catch(e){}
-  try { triggerGoogleTranslate(code); } catch(e){}
+  // ترجمة المحتوى الديناميكي عبر MyMemory
+  console.log('[i18n] setLang →', code, '— calling translatePageDynamic');
+  try {
+    translatePageDynamic(code)
+      .then(() => console.log('[i18n] translatePageDynamic done for', code))
+      .catch(err => console.error('[i18n] translatePageDynamic error:', err));
+  } catch(e) { console.error('[i18n] translatePageDynamic threw:', e); }
 
   if (currentRecord && !skipResult) showResult(currentRecord);
 }
@@ -1538,7 +1504,8 @@ function setLang(code, skipResult=false) {
   try {
     const saved = localStorage.getItem('userSelectedLang');
     if (saved && LANGS[saved] && saved !== currentLang) {
-      setLang(saved, true);
+      window._userLockedLang = saved;
+      setLang(saved, true, true);
     }
   } catch(e) {}
 })();
@@ -1619,7 +1586,8 @@ async function doLogin(){
     localStorage.removeItem('haj_bk');
   }
   const nat = rec['الجنسية'];
-  if(NAT_LANG_MAP[nat]){setLang(NAT_LANG_MAP[nat], true);}
+  const userPicked = (() => { try { return localStorage.getItem('userSelectedLang'); } catch(e){ return null; } })();
+  if(!userPicked && NAT_LANG_MAP[nat]){setLang(NAT_LANG_MAP[nat], true);}
   btn.textContent = origText;
   btn.disabled = false;
   showResult(rec);
@@ -2567,8 +2535,8 @@ async function loadAnnouncements() {
               <span style="background:${t.bg};color:${t.color};padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700">${t.icon} ${t.label}</span>
               <span style="font-size:11px;color:#bbb">${a.date||''}</span>
             </div>
-            <div style="font-size:15px;font-weight:700;color:#3d2000;margin-bottom:6px;display:${a.title?'block':'none'}">${a.title||''}</div>
-            <div style="font-size:13px;color:#555;line-height:1.7;white-space:pre-wrap">${text}</div>
+            <div class="announcement-title" style="font-size:15px;font-weight:700;color:#3d2000;margin-bottom:6px;display:${a.title?'block':'none'}">${a.title||''}</div>
+            <div class="announcement-content" style="font-size:13px;color:#555;line-height:1.7;white-space:pre-wrap">${text}</div>
           </div>`;
         }).join('');
         return;
@@ -2599,19 +2567,5 @@ if(savedId && savedBk){
 }
 </script>
 
-<!-- Google Translate Widget (مخفي - نتحكم به برمجياً) -->
-<div id="google_translate_element" style="position:fixed;top:-100px;left:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;z-index:-1"></div>
-<script type="text/javascript">
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'ar',
-    includedLanguages: 'ar,en,ur,bn,fr,zh-CN,tr,id,ms,hi',
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-    autoDisplay: false,
-    multilanguagePage: false
-  }, 'google_translate_element');
-}
-</script>
-<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
