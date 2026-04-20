@@ -3723,7 +3723,7 @@ function _buildBulkValueOptions(field, valSel){
     window.DB.Camps.getAll().then(allCamps => {
       const locCamps = allCamps.filter(c=>c.location===loc);
       valSel.innerHTML = '<option value="">— اختر مخيم '+loc+' —</option>' +
-        (()=>{ const sorted=_sortCamps(locCamps); let html=''; let lt=null; sorted.forEach(camp=>{ const t=camp.camp_type||''; if(t!==lt){if(lt!==null)html+='</optgroup>';html+=`<optgroup label="${(t===''||t==='رجال')?'👨 رجال':t==='نساء'?'👩 نساء':'👨 رجال'}">`; lt=t;} const cNum=camp.camp_num||camp.name; const cap=parseInt(camp.capacity)||0; const occ=ALL_DATA.filter(p=>p[fk]===cNum&&p[bk]).length; const full=cap>0&&occ>=cap; html+=`<option value="${cNum}" ${full?'disabled':''} style="${full?'color:#bbb':''}">‎${cNum}${full?' ⛔':' — '+(cap-occ)}</option>`; }); if(lt!==null)html+='</optgroup>'; return html; })();
+        _buildCampSelectOptions(locCamps, fk, bk);
     }).catch(()=>{
       const camps = [...new Set(ALL_DATA.map(p=>p[fk]).filter(Boolean))].sort();
       valSel.innerHTML = '<option value="">— اختر مخيم '+loc+' —</option>' +
@@ -4829,7 +4829,7 @@ async function showCampPilgrims(campNum, location) {
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-right:auto">
         <select id="cv-bulk-camp" onchange="checkCVBulkCamp()" style="padding:6px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:12px;font-family:inherit">
           <option value="">— اختر المخيم —</option>
-          ${(()=>{ const sorted=_sortCamps(locCamps); let html=''; let lt=null; sorted.forEach(camp=>{ const t=camp.camp_type||''; if(t!==lt){if(lt!==null)html+='</optgroup>';html+=`<optgroup label="${(t===''||t==='رجال')?'👨 رجال':t==='نساء'?'👩 نساء':'👨 رجال'}">`; lt=t;} const cNum=camp.camp_num||camp.name; const cap=parseInt(camp.capacity)||0; const occ=ALL_DATA.filter(p=>p[fieldKey]===cNum&&p[bedKey]).length; const av=cap-occ; const full=cap>0&&av<=0; html+=`<option value="${cNum}" ${full?'disabled':''} style="${full?'color:#bbb':''}">‎${cNum} ${full?'⛔ ممتلئ':'— متاح: '+av+' / '+cap}</option>`; }); if(lt!==null)html+='</optgroup>'; return html; })()}
+          ${_buildCampSelectOptions(locCamps, fieldKey, bedKey)}
         </select>
         <span id="cv-bulk-camp-info" style="font-size:11px;color:#888"></span>
         <button onclick="applyCVBulk()" style="padding:6px 14px;background:#c8971a;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">⚡ نقل جماعي</button>
@@ -4864,7 +4864,7 @@ async function showCampPilgrims(campNum, location) {
             <td style="padding:8px 10px">${p['المدينة']||'—'}</td>
             <td style="padding:8px 10px">
               <select id="camp-sel-${p['_supabase_id']}" onchange="updateBedOptions(${p['_supabase_id']},'${location}');markRowModified(${p['_supabase_id']})" style="padding:4px 6px;border:1.5px solid #ddd;border-radius:6px;font-size:12px;font-family:inherit">
-                ${(()=>{ const sorted=_sortCamps(locCamps); let html=''; let lt=null; sorted.forEach(camp=>{ const t=camp.camp_type||''; if(t!==lt){if(lt!==null)html+='</optgroup>';html+=`<optgroup label="${(t===''||t==='رجال')?'👨 رجال':t==='نساء'?'👩 نساء':'👨 رجال'}">`; lt=t;} const cNum=camp.camp_num||camp.name; const cap=parseInt(camp.capacity)||0; const occ=ALL_DATA.filter(px=>px[fieldKey]===cNum&&px[bedKey]).length; const full=cap>0&&occ>=cap&&p[fieldKey]!==cNum; html+=`<option value="${cNum}" ${p[fieldKey]===cNum?'selected':''} ${full?'disabled':''} style="${full?'color:#bbb':''}">‎${cNum}${full?' ⛔':''}</option>`; }); if(lt!==null)html+='</optgroup>'; return html; })()}
+                ${_buildCampSelectOptions(locCamps, fieldKey, bedKey, { capFormat:'short', selected: p[fieldKey], excludePilgrimId: p['_supabase_id'] })}
               </select>
             </td>
             <td style="padding:8px 10px">
@@ -8666,7 +8666,7 @@ async function openPilgrimAssign(pilgrimId) {
         <label>🏕️ مخيم منى</label>
         <select id="pa-mina-camp" onchange="updateMinaBeds()">
           <option value="">اختر المخيم</option>
-          ${(()=>{ const sorted=_sortCamps(minaCamps); let html=''; let lt=null; sorted.forEach(camp=>{ const t=camp.camp_type||''; if(t!==lt){if(lt!==null)html+='</optgroup>';html+=`<optgroup label="${(t===''||t==='رجال')?'👨 رجال':t==='نساء'?'👩 نساء':'👨 رجال'}">`; lt=t;} const cNum=camp.camp_num||camp.name; const cap=parseInt(camp.capacity)||0; const occ=ALL_DATA.filter(p=>p['mina_camp']===cNum&&p['mina_bed']).length; const av=cap-occ; const full=cap>0&&av<=0; html+=`<option value="${cNum}" ${pilgrim['mina_camp']===cNum?'selected':''} ${full?'disabled':''}>${cNum} ${full?'⛔':'— '+av}</option>`; }); if(lt!==null)html+='</optgroup>'; return html; })()}
+          ${_buildCampSelectOptions(minaCamps, 'mina_camp', 'mina_bed', { capFormat:'short', selected: pilgrim['mina_camp'] })}
         </select>
       </div>
       <div class="form-row">
@@ -8679,7 +8679,7 @@ async function openPilgrimAssign(pilgrimId) {
         <label>🌄 مخيم عرفات</label>
         <select id="pa-arafat-camp" onchange="updateArafatBeds()">
           <option value="">اختر المخيم</option>
-          ${(()=>{ const sorted=_sortCamps(arafatCamps); let html=''; let lt=null; sorted.forEach(camp=>{ const t=camp.camp_type||''; if(t!==lt){if(lt!==null)html+='</optgroup>';html+=`<optgroup label="${(t===''||t==='رجال')?'👨 رجال':t==='نساء'?'👩 نساء':'👨 رجال'}">`; lt=t;} const cNum=camp.camp_num||camp.name; const cap=parseInt(camp.capacity)||0; const occ=ALL_DATA.filter(p=>p['arafat_camp']===cNum&&p['arafat_bed']).length; const av=cap-occ; const full=cap>0&&av<=0; html+=`<option value="${cNum}" ${pilgrim['arafat_camp']===cNum?'selected':''} ${full?'disabled':''}>${cNum} ${full?'⛔':'— '+av}</option>`; }); if(lt!==null)html+='</optgroup>'; return html; })()}
+          ${_buildCampSelectOptions(arafatCamps, 'arafat_camp', 'arafat_bed', { capFormat:'short', selected: pilgrim['arafat_camp'] })}
         </select>
       </div>
       <div class="form-row">
@@ -11059,7 +11059,7 @@ function showUnassignedPilgrims(location) {
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-right:auto">
               <select id="ua-bulk-camp" onchange="checkUABulkCamp()" style="padding:6px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:12px;font-family:inherit">
                 <option value="">— اختر المخيم —</option>
-                ${locCamps.map(c=>`<option value="${c.camp_num||c.name}">${c.camp_num||c.name} (${c.capacity||0} سرير)</option>`).join('')}
+                ${_buildCampSelectOptions(locCamps, fieldKey, bedKey)}
               </select>
               <span id="ua-bulk-camp-info" style="font-size:11px;color:#888"></span>
               <button onclick="applyUABulk()" style="padding:6px 14px;background:#c8971a;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">⚡ تسكين جماعي</button>
@@ -11235,6 +11235,58 @@ function _sortCamps(camps) {
     if(bType==='رجال' && aType!=='رجال') return 1;
     return String(a.camp_num||a.name).localeCompare(String(b.camp_num||b.name), undefined, {numeric:true});
   });
+}
+
+/**
+ * Helper مركزي لبناء <option>s لـ <select> مخيم (v16.3).
+ * يُستخدم في 6 شاشات: cv-bulk, ua-bulk, data-bulk, assign modal (mina+arafat), per-row.
+ * @param {Array<Object>} locCamps — قائمة مخيمات موقع واحد
+ * @param {string} fieldKey — مفتاح المخيم في ALL_DATA (mina_camp/arafat_camp)
+ * @param {string} bedKey   — مفتاح السرير في ALL_DATA (mina_bed/arafat_bed)
+ * @param {Object} [opts]
+ * @param {'full'|'short'} [opts.capFormat='full'] — 'full'="— متاح: X / Y"، 'short'="— متاح X"
+ * @param {string} [opts.selected] — القيمة المختارة (لـ assign modal + per-row)
+ * @param {string} [opts.excludePilgrimId] — يستثني هذا الحاج من حساب الإشغال + يسمح ببقائه في مخيمه الحالي حتى لو مُمتلئ
+ * @returns {string} HTML للـ <option>s مع <optgroup> حسب الجنس
+ */
+function _buildCampSelectOptions(locCamps, fieldKey, bedKey, opts){
+  opts = opts || {};
+  const capFormat = opts.capFormat || 'full';
+  const selected  = opts.selected;
+  const excludeId = opts.excludePilgrimId;
+  const sorted = _sortCamps(locCamps || []);
+  let html = '';
+  let lastType = null;
+  sorted.forEach(camp => {
+    const t = camp.camp_type || '';
+    if(t !== lastType){
+      if(lastType !== null) html += '</optgroup>';
+      const label = (t === '' || t === 'رجال') ? '👨 رجال'
+                  : t === 'نساء' ? '👩 نساء' : '👨 رجال';
+      html += `<optgroup label="${label}">`;
+      lastType = t;
+    }
+    const cNum = camp.camp_num || camp.name;
+    const cap  = parseInt(camp.capacity) || 0;
+    const occ  = ALL_DATA.filter(p => {
+      if(p[fieldKey] !== cNum || !p[bedKey]) return false;
+      if(excludeId && String(p['_supabase_id']) === String(excludeId)) return false;
+      return true;
+    }).length;
+    const av = cap - occ;
+    // ممتلئ يُعطَّل — إلا إذا كان المخيم الحالي للحاج (يُسمح ببقائه)
+    let full = cap > 0 && av <= 0;
+    if(full && selected === cNum) full = false;
+    const style    = full ? 'color:#bbb' : '';
+    const disabled = full ? 'disabled' : '';
+    const sel      = (selected === cNum) ? 'selected' : '';
+    const suffix   = full
+      ? '⛔ ممتلئ'
+      : (capFormat === 'short' ? `— متاح ${av}` : `— متاح: ${av} / ${cap}`);
+    html += `<option value="${cNum}" ${sel} ${disabled} style="${style}">‎${cNum} ${suffix}</option>`;
+  });
+  if(lastType !== null) html += '</optgroup>';
+  return html;
 }
 
 function _buildCampSelect(camps, selectedVal, fieldKey, bedKey, extraStyle) {
