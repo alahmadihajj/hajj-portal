@@ -1187,7 +1187,31 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 .toast-warning { background:#c07000; box-shadow:0 4px 12px rgba(192,112,0,.28),0 8px 30px rgba(0,0,0,.15); }
 .toast-info    { background:#1a5fa8; box-shadow:0 4px 12px rgba(26,95,168,.28),0 8px 30px rgba(0,0,0,.15); }
 .toast-ic { font-size:18px; line-height:1; flex-shrink:0; }
-.toast-msg { line-height:1.5; }
+.toast-msg { line-height:1.5; flex:1 1 auto; }
+.toast-action{
+  margin-inline-start:12px;
+  padding:6px 14px;
+  background:rgba(255,255,255,.2);
+  border:1.5px solid rgba(255,255,255,.5);
+  border-radius:8px;
+  color:inherit;
+  font-family:inherit; font-size:13px; font-weight:700;
+  cursor:pointer; min-height:32px;
+  white-space:nowrap; flex-shrink:0;
+  transition:background .18s ease, border-color .18s ease, transform .1s ease;
+}
+.toast-action:hover{
+  background:rgba(255,255,255,.35);
+  border-color:rgba(255,255,255,.85);
+}
+.toast-action:active{ transform:scale(.96) }
+@media (max-width:480px){
+  .toast{ flex-direction:column; align-items:stretch; text-align:center }
+  .toast-action{
+    margin-inline-start:0; margin-top:6px;
+    width:100%; padding:10px; min-height:44px; font-size:14px;
+  }
+}
 @keyframes toastIn  { from{opacity:0;transform:translateY(-20px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
 @keyframes toastOut { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-10px)} }
 
@@ -3336,6 +3360,7 @@ function goPage(p) { currentPage = p; render(); window.scrollTo(0,0); }
 
 function adminLogout(){
   sessionStorage.removeItem('admin_user');
+  window._lastBulkSnapshot = null; // تنظيف snapshot الـ undo
   document.getElementById('login-screen').style.display='flex'; document.getElementById('admin-panel').style.display='none';
 }
 
@@ -4026,23 +4051,28 @@ async function _executeBulkPipeline(ids, field, value, context){
     } catch(_){}
   }
 
-  // 8) Apply to DB
+  // 8) Apply to DB — مع snapshot للـ undo
   let ok = 0, fail = 0;
+  const successSnapshots = [];
+  const snapKeys = _bulkSnapshotKeys(field, isCamp, !!supervisorData);
   if(isCamp && assignments){
     // حلقة فردية (كل حاج بسرير مختلف) مع _applyBedAssignment
     showToast(`جاري تسكين ${workingIds.length} حاج`, 'info');
     for(const id of workingIds){
+      const pilgrimRec = ALL_DATA.find(p => String(p['_supabase_id']) === String(id));
+      // التقاط snapshot قبل DB update
+      const before = {};
+      snapKeys.forEach(k => { before[k] = pilgrimRec ? (pilgrimRec[k] ?? null) : null; });
       try {
         const bedKey = assignments.get(id);
-        const pilgrimRec = ALL_DATA.find(p => String(p['_supabase_id']) === String(id));
         const updates = {};
         _applyBedAssignment(updates, pilgrimRec, loc, value, bedKey);
         await window.DB.Pilgrims.update(parseInt(id), updates);
+        successSnapshots.push({ id, before, name: pilgrimRec?.['اسم الحاج']||'—' });
         ok++;
       } catch(e){
         fail++;
-        const p = ALL_DATA.find(x => String(x['_supabase_id']) === String(id));
-        console.error('[bulk] FAILED', 'pilgrim_id:'+id, 'name:'+(p?.['اسم الحاج']||'—'), 'error:'+e.message);
+        console.error('[bulk] FAILED', 'pilgrim_id:'+id, 'name:'+(pilgrimRec?.['اسم الحاج']||'—'), 'error:'+e.message);
       }
     }
   } else {
@@ -4052,6 +4082,13 @@ async function _executeBulkPipeline(ids, field, value, context){
       baseUpdates.supervisor_name  = supervisorData.supervisor_name;
       baseUpdates.supervisor_phone = supervisorData.supervisor_phone;
     }
+    // التقاط snapshot قبل DB + memory update
+    workingIds.forEach(id => {
+      const r = ALL_DATA.find(p => String(p['_supabase_id']) === String(id));
+      const before = {};
+      snapKeys.forEach(k => { before[k] = r ? (r[k] ?? null) : null; });
+      successSnapshots.push({ id, before, name: r?.['اسم الحاج']||'—' });
+    });
     try {
       await window.DB.Pilgrims.bulkUpdate(workingIds, baseUpdates);
       workingIds.forEach(id => {
@@ -4065,19 +4102,131 @@ async function _executeBulkPipeline(ids, field, value, context){
       ok = workingIds.length;
     } catch(e){
       fail = workingIds.length;
+      successSnapshots.length = 0; // فشل كامل → لا snapshots
       console.error('[bulk] bulkUpdate FAILED', 'error:'+e.message);
     }
   }
 
-  // 9) Feedback
-  if(fail === 0){
-    showToast(`تم تحديث ${ok} حاج بنجاح`, 'success');
+  // 9) Feedback + حفظ snapshot للـ undo (10 ثوانٍ من toast + 15 ثانية من snapshot)
+  if(fail === 0 && ok > 0){
+    const snapTime = Date.now();
+    window._lastBulkSnapshot = {
+      timestamp: snapTime,
+      field, value,
+      context: context.source,
+      snapshots: successSnapshots,
+      count: ok
+    };
+    // تنظيف تلقائي بعد 15s (مع فحص timestamp لمنع مسح snapshot جديد بالخطأ)
+    setTimeout(() => {
+      if(window._lastBulkSnapshot && window._lastBulkSnapshot.timestamp === snapTime){
+        window._lastBulkSnapshot = null;
+      }
+    }, 15000);
+    showToast(`تم تحديث ${ok} حاج بنجاح`, 'success', 10000, {
+      action: { label: '↶ تراجع', handler: () => _undoLastBulk() }
+    });
   } else if(ok > 0){
-    showToast(`نجح ${ok} • فشل ${fail} (راجع console)`, 'warning', 6000);
+    // فشل جزئي → لا undo (snapshot غير متّسق)
+    showToast(`نجح ${ok}، وفشل ${fail} — راجع console. (التراجع غير متاح عند الفشل الجزئي)`, 'warning', 7000);
   } else {
     showToast('فشل التحديث', 'error');
   }
   return { success: ok > 0, updated: ok, failed: fail };
+}
+
+/**
+ * استعادة آخر bulk — snapshot لمدة 15 ثانية (10s في toast + 5s buffer).
+ * يحمي من double-booking: إذا السرير المُسجَّل محجوز الآن لحاج آخر → يُمسح بدلاً من الاستعادة.
+ * @returns {Promise<void>}
+ */
+async function _undoLastBulk(){
+  const snap = window._lastBulkSnapshot;
+  if(!snap){ showToast('لا توجد عملية للتراجع عنها', 'warning'); return; }
+
+  // تأكيد للعمليات الكبيرة (≥10)
+  if(snap.count >= 10){
+    const confirmed = await showActionModal({
+      type: 'warning',
+      title: 'تأكيد التراجع',
+      description: `سيتم استعادة البيانات السابقة لـ ${snap.count} حاج.`,
+      items: [
+        { icon:'📋', label:'الحقل المُعاد:', value: (FIELD_LABELS[snap.field] || snap.field) },
+        { icon:'📅', label:'وقت التنفيذ:',   value: _formatTimeAgo(snap.timestamp) },
+        { icon:'👥', label:'عدد الحجاج:',    value: snap.count + ' حاج' }
+      ],
+      actions: [
+        { label:'تأكيد التراجع', value:'undo', emoji:'↶', variant:'primary', color:'warning' },
+        { label:'إلغاء',          value:null,   variant:'cancel' }
+      ]
+    });
+    if(confirmed !== 'undo') return;
+  }
+
+  showToast('جاري التراجع...', 'info', 3000);
+  let ok = 0, fail = 0;
+  const conflicts = []; // double-booking على mina_bed/arafat_bed
+
+  for(const s of snap.snapshots){
+    try {
+      // حماية double-booking: إذا السرير محجوز الآن لحاج آخر → مسح بدل الاستعادة
+      const restoreData = { ...s.before };
+      ['mina', 'arafat'].forEach(lc => {
+        const bedKey = lc + '_bed';
+        const seatKey = lc + '_seat';
+        const campKey = lc + '_camp';
+        if(restoreData[bedKey] && restoreData[campKey]){
+          const conflict = ALL_DATA.find(p =>
+            String(p['_supabase_id']) !== String(s.id) &&
+            p[campKey] === restoreData[campKey] &&
+            p[bedKey] &&
+            _normalizeBedId(p[bedKey], restoreData[campKey]) === _normalizeBedId(restoreData[bedKey], restoreData[campKey])
+          );
+          if(conflict){
+            conflicts.push({ id: s.id, name: s.name, bed: restoreData[bedKey] });
+            restoreData[bedKey]  = null;
+            restoreData[seatKey] = null;
+          }
+        }
+      });
+      await window.DB.Pilgrims.update(parseInt(s.id), restoreData);
+      const r = ALL_DATA.find(p => String(p['_supabase_id']) === String(s.id));
+      if(r){
+        Object.keys(restoreData).forEach(k => {
+          r[k] = restoreData[k];
+          const arKey = REVERSE_FIELD_MAP[k];
+          if(arKey) r[arKey] = restoreData[k];
+        });
+      }
+      ok++;
+    } catch(e){
+      fail++;
+      console.error('[undo] FAILED', 'pilgrim_id:'+s.id, 'name:'+s.name, 'error:'+e.message);
+    }
+  }
+
+  window._lastBulkSnapshot = null; // منع undo مزدوج
+
+  // إعادة عرض الواجهة حسب السياق
+  if(snap.context === 'bg'){
+    const bn  = window._currentBookingGroupNum;
+    const aid = window._currentBookingClickedId;
+    const ctx = window._currentBookingCtx || 'main';
+    if(bn || aid) showBookingGroup(bn, aid, ctx);
+  } else {
+    if(typeof render === 'function') render();
+  }
+
+  // Feedback — مع تنبيه double-booking إن وُجد
+  if(conflicts.length > 0){
+    const names = conflicts.slice(0, 3).map(c => c.name).join('، ');
+    const more = conflicts.length > 3 ? ` وآخرون (${conflicts.length - 3})` : '';
+    showToast(`تم التراجع جزئياً — ${conflicts.length} سرير محجوز لحاج آخر، تم مسحه (${names}${more})`, 'warning', 8000);
+  } else if(fail === 0){
+    showToast(`تم التراجع بنجاح — استعادة ${ok} حاج`, 'success');
+  } else {
+    showToast(`تراجع جزئي — نجح ${ok}، وفشل ${fail}`, 'warning', 6000);
+  }
 }
 
 async function applyDataBulk(){
@@ -6553,6 +6702,8 @@ async function saveVisibilitySettings() {
 }
 
 function switchTab(tab) {
+  // تنظيف snapshot الـ undo عند تغيير التبويب — يمنع undo خاطئ في سياق مختلف
+  window._lastBulkSnapshot = null;
   const tabs = ['data','settings','housing','staff','ann','surveys','users'];
   tabs.forEach(t => {
     const panel = document.getElementById('tab-'+t);
@@ -8291,7 +8442,7 @@ async function deleteAnn(id) {
 
 // ===== Toast Notifications =====
 // نظام التوست: أيقونة موحّدة + aria-live + مدة ديناميكية + stack بحد أقصى 3
-function showToast(msg, type='success', duration) {
+function showToast(msg, type='success', duration, options) {
   let container = document.getElementById('toast-container');
   if(!container){
     container = document.createElement('div');
@@ -8305,17 +8456,33 @@ function showToast(msg, type='success', duration) {
     if(!oldest) break;
     oldest.remove();
   }
+  const hasAction = !!(options && options.action && typeof options.action.handler === 'function');
   // المدة الديناميكية: 3s ثابتة + 40ms لكل حرف، محصورة بين 3s و 10s
+  // عند وجود action: الافتراضي 10s (كافٍ للتفاعل) إذا لم يُمرَّر duration صراحة
   const safeMsg = String(msg||'');
-  const autoDuration = Math.min(10000, Math.max(3000, 3000 + safeMsg.length * 40));
+  const autoDuration = hasAction
+    ? 10000
+    : Math.min(10000, Math.max(3000, 3000 + safeMsg.length * 40));
   const ms = (typeof duration === 'number' && duration > 0) ? duration : autoDuration;
   const icons = { success:'✅', error:'❌', warning:'⚠️', info:'ℹ️' };
+  const esc = (s)=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const toast = document.createElement('div');
   toast.className = 'toast toast-' + type;
   toast.setAttribute('role', type === 'error' || type === 'warning' ? 'alert' : 'status');
   toast.setAttribute('aria-live', type === 'error' || type === 'warning' ? 'assertive' : 'polite');
-  toast.innerHTML = `<span class="toast-ic" aria-hidden="true">${icons[type]||'✅'}</span><span class="toast-msg">${safeMsg}</span>`;
+  const actionHtml = hasAction
+    ? `<button class="toast-action" type="button" aria-label="${esc(options.action.label||'تراجع')}">${esc(options.action.label||'تراجع')}</button>`
+    : '';
+  toast.innerHTML = `<span class="toast-ic" aria-hidden="true">${icons[type]||'✅'}</span><span class="toast-msg">${safeMsg}</span>${actionHtml}`;
   container.appendChild(toast);
+  if(hasAction){
+    const btn = toast.querySelector('.toast-action');
+    btn.addEventListener('click', () => {
+      try { options.action.handler(); } catch(e){ console.error(e); }
+      toast.style.animation = 'toastOut 0.3s cubic-bezier(.2,.8,.2,1) forwards';
+      setTimeout(() => toast.remove(), 300);
+    });
+  }
   setTimeout(() => {
     toast.style.animation = 'toastOut 0.3s cubic-bezier(.2,.8,.2,1) forwards';
     setTimeout(() => toast.remove(), 300);
@@ -9728,6 +9895,46 @@ const FIELD_LABELS = {
   supervisor_name:  'المشرف',
   supervisor_phone: 'المشرف'
 };
+
+// Mapping من مفاتيح DB الإنجليزية إلى المفاتيح العربية في ALL_DATA.
+// يُستخدم في استعادة snapshot (undo) لضمان اتساق DB + الذاكرة.
+// الحقول غير المذكورة (مثل mina_camp) تستخدم نفس المفتاح في الذاكرة.
+const REVERSE_FIELD_MAP = {
+  bus_num:            'رقم الحافلة الخاصة بك',
+  group_num:          'رقم فوج التفويج الخاص بك',
+  supervisor_name:    'اسم المشرف الخاص بالحاج',
+  supervisor_phone:   'رقم جوال المشرف',
+  bus_status:         'حالة الإركاب',
+  camp_status:        'حالة الحضور في المخيم',
+  nusuk_card_status:  'حالة بطاقة نسك'
+};
+
+/**
+ * يُعيد نصاً عربياً يصف الفرق الزمني بين timestamp والآن.
+ * يُستخدم في modal تأكيد undo.
+ */
+function _formatTimeAgo(timestamp){
+  const diff = Math.floor((Date.now() - (timestamp||0)) / 1000);
+  if(diff < 5)    return 'الآن';
+  if(diff < 60)   return 'قبل ' + diff + ' ثانية';
+  if(diff < 3600) return 'قبل ' + Math.floor(diff/60) + ' دقيقة';
+  return 'قبل ' + Math.floor(diff/3600) + ' ساعة';
+}
+
+/**
+ * يُعيد قائمة الحقول التي يجب حفظها في snapshot قبل bulk update.
+ * @param {string} field — الحقل المستهدف
+ * @param {boolean} isCamp — هل هو camp bulk (يتطلّب حفظ bed+seat)
+ * @param {boolean} hasSupervisor — هل supervisor يُحدَّث (bus/group bulk)
+ */
+function _bulkSnapshotKeys(field, isCamp, hasSupervisor){
+  if(isCamp){
+    const loc = field === 'mina_camp' ? 'mina' : 'arafat';
+    return [loc+'_camp', loc+'_bed', loc+'_seat'];
+  }
+  if(hasSupervisor) return [field, 'supervisor_name', 'supervisor_phone'];
+  return [field];
+}
 
 /**
  * يبني ملخّصاً نصياً للحقول المُحدَّثة لعرضه في toast النجاح.
