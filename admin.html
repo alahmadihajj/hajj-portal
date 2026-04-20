@@ -475,6 +475,10 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   .am-desc{font-size:13px}
   .am-actions{flex-direction:column; gap:8px}
   .am-btn{width:100%; justify-content:center; min-height:48px; font-size:14px}
+  /* تحسين قراءة items الطويلة على الشاشات الصغيرة: label أعلى، value أسفل */
+  .am-item{ flex-direction:column; align-items:flex-start; gap:4px; padding:12px 14px }
+  .am-item-lbl{ font-size:13px; display:block; margin-bottom:0 }
+  .am-item-val{ font-size:12.5px; line-height:1.6; display:block; width:100% }
   /* Preview يتحوّل لبطاقات */
   .bp-table{ display:none }
   .bp-cards{ display:flex; flex-direction:column; gap:8px; padding:6px }
@@ -3906,16 +3910,18 @@ async function _executeBulkPipeline(ids, field, value, context){
     if(!gCheck.ok){
       const matching = workingIds.length - gCheck.mismatches.length;
       const items = gCheck.mismatches.slice(0,5).map(m => ({
-        icon: m.gender==='ذكر'?'👨':'👩', label:m.name, value:m.gender
+        icon: m.gender==='ذكر'?'👨':'👩',
+        label: m.name,
+        value: 'الجنس: ' + m.gender
       }));
-      if(gCheck.mismatches.length > 5) items.push({ icon:'…', label:'وآخرون', value:(gCheck.mismatches.length-5)+' حاج' });
+      if(gCheck.mismatches.length > 5) items.push({ icon:'…', label:'وآخرون:', value:(gCheck.mismatches.length-5)+' حاج إضافي' });
       const actions = [];
       if(matching > 0) actions.push({ label:`تطبيق على المتوافقين (${matching})`, value:'filter', emoji:'✅', variant:'primary' });
       actions.push({ label:'إلغاء', value:null, variant:'cancel' });
       const decision = await showActionModal({
         type:'warning',
         title:'الجنس لا يتطابق مع نوع المخيم',
-        description:`المخيم ${value} مخصّص لـ ${camp.camp_type}. ${gCheck.mismatches.length} حاج من جنس مختلف.`,
+        description:`المخيم ${value} مخصَّص للـ${camp.camp_type}. من بين الحجاج المحدَّدين، ${gCheck.mismatches.length} من الجنس الآخر ولا يمكن تسكينهم هنا.`,
         items, actions
       });
       if(decision !== 'filter') return { success:false, skipReason:'gender_abort' };
@@ -3932,7 +3938,7 @@ async function _executeBulkPipeline(ids, field, value, context){
       const decision = await showActionModal({
         type:'warning',
         title:'السعة لا تكفي',
-        description:`المخيم ${value} سعته ${cCheck.capacity}. متاح ${cCheck.available} سرير فقط.`,
+        description:`المخيم ${value} سعته ${cCheck.capacity} سرير، المتاح حالياً ${cCheck.available} فقط. اخترت ${cCheck.needed} حاج، وهذا يزيد ${cCheck.needed - cCheck.available} عن المتاح.`,
         items:[
           { icon:'🏕️', label:'السعة الكلية:',   value:cCheck.capacity+' سرير' },
           { icon:'🛏️', label:'المحجوز حالياً:', value:(cCheck.capacity - cCheck.available)+' سرير' },
@@ -3956,14 +3962,15 @@ async function _executeBulkPipeline(ids, field, value, context){
     const biCheck = _checkBookingIntegrity(workingIds, { targetField: fk, targetValue: value });
     if(!biCheck.ok){
       const items = biCheck.splits.slice(0,5).map(s => ({
-        icon:'📋', label:'حجز #'+s.bookingKey,
-        value:`${s.selectedCount}/${s.totalCount} — ينقص ${s.missingIds.length}`
+        icon:'📋',
+        label:'الحجز رقم ' + s.bookingKey,
+        value:'يحتوي ' + s.totalCount + ' شخص، تم اختيار ' + s.selectedCount + ' منهم — سيبقى ' + s.missingIds.length + ' خارج المجموعة'
       }));
-      if(biCheck.splits.length > 5) items.push({ icon:'…', label:'ومجموعات أخرى', value:(biCheck.splits.length-5)+' حجز' });
+      if(biCheck.splits.length > 5) items.push({ icon:'…', label:'ومجموعات أخرى:', value:(biCheck.splits.length-5)+' حجز إضافي' });
       const decision = await showActionModal({
         type:'warning',
         title:'تفكيك مجموعات حجز',
-        description:`${biCheck.splits.length} مجموعة حجز ستتفكّك. بعض الأفراد خارج التحديد.`,
+        description:`سيتأثر بهذا التحديد ${biCheck.splits.length} مجموعة حجز. الأفراد المحدَّدون سيُنقَلون للمخيم الجديد، وباقي مجموعاتهم سيبقون في مكانهم.`,
         items,
         actions:[
           { label:'توسيع التحديد تلقائياً', value:'expand', emoji:'🔄', variant:'primary', color:'success' },
@@ -4791,9 +4798,9 @@ async function saveCampAssign(pilgrimId, location) {
       title:'جنس غير مطابق — لا يمكن التسكين',
       description:'قاعدة شرعية صلبة: لا يُسكَّن حاج في مخيم من جنس مختلف.',
       items:[
-        { icon:'👤', label:'الحاج:',  value:pilgrim['اسم الحاج']||'—' },
-        { icon:'🏕️', label:'المخيم:', value:campVal+' ('+camp.camp_type+')' },
-        { icon:'⚠️', label:'الموقع:', value:location }
+        { icon:'👤', label:'اسم الحاج:',      value: pilgrim['اسم الحاج']||'—' },
+        { icon:'🏕️', label:'المخيم المطلوب:', value: campVal + ' (مخصَّص للـ' + camp.camp_type + ')' },
+        { icon:'📍', label:'الموقع:',         value: location }
       ],
       actions:[{label:'فهمت', value:null, variant:'primary', color:'danger'}]
     });
@@ -4817,12 +4824,13 @@ async function saveCampAssign(pilgrimId, location) {
     const decision = await showActionModal({
       type:'warning',
       title:'تفكيك مجموعة الحجز',
-      description:'الحاج '+(pilgrim?.['اسم الحاج']||'')+' من مجموعة حجز تحتوي '+splitCheck.groupSize+' أفراد. هذا التغيير سيفصله عن مجموعته.',
+      description:'الحاج '+(pilgrim?.['اسم الحاج']||'')+' ينتمي لحجز يحتوي '+splitCheck.groupSize+' أشخاص. نقله لوحده سيفصله عن مجموعته.',
       items:[
-        { icon:'📋', label:'رقم الحجز:',            value:'#'+splitCheck.bookingKey },
-        { icon:'🏕️', label:'الآخرون في:',          value:inCampsSummary || '—' },
-        { icon:'❓', label:'غير مُسكَّنين:',        value:splitCheck.unassigned.length+' حاج' },
-        { icon:'➡️', label:'سينتقل إلى:',           value:campVal+' ('+location+')' }
+        { icon:'📋', label:'رقم الحجز:',           value: splitCheck.bookingKey },
+        { icon:'👥', label:'إجمالي المجموعة:',    value: splitCheck.groupSize + ' شخص' },
+        { icon:'🏕️', label:'الأعضاء الآخرون:',    value: inCampsSummary ? ('موزَّعون: ' + inCampsSummary) : 'لا مواقع محدَّدة' },
+        { icon:'❓', label:'غير مُسكَّنين:',       value: splitCheck.unassigned.length + ' شخص' },
+        { icon:'➡️', label:'وجهة النقل:',          value: 'مخيم ' + campVal + ' (' + location + ')' }
       ],
       actions:[
         { label:'متابعة الفصل', value:'split', emoji:'⚠️', variant:'primary', color:'warning' },
@@ -8858,11 +8866,11 @@ async function savePilgrimAssign(pilgrimId) {
       await showActionModal({
         type:'error',
         title:'جنس غير مطابق — لا يمكن التسكين',
-        description:'قاعدة شرعية صلبة: لا يُسكَّن حاج في مخيم من جنس مختلف.',
+        description:'لا يمكن تسكين هذا الحاج في مخيم مخصَّص للجنس الآخر — قاعدة شرعية صلبة.',
         items:[
-          { icon:'👤', label:'الحاج:',   value:(pilgrim&&pilgrim['اسم الحاج'])||'—' },
-          { icon:'🏕️', label:'المخيم:',  value:val+' ('+camp.camp_type+')' },
-          { icon:'⚠️', label:'الموقع:',   value:locAr }
+          { icon:'👤', label:'اسم الحاج:',      value:(pilgrim&&pilgrim['اسم الحاج'])||'—' },
+          { icon:'🏕️', label:'المخيم المطلوب:', value: val + ' (مخصَّص للـ' + camp.camp_type + ')' },
+          { icon:'📍', label:'الموقع:',         value: locAr }
         ],
         actions:[{label:'فهمت', value:null, variant:'primary', color:'danger'}]
       });
@@ -8916,12 +8924,13 @@ async function savePilgrimAssign(pilgrimId) {
       const decision = await showActionModal({
         type:'warning',
         title:'تفكيك مجموعة الحجز',
-        description:'الحاج '+(pilgrim['اسم الحاج']||'')+' من مجموعة حجز تحتوي '+check.groupSize+' أفراد. هذا التغيير سيفصله عن مجموعته.',
+        description:'الحاج '+(pilgrim['اسم الحاج']||'')+' ينتمي لحجز يحتوي '+check.groupSize+' أشخاص. نقله لوحده سيفصله عن مجموعته.',
         items:[
-          { icon:'📋', label:'رقم الحجز:',            value:'#'+check.bookingKey },
-          { icon:'🏕️', label:'الآخرون في:',          value:inCampsSummary || '—' },
-          { icon:'❓', label:'غير مُسكَّنين:',        value:check.unassigned.length+' حاج' },
-          { icon:'➡️', label:'الحاج سينتقل إلى:',    value:val+' ('+locAr+')' }
+          { icon:'📋', label:'رقم الحجز:',           value: check.bookingKey },
+          { icon:'👥', label:'إجمالي المجموعة:',    value: check.groupSize + ' شخص' },
+          { icon:'🏕️', label:'الأعضاء الآخرون:',    value: inCampsSummary ? ('موزَّعون: ' + inCampsSummary) : 'لا مواقع محدَّدة' },
+          { icon:'❓', label:'غير مُسكَّنين:',       value: check.unassigned.length + ' شخص' },
+          { icon:'➡️', label:'وجهة النقل:',          value: 'مخيم ' + val + ' (' + locAr + ')' }
         ],
         actions:[
           { label:'متابعة الفصل', value:'split', emoji:'⚠️', variant:'primary', color:'warning' },
@@ -10458,11 +10467,11 @@ async function saveQuickEdit(pid) {
       await showActionModal({
         type:'error',
         title:'جنس غير مطابق — لا يمكن التسكين',
-        description:'قاعدة شرعية صلبة: لا يُسكَّن حاج في مخيم من جنس مختلف.',
+        description:'لا يمكن تسكين هذا الحاج في مخيم مخصَّص للجنس الآخر — قاعدة شرعية صلبة.',
         items:[
-          { icon:'👤', label:'الحاج:',  value:(pilgrim&&pilgrim['اسم الحاج'])||'—' },
-          { icon:'🏕️', label:'المخيم:', value:val+' ('+camp.camp_type+')' },
-          { icon:'⚠️', label:'الموقع:', value:locAr }
+          { icon:'👤', label:'اسم الحاج:',      value:(pilgrim&&pilgrim['اسم الحاج'])||'—' },
+          { icon:'🏕️', label:'المخيم المطلوب:', value: val + ' (مخصَّص للـ' + camp.camp_type + ')' },
+          { icon:'📍', label:'الموقع:',         value: locAr }
         ],
         actions:[{label:'فهمت', value:null, variant:'primary', color:'danger'}]
       });
@@ -10486,12 +10495,13 @@ async function saveQuickEdit(pid) {
       const decision = await showActionModal({
         type:'warning',
         title:'تفكيك مجموعة الحجز',
-        description:'الحاج '+(pilgrim['اسم الحاج']||'')+' من مجموعة حجز تحتوي '+check.groupSize+' أفراد. هذا التغيير سيفصله عن مجموعته.',
+        description:'الحاج '+(pilgrim['اسم الحاج']||'')+' ينتمي لحجز يحتوي '+check.groupSize+' أشخاص. نقله لوحده سيفصله عن مجموعته.',
         items:[
-          { icon:'📋', label:'رقم الحجز:',         value:'#'+check.bookingKey },
-          { icon:'🏕️', label:'الآخرون في:',        value:inCampsSummary || '—' },
-          { icon:'❓', label:'غير مُسكَّنين:',      value:check.unassigned.length+' حاج' },
-          { icon:'➡️', label:'الحاج سينتقل إلى:',  value:val+' ('+locAr+')' }
+          { icon:'📋', label:'رقم الحجز:',           value: check.bookingKey },
+          { icon:'👥', label:'إجمالي المجموعة:',    value: check.groupSize + ' شخص' },
+          { icon:'🏕️', label:'الأعضاء الآخرون:',    value: inCampsSummary ? ('موزَّعون: ' + inCampsSummary) : 'لا مواقع محدَّدة' },
+          { icon:'❓', label:'غير مُسكَّنين:',       value: check.unassigned.length + ' شخص' },
+          { icon:'➡️', label:'وجهة النقل:',          value: 'مخيم ' + val + ' (' + locAr + ')' }
         ],
         actions:[
           { label:'متابعة الفصل', value:'split', emoji:'⚠️', variant:'primary', color:'warning' },
@@ -11262,11 +11272,11 @@ async function saveUnassignedPilgrim(pilgrimId) {
       await showActionModal({
         type:'error',
         title:'جنس غير مطابق — لا يمكن التسكين',
-        description:'قاعدة شرعية صلبة: لا يُسكَّن حاج في مخيم من جنس مختلف.',
+        description:'لا يمكن تسكين هذا الحاج في مخيم مخصَّص للجنس الآخر — قاعدة شرعية صلبة.',
         items:[
-          { icon:'👤', label:'الحاج:',  value:pilgrim['اسم الحاج']||'—' },
-          { icon:'🏕️', label:'المخيم:', value:campVal+' ('+camp.camp_type+')' },
-          { icon:'⚠️', label:'الموقع:', value:location }
+          { icon:'👤', label:'اسم الحاج:',      value: pilgrim['اسم الحاج']||'—' },
+          { icon:'🏕️', label:'المخيم المطلوب:', value: campVal + ' (مخصَّص للـ' + camp.camp_type + ')' },
+          { icon:'📍', label:'الموقع:',         value: location }
         ],
         actions:[{label:'فهمت', value:null, variant:'primary', color:'danger'}]
       });
@@ -11288,12 +11298,13 @@ async function saveUnassignedPilgrim(pilgrimId) {
       const decision = await showActionModal({
         type:'warning',
         title:'تفكيك مجموعة الحجز',
-        description:'الحاج '+(pilgrim?.['اسم الحاج']||'')+' من مجموعة حجز تحتوي '+check.groupSize+' أفراد. بعض الأعضاء في مخيم مختلف.',
+        description:'الحاج '+(pilgrim?.['اسم الحاج']||'')+' ينتمي لحجز يحتوي '+check.groupSize+' أشخاص. بعض أفراد المجموعة في مخيم مختلف، وتسكينه هنا سيفصله عنهم.',
         items:[
-          { icon:'📋', label:'رقم الحجز:',         value:'#'+check.bookingKey },
-          { icon:'🏕️', label:'الآخرون في:',        value:inCampsSummary || '—' },
-          { icon:'❓', label:'غير مُسكَّنين:',      value:check.unassigned.length+' حاج' },
-          { icon:'➡️', label:'هذا الحاج سيُسكَّن في:', value:campVal+' ('+location+')' }
+          { icon:'📋', label:'رقم الحجز:',           value: check.bookingKey },
+          { icon:'👥', label:'إجمالي المجموعة:',    value: check.groupSize + ' شخص' },
+          { icon:'🏕️', label:'الأعضاء الآخرون:',    value: inCampsSummary ? ('موزَّعون: ' + inCampsSummary) : 'لا مواقع محدَّدة' },
+          { icon:'❓', label:'غير مُسكَّنين:',       value: check.unassigned.length + ' شخص' },
+          { icon:'➡️', label:'وجهة التسكين:',        value: 'مخيم ' + campVal + ' (' + location + ')' }
         ],
         actions:[
           { label:'متابعة الفصل', value:'split', emoji:'⚠️', variant:'primary', color:'warning' },
