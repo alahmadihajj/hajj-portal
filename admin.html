@@ -2802,6 +2802,9 @@ async function doAdminLogin(){
 
 function enterAdminPanel(user){
   window._currentUser = user;
+  // v17.0: session id لربط كل عمليات الأدمن في audit_log
+  window._sessionId = (crypto.randomUUID && crypto.randomUUID())
+    || ('sess-' + Date.now() + '-' + Math.random().toString(36).substring(2,10));
   // تنظيف أي toasts متبقّية من جلسة سابقة قبل إظهار لوحة الأدمن
   const tc = document.getElementById('toast-container');
   if(tc) tc.innerHTML = '';
@@ -2851,6 +2854,7 @@ function rejectConsent() {
   document.getElementById('login-screen').style.display = 'flex';
 }
 
+// TODO: حذف الدالة المكرّرة في سطر 2854 (dead code — النسخة الحيّة في ~3424)
 function adminLogout(){
   document.getElementById('admin-panel').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
@@ -3424,6 +3428,8 @@ function goPage(p) { currentPage = p; render(); window.scrollTo(0,0); }
 function adminLogout(){
   sessionStorage.removeItem('admin_user');
   window._lastBulkSnapshot = null; // تنظيف snapshot الـ undo
+  window._sessionId = null;        // v17.0: إنهاء جلسة audit
+  window._currentUser = null;
   // تنظيف toasts معلّقة من الجلسة (زر تراجع، أخطاء سابقة...)
   const tc = document.getElementById('toast-container');
   if(tc) tc.innerHTML = '';
@@ -3981,6 +3987,11 @@ async function _executeBulkPipeline(ids, field, value, context){
   context = context || { source:'data' };
   if(!context._iterCount) context._iterCount = 0;
   if(!ids || !ids.length) return { success:false, skipReason:'empty_ids' };
+  // v17.0: bulk session UUID يربط كل صفوف الـ audit الفردية + الصف الجماعي
+  if(!context._bulkSessionId){
+    context._bulkSessionId = (crypto.randomUUID && crypto.randomUUID())
+      || ('bulk-' + Date.now() + '-' + Math.random().toString(36).substring(2,10));
+  }
 
   // 1) Pre-filter — نوع الحقل
   const isCamp  = field === 'mina_camp' || field === 'arafat_camp';
@@ -4175,6 +4186,52 @@ async function _executeBulkPipeline(ids, field, value, context){
 
   // 9) Feedback + حفظ snapshot للـ undo (10 ثوانٍ من toast + 15 ثانية من snapshot)
   if(fail === 0 && ok > 0){
+    // v17.0: audit — N صفوف فردية + 1 صف ملخّص
+    const bulkSrc    = context.source === 'bg' ? 'bulk_bg' : 'bulk_data';
+    const bulkSessId = context._bulkSessionId;
+    const fieldLbl   = _bulkFieldLabel(field);
+    const bulkMeta = {
+      source: bulkSrc,
+      bulk_session: bulkSessId,
+      bulk_target_field: field,
+      bulk_target_value: value,
+      bulk_total_count: ok
+    };
+    // صفوف فردية — كل حاج له update خاص (field_changes دقيقة حسب snapshot)
+    successSnapshots.forEach(snap => {
+      const rec = ALL_DATA.find(p => String(p['_supabase_id']) === String(snap.id));
+      // after = {field: value} أو — في حالة camp — نعيد بناء بعد الـ memory update
+      let after;
+      if(isCamp){
+        after = {};
+        snapKeys.forEach(k => { after[k] = rec ? (rec[k] ?? null) : null; });
+      } else {
+        after = Object.assign({ [field]: value }, supervisorData || {});
+      }
+      // v17.0.1: فلترة shadow seat sync
+      const changes = _buildFieldChanges(snap.before, _filterAuditSyncArtifacts(after));
+      if(!changes) return;
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(snap.id),
+        entity_label: _buildPilgrimLabel(rec) !== '—' ? _buildPilgrimLabel(rec) : (snap.name || '—'),
+        field_changes: changes,
+        metadata: bulkMeta
+      });
+    });
+    // صف ملخّص جماعي
+    _recordAudit({
+      action_type:  'bulk_update',
+      entity_type:  'pilgrim',
+      entity_id:    null,
+      entity_label: 'تحديث جماعي: ' + ok + ' حاج — ' + fieldLbl + ': ' + (value == null ? '—' : value),
+      field_changes: { [field]: { before: null, after: value, note: 'bulk' } },
+      bulk_ids:   successSnapshots.map(s => s.id),
+      bulk_count: ok,
+      metadata: bulkMeta
+    });
+
     const snapTime = Date.now();
     window._lastBulkSnapshot = {
       timestamp: snapTime,
@@ -5061,8 +5118,28 @@ async function saveCampAssign(pilgrimId, location) {
   const updates = {};
   _applyBedAssignment(updates, pilgrimRec, loc, campVal, bedVal);
 
+  // v17.0: snapshot قبل التحديث (للـ audit)
+  const seatKeyCA = loc + '_seat';
+  const before = pilgrimRec ? {
+    [fieldKey]: pilgrimRec[fieldKey] ?? null,
+    [bedKey]:   pilgrimRec[bedKey]   ?? null,
+    [seatKeyCA]: pilgrimRec[seatKeyCA] ?? null
+  } : {};
+
   try {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+    // v17.0: audit (v17.0.1: فلترة shadow seat sync)
+    const changes = _buildFieldChanges(before, _filterAuditSyncArtifacts(updates));
+    if(changes){
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(pilgrimId),
+        entity_label: _buildPilgrimLabel(pilgrimRec),
+        field_changes: changes,
+        metadata: { source: 'camp_view_per_row' }
+      });
+    }
     const row = document.getElementById('camp-row-'+pilgrimId);
     if(row) { row.style.background='#e8f8e8'; setTimeout(()=>row.style.background='',2000); }
     showToast('تم حفظ التسكين بنجاح', 'success');
@@ -9243,6 +9320,22 @@ async function savePilgrimAssign(pilgrimId) {
 
   try {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+    // v17.0: audit (لا نسجّل supervisor إذا لم يتغيّر فعلاً) — v17.0.1: فلترة shadow seat sync
+    const beforeForAudit = Object.assign({}, before, {
+      supervisor_name:  pilgrimRec?.['اسم المشرف الخاص بالحاج'],
+      supervisor_phone: pilgrimRec?.['رقم جوال المشرف']
+    });
+    const changes = _buildFieldChanges(beforeForAudit, _filterAuditSyncArtifacts(updates));
+    if(changes){
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(pilgrimId),
+        entity_label: _buildPilgrimLabel(pilgrimRec),
+        field_changes: changes,
+        metadata: { source: 'assign_modal' }
+      });
+    }
     // 3) تحديث الذاكرة المحلية من updates فقط
     if(pilgrimRec){
       Object.keys(updates).forEach(k => {
@@ -9963,6 +10056,83 @@ const FIELD_LABELS = {
   supervisor_name:  'المشرف',
   supervisor_phone: 'المشرف'
 };
+
+// ===== v17.0 Phase 1: Audit Log Helpers =====
+
+/**
+ * يُسجّل حدثاً في audit_log — fire-and-forget.
+ * فشل التسجيل لا يُوقف الحفظ (.catch يطبع فقط).
+ * يُضيف تلقائياً: user_*, session_id, reversible, metadata.user_agent.
+ * @param {Object} entry — {action_type, entity_type, entity_id, entity_label, field_changes?, bulk_ids?, bulk_count?, metadata?}
+ */
+function _recordAudit(entry){
+  const u = window._currentUser;
+  if(!u) return; // حماية: لا تسجيل بدون مستخدم مسجّل
+
+  // v17.0.1: guard دفاعي — لا تسجّل update بدون تغييرات فعلية
+  if(entry.action_type === 'update' && !entry.field_changes) return;
+
+  const reversible = (entry.action_type === 'update' || entry.action_type === 'bulk_update');
+  const metadata = Object.assign({
+    source: (entry.metadata && entry.metadata.source) || 'unknown',
+    user_agent: (navigator.userAgent || '').substring(0, 200)
+  }, entry.metadata || {});
+
+  const payload = Object.assign({
+    user_id:     u.username || null, // TEXT في schema (ليس u.id)
+    user_name:   u.name || u.username || '—',
+    user_role:   u.role || 'unknown',
+    session_id:  window._sessionId || null,
+    reversible
+  }, entry, { metadata });
+
+  // fire-and-forget — لا await (حتى لا يعطّل UX عند بطء الشبكة)
+  window.DB.Audit.log(payload).catch(e => console.error('[audit]', e));
+}
+
+/**
+ * يُقارن snapshot قبل/بعد ويُرجع {field:{before,after}} للحقول المتغيّرة فقط.
+ * @returns {Object|null} null إذا لم يتغيّر شيء.
+ */
+function _buildFieldChanges(before, after){
+  const changes = {};
+  const keys = new Set([...Object.keys(before||{}), ...Object.keys(after||{})]);
+  keys.forEach(k => {
+    const b = before?.[k] ?? null;
+    const a = after?.[k]  ?? null;
+    if(String(b) !== String(a)) changes[k] = { before: b, after: a };
+  });
+  return Object.keys(changes).length ? changes : null;
+}
+
+/**
+ * يُرجع label للحاج: "اسم الحاج (رقم الهوية)" مع fallback.
+ */
+function _buildPilgrimLabel(pilgrim){
+  if(!pilgrim) return '—';
+  const name = pilgrim['اسم الحاج'] || pilgrim.name   || '—';
+  const idn  = pilgrim['رقم الهوية'] || pilgrim.id_num || '—';
+  return name + ' (' + idn + ')';
+}
+
+/**
+ * v17.0.1: يُنظّف updates من "shadow seat sync" قبل توليد audit changes.
+ * المنطق: إذا seat في updates لكن bed المقابل ليس فيها → seat مُزامَن تلقائياً
+ * من _applyBedAssignment، وليس تغييراً من المستخدم → احذفه من نسخة الـ audit.
+ * لا يلمس DB — يُستخدم فقط قبل _buildFieldChanges.
+ */
+function _filterAuditSyncArtifacts(updates){
+  const out = Object.assign({}, updates);
+  ['mina','arafat'].forEach(loc => {
+    const bedKey  = loc + '_bed';
+    const seatKey = loc + '_seat';
+    if(Object.prototype.hasOwnProperty.call(out, seatKey)
+      && !Object.prototype.hasOwnProperty.call(out, bedKey)){
+      delete out[seatKey];
+    }
+  });
+  return out;
+}
 
 // Mapping من مفاتيح DB الإنجليزية إلى المفاتيح العربية في ALL_DATA.
 // يُستخدم في استعادة snapshot (undo) لضمان اتساق DB + الذاكرة.
@@ -10952,6 +11122,18 @@ async function saveQuickEdit(pid) {
   // 4) الحفظ + تحديث الذاكرة من updates
   try {
     await window.DB.Pilgrims.update(parseInt(pid), updates);
+    // v17.0: audit (v17.0.1: فلترة shadow seat sync)
+    const changes = _buildFieldChanges(before, _filterAuditSyncArtifacts(updates));
+    if(changes){
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(pid),
+        entity_label: _buildPilgrimLabel(pilgrim),
+        field_changes: changes,
+        metadata: { source: 'quick_edit' }
+      });
+    }
     if(pilgrim){
       Object.keys(updates).forEach(k => {
         if(k === 'group_num')              pilgrim['رقم فوج التفويج الخاص بك'] = updates[k];
@@ -11774,6 +11956,18 @@ async function saveUnassignedPilgrim(pilgrimId) {
 
   try {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+    // v17.0: audit (v17.0.1: فلترة shadow seat sync)
+    const changes = _buildFieldChanges(before, _filterAuditSyncArtifacts(updates));
+    if(changes){
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(pilgrimId),
+        entity_label: _buildPilgrimLabel(pilgrimRec),
+        field_changes: changes,
+        metadata: { source: 'unassigned_view' }
+      });
+    }
     // إزالة الصف من قائمة التعديلات غير المحفوظة
     if(window._uaModifiedRows) window._uaModifiedRows.delete(String(pilgrimId));
     // تحديث ALL_DATA وقائمة الموقع من updates (قيم مُطبَّعة)

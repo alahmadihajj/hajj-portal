@@ -368,7 +368,44 @@ const Surveys = {
   }
 };
 
+// ===== سجلّ التدقيق (Audit Log) =====
+const Audit = {
+  async log(entry) {
+    const { error } = await _db.from('audit_log').insert(entry);
+    if (error) throw error;
+  },
+  async getAll(filters) {
+    // skeleton — يُستخدم في v17.1 (لوحة UI للسجلّ)
+    const { data, error } = await _db
+      .from('audit_log')
+      .select('*')
+      .order('timestamp', { ascending: false })
+      .limit(500);
+    if (error) throw error;
+    return data || [];
+  },
+  async getByEntity(entityType, entityId) {
+    // skeleton — للاستعلامات السياقية في v17.2
+    const { data, error } = await _db
+      .from('audit_log')
+      .select('*')
+      .eq('entity_type', entityType)
+      .eq('entity_id', String(entityId))
+      .order('timestamp', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+  async markUndone(id, undoneBy) {
+    // skeleton — للـ undo الموسَّع في v17.2
+    const { error } = await _db
+      .from('audit_log')
+      .update({ undone: true, undone_at: new Date().toISOString(), undone_by: undoneBy })
+      .eq('id', id);
+    if (error) throw error;
+  }
+};
+
 // تعريف DB عالمياً
-window.DB = { Pilgrims, Announcements, Camps, Groups, Buses, SysUsers, Requests, Staff, Settings, Surveys };
+window.DB = { Pilgrims, Announcements, Camps, Groups, Buses, SysUsers, Requests, Staff, Settings, Surveys, Audit };
 window.dispatchEvent(new Event('db-ready'));
 console.log('✅ Supabase متصل بنجاح');
