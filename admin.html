@@ -7181,15 +7181,27 @@ function supModalSearch() {
   }).join('');
 }
 
-// TODO: حذف هذه الدالة الميتة — المستخدمة هي supRegister في السطر 7267
 async function supRegister(id, action) {
   const field = action==='bus'?'bus_status':action==='camp'?'camp_status':null;
   const value = action==='bus'?'ركب':action==='camp'?'حضر':null;
   if(!field) return;
+  const p = window._supPilgrims.find(x=>String(x.id)===String(id));
+  const before = { [field]: p ? (p[field] ?? null) : null };
   try {
     await window.DB.Pilgrims.update(parseInt(id), {[field]:value});
-    const p = window._supPilgrims.find(x=>String(x.id)===String(id));
     if(p) p[field]=value;
+    // v17.2: audit
+    const changes = _buildFieldChanges(before, { [field]: value });
+    if(changes){
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(id),
+        entity_label: _buildPilgrimLabel(p),
+        field_changes: changes,
+        metadata: { source: 'supervisor_' + action }
+      });
+    }
     showToast('تم التسجيل', 'success');
     updateSupStats(); renderSupTable(); supModalSearch();
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
@@ -7357,128 +7369,6 @@ function openQuickAction(id) {
   const p = window._supPilgrims.find(x=>String(x.id)===String(id));
   if(!p) return;
   document.getElementById('sup-modal-search').value = p.name||'';
-  openSupAction('bus');
-}
-
-function supervisorLogout() {
-  document.getElementById('supervisor-panel').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  window._supPilgrims = [];
-  window._currentUser = null;
-}
-
-
-
-function updateSupStats() {
-  const pilgrims = window._supPilgrims;
-  document.getElementById('sup-total').textContent = pilgrims.length;
-  document.getElementById('sup-boarded').textContent = pilgrims.filter(p=>p.bus_status==='ركب').length;
-  document.getElementById('sup-arrived').textContent = pilgrims.filter(p=>p.camp_status==='حضر').length;
-}
-
-function renderSupTable() {
-  const q = (document.getElementById('sup-search')?.value||'').toLowerCase();
-  const list = window._supPilgrims.filter(p =>
-    !q || (p.name||'').toLowerCase().includes(q) || (p.id_num||'').includes(q)
-  );
-  const tbody = document.getElementById('sup-tbody');
-  const empty = document.getElementById('sup-empty');
-  if(!list.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display='none';
-  tbody.innerHTML = list.map(p => {
-    const boarded = p.bus_status==='ركب';
-    const arrived = p.camp_status==='حضر';
-    return `<tr style="border-bottom:1px solid #f0e8d0">
-      <td style="padding:10px 8px;font-size:13px;font-weight:600">${p.name||'—'}</td>
-      <td style="padding:10px 8px;text-align:center;font-size:12px;color:#666">${p.id_num||'—'}</td>
-      <td style="padding:10px 8px;text-align:center">
-        <span style="background:${boarded?'#e8f8e8':'#fde8e8'};color:${boarded?'#1a7a1a':'#c00'};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600">${boarded?'✅ ركب':'⏳ لم يركب'}</span>
-      </td>
-      <td style="padding:10px 8px;text-align:center">
-        <span style="background:${arrived?'#e8f0fd':'#fde8e8'};color:${arrived?'#1a5fa8':'#c00'};padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600">${arrived?'✅ حضر':'⏳ لم يصل'}</span>
-      </td>
-      <td style="padding:10px 8px;text-align:center">
-        <button onclick="quickToggle('${p.id}','${p.bus_status||''}','${p.camp_status||''}')" style="background:#c8971a;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit">✏️</button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-function openSupAction(action) {
-  window._supAction = action;
-  const modal = document.getElementById('sup-modal');
-  document.getElementById('sup-modal-title').textContent = action==='bus' ? '🚌 تسجيل إركاب الحافلة' : '🏕️ تسجيل وصول المخيم';
-  document.getElementById('sup-modal-search').value = '';
-  document.getElementById('sup-modal-results').innerHTML = '';
-  modal.style.display = 'flex';
-  supModalSearch();
-}
-
-function closeSupModal() {
-  document.getElementById('sup-modal').style.display = 'none';
-}
-
-function supModalSearch() {
-  const q = document.getElementById('sup-modal-search').value.toLowerCase();
-  const action = window._supAction;
-  const list = window._supPilgrims.filter(p =>
-    !q || (p.name||'').toLowerCase().includes(q) || (p.id_num||'').includes(q)
-  );
-  const el = document.getElementById('sup-modal-results');
-  el.innerHTML = list.map(p => {
-    const done = action==='bus' ? p.bus_status==='ركب' : p.camp_status==='حضر';
-    const label = action==='bus' ? (done?'✅ ركب':'🚌 تسجيل إركاب') : (done?'✅ حضر':'🏕️ تسجيل وصول');
-    const color = done ? '#888' : (action==='bus'?'#1a7a1a':'#1a5fa8');
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #f0f0f0">
-      <div>
-        <div style="font-size:14px;font-weight:600">${p.name||'—'}</div>
-        <div style="font-size:12px;color:#888">${p.id_num||'—'}</div>
-      </div>
-      <button onclick="supRegister('${p.id}','${action}')" style="background:${color};color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap" ${done?'disabled':''}>
-        ${label}
-      </button>
-    </div>`;
-  }).join('') || '<p style="text-align:center;color:#888;padding:20px">لا يوجد نتائج</p>';
-}
-
-async function supRegister(id, action) {
-  const field = action==='bus' ? 'bus_status' : 'camp_status';
-  const value = action==='bus' ? 'ركب' : 'حضر';
-  const p = window._supPilgrims.find(x=>String(x.id)===String(id));
-  const before = { [field]: p ? (p[field] ?? null) : null };
-  try {
-    await window.DB.Pilgrims.update(parseInt(id), { [field]: value });
-    if(p) p[field] = value;
-    // v17.2: audit
-    const changes = _buildFieldChanges(before, { [field]: value });
-    if(changes){
-      _recordAudit({
-        action_type:  'update',
-        entity_type:  'pilgrim',
-        entity_id:    String(id),
-        entity_label: _buildPilgrimLabel(p),
-        field_changes: changes,
-        metadata: { source: 'supervisor_' + action }
-      });
-    }
-    showToast('تم التسجيل بنجاح', 'success');
-    updateSupStats();
-    renderSupTable();
-    supModalSearch();
-  } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
-}
-
-async function quickToggle(id, busStatus, campStatus) {
-  const p = window._supPilgrims.find(x=>String(x.id)===String(id));
-  if(!p) return;
-  const newBus = busStatus==='ركب' ? '' : 'ركب';
-  const newCamp = campStatus==='حضر' ? '' : 'حضر';
-
-  const ok = await showConfirm(
-    `الاسم: ${p.name||'—'}\nالإركاب: ${busStatus||'لم يركب'} | المخيم: ${campStatus||'لم يصل'}`,
-    'تعديل الحالة', 'تعديل', '#c8971a', '✏️'
-  );
-  if(!ok) return;
   openSupAction('bus');
 }
 
