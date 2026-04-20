@@ -2742,6 +2742,9 @@ async function doAdminLogin(){
 
 function enterAdminPanel(user){
   window._currentUser = user;
+  // تنظيف أي toasts متبقّية من جلسة سابقة قبل إظهار لوحة الأدمن
+  const tc = document.getElementById('toast-container');
+  if(tc) tc.innerHTML = '';
   const remember = document.getElementById('admin-remember');
   if(remember && remember.checked){
     localStorage.setItem('admin_user_saved', document.getElementById('login-user').value.trim());
@@ -3361,6 +3364,9 @@ function goPage(p) { currentPage = p; render(); window.scrollTo(0,0); }
 function adminLogout(){
   sessionStorage.removeItem('admin_user');
   window._lastBulkSnapshot = null; // تنظيف snapshot الـ undo
+  // تنظيف toasts معلّقة من الجلسة (زر تراجع، أخطاء سابقة...)
+  const tc = document.getElementById('toast-container');
+  if(tc) tc.innerHTML = '';
   document.getElementById('login-screen').style.display='flex'; document.getElementById('admin-panel').style.display='none';
 }
 
@@ -8443,6 +8449,9 @@ async function deleteAnn(id) {
 // ===== Toast Notifications =====
 // نظام التوست: أيقونة موحّدة + aria-live + مدة ديناميكية + stack بحد أقصى 3
 function showToast(msg, type='success', duration, options) {
+  // Guard: لا تعرض toasts أثناء شاشة الدخول (تمنع ظهور رسائل من جلسة سابقة)
+  const loginScreen = document.getElementById('login-screen');
+  if(loginScreen && loginScreen.style.display === 'flex') return;
   let container = document.getElementById('toast-container');
   if(!container){
     container = document.createElement('div');
