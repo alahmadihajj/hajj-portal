@@ -1215,6 +1215,66 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 @keyframes toastIn  { from{opacity:0;transform:translateY(-20px) scale(.96)} to{opacity:1;transform:translateY(0) scale(1)} }
 @keyframes toastOut { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-10px)} }
 
+/* ===== Pilgrim List Card — بطاقات قوائم الحجاج (v16.4) ===== */
+.plc{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px;
+  padding:9px 12px;
+  background:var(--surface, #fff);
+  border:1px solid var(--border, #e0d5c5);
+  border-radius:8px;
+  margin-bottom:5px;
+  transition:border-color .18s ease, box-shadow .18s ease;
+}
+.plc:hover{
+  border-color:var(--gold, #c8971a);
+  box-shadow:0 2px 6px rgba(200,151,26,.08);
+}
+.plc.plc-compact{ padding:7px 10px }
+.plc.plc-divider{
+  border:none;
+  border-bottom:1px solid var(--border-light, #f0e8d8);
+  border-radius:0;
+  margin-bottom:0;
+}
+.plc.plc-divider:last-child{ border-bottom:none }
+.plc-info{ flex:1; min-width:0 }
+.plc-name{
+  font-size:13.5px; font-weight:700; color:var(--brown, #3d2000);
+  display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+}
+.plc-sub{
+  font-size:11.5px; color:#888;
+  margin-top:2px; line-height:1.5;
+}
+.plc-badges{ display:inline-flex; gap:4px; margin-inline-start:4px }
+.plc-badge{
+  display:inline-block; padding:1px 7px; border-radius:10px;
+  font-size:10.5px; font-weight:700; color:#fff;
+  line-height:1.4;
+}
+.plc-action{
+  flex-shrink:0;
+  padding:6px 14px;
+  color:#fff; border:none; border-radius:7px;
+  font-size:12px; font-weight:600; font-family:inherit;
+  cursor:pointer; min-height:32px;
+  transition:filter .15s ease, transform .08s ease;
+}
+.plc-action:hover:not(:disabled){ filter:brightness(1.08) }
+.plc-action:active:not(:disabled){ transform:scale(.97) }
+.plc-action:disabled{ opacity:.6; cursor:not-allowed }
+.plc-action:focus-visible{ outline:2px solid var(--gold, #c8971a); outline-offset:2px }
+.plc-empty{
+  text-align:center; padding:20px 16px;
+  color:#888; font-size:13px;
+}
+@media (max-width:480px){
+  .plc{ flex-direction:column; align-items:stretch; gap:8px; padding:12px }
+  .plc-action{ width:100%; min-height:44px; font-size:13.5px }
+  .plc-sub{ font-size:12px; line-height:1.7 }
+}
+
 /* Unsaved Changes Indicator */
 .row-modified { background: #fffbf0 !important; border-right: 3px solid #c8971a !important; }
 </style>
@@ -6844,32 +6904,33 @@ function closeSupModal() { document.getElementById('sup-modal').style.display = 
 function supModalSearch() {
   const q = document.getElementById('sup-modal-search').value.toLowerCase();
   const action = window._supAction;
-  let list = window._supPilgrims.filter(p=>!q||(p.name||'').toLowerCase().includes(q)||(p.id_num||'').includes(q));
+  let list = _filterPilgrimsByQuery(q, { source: window._supPilgrims, limit: 500 });
 
   // فلترة حسب النوع
   if(action==='nusuk') list = list.filter(p=>p.nusuk_card_status==='موجودة'||p.nusuk_card_status==='مسلمة');
-  if(action==='bracelet') list = list;
 
   const el = document.getElementById('sup-modal-results');
-  if(!list.length){ el.innerHTML='<p style="text-align:center;color:#888;padding:20px">لا يوجد نتائج</p>'; return; }
+  if(!list.length){ el.innerHTML = '<div class="plc-empty">لا يوجد نتائج</div>'; return; }
 
   el.innerHTML = list.map(p => {
     let done, label, color;
-    if(action==='bus'){ done=p.bus_status==='ركب'; label=done?'✅ ركب':'🚌 تسجيل إركاب'; color=done?'#888':'#1a7a1a'; }
-    else if(action==='camp'){ done=p.camp_status==='حضر'; label=done?'✅ حضر':'🏕️ تسجيل وصول'; color=done?'#888':'#1a5fa8'; }
-    else if(action==='nusuk'){ done=p.nusuk_card_status==='مسلمة'; label=done?'✅ مُسلَّمة':'🪪 تسليم + توقيع'; color=done?'#888':'#7a4500'; }
-    else if(action==='bracelet'){ done=!!p.bracelet_time; label=done?'✅ مُسلَّمة':'🚆 تسليم + توقيع'; color=done?'#888':'#444'; }
+    if(action==='bus'){        done=p.bus_status==='ركب';              label=done?'✅ ركب':'🚌 تسجيل إركاب';   color=done?'#888':'#1a7a1a'; }
+    else if(action==='camp'){  done=p.camp_status==='حضر';             label=done?'✅ حضر':'🏕️ تسجيل وصول';   color=done?'#888':'#1a5fa8'; }
+    else if(action==='nusuk'){ done=p.nusuk_card_status==='مسلمة';     label=done?'✅ مُسلَّمة':'🪪 تسليم + توقيع'; color=done?'#888':'#7a4500'; }
+    else if(action==='bracelet'){ done=!!p.bracelet_time;              label=done?'✅ مُسلَّمة':'🚆 تسليم + توقيع'; color=done?'#888':'#444'; }
     const needsSig = (action==='nusuk'||action==='bracelet') && !done;
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #f0f0f0">
-      <div>
-        <div style="font-size:14px;font-weight:600">${p.name||'—'}</div>
-        <div style="font-size:12px;color:#888">${p.id_num||'—'}</div>
-      </div>
-      <button onclick="${needsSig?`openSigModal('${p.id}','${action}')`:`supRegister('${p.id}','${action}')`}"
-        style="background:${color};color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit" ${done?'disabled':''}>
-        ${label}
-      </button>
-    </div>`;
+    return _buildPilgrimCard(p, {
+      showFields: ['id'],
+      size: 'compact',
+      divider: true,
+      action: {
+        label,
+        onclick: needsSig ? `openSigModal('${p.id}','${action}')` : `supRegister('${p.id}','${action}')`,
+        color,
+        disabled: done,
+        ariaLabel: label + ' — ' + (p.name||'الحاج')
+      }
+    });
   }).join('');
 }
 
@@ -9419,22 +9480,20 @@ function searchLinkPilgrim(anchorId) {
   const resultsEl = document.getElementById('link-search-results');
   if(!resultsEl) return;
   if(q.length < 2) { resultsEl.innerHTML=''; return; }
-  const results = ALL_DATA.filter(p =>
-    String(p['_supabase_id'])!==String(anchorId) &&
-    ((p['اسم الحاج']||'').toLowerCase().includes(q) ||
-     (p['رقم الهوية']||'').includes(q) ||
-     (p['رقم الحجز']||'').includes(q))
-  ).slice(0,8);
-  if(!results.length){ resultsEl.innerHTML='<div style="text-align:center;color:#aaa;padding:10px;font-size:12px">لا توجد نتائج</div>'; return; }
-  resultsEl.innerHTML = results.map(p=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#fff;border:1px solid #e0e8f0;border-radius:7px;margin-bottom:4px">
-      <div>
-        <div style="font-size:13px;font-weight:700;color:#3d2000">${p['اسم الحاج']||'—'}</div>
-        <div style="font-size:11px;color:#888">🪪 ${p['رقم الهوية']||'—'} &nbsp;•&nbsp; 📋 ${p['رقم الحجز']||'—'}</div>
-      </div>
-      <button onclick="linkPilgrim('${anchorId}','${p['_supabase_id']}')" 
-        style="padding:5px 12px;background:#1a5fa8;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600">🔗 ربط</button>
-    </div>`).join('');
+  const results = _filterPilgrimsByQuery(q, { excludeIds: [anchorId], limit: 8 });
+  if(!results.length){
+    resultsEl.innerHTML = '<div class="plc-empty">لا توجد نتائج</div>';
+    return;
+  }
+  resultsEl.innerHTML = results.map(p => _buildPilgrimCard(p, {
+    showFields: ['id', 'booking'],
+    action: {
+      label: '🔗 ربط',
+      onclick: `linkPilgrim('${anchorId}','${p['_supabase_id']}')`,
+      color: 'info',
+      ariaLabel: 'ربط ' + (p['اسم الحاج']||'الحاج') + ' بالحجز'
+    }
+  })).join('');
 }
 
 async function linkPilgrim(anchorId, targetId) {
@@ -9971,8 +10030,103 @@ function _summarizeUpdates(updates, excludeKeys){
  * جنس الحاج بصيغة موحّدة.
  * @returns {'M'|'F'|null}
  */
+/**
+ * v16.4 — بطاقة حاج موحّدة لقوائم البحث (searchLinkPilgrim + supModalSearch).
+ * يدعم المفاتيح العربية (ALL_DATA) والإنجليزية (supervisor context).
+ *
+ * @param {Object} pilgrim
+ * @param {Object} [opts]
+ * @param {Array<string>} [opts.showFields=['id','booking']] — 'id','booking','phone','gender','nationality'
+ * @param {Object} [opts.action] — { label, onclick, color, disabled, ariaLabel }
+ *   color: 'info'|'success'|'warning'|'danger'|'brand' أو hex مباشر (مثل '#888')
+ * @param {'compact'|'standard'} [opts.size='standard']
+ * @param {boolean} [opts.divider=false] — بدل border كامل → border-bottom فقط
+ * @param {Array<{label,color}>} [opts.badges]
+ * @returns {string} HTML
+ */
+function _buildPilgrimCard(pilgrim, opts){
+  opts = opts || {};
+  const esc = (s)=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  // Normalization — يقبل كلا نمطَي المفاتيح
+  const name    = pilgrim['اسم الحاج'] ?? pilgrim.name ?? '—';
+  const id      = pilgrim['رقم الهوية'] ?? pilgrim.id_num ?? '';
+  const booking = pilgrim['رقم الحجز'] ?? pilgrim.booking_num ?? '';
+  const phone   = pilgrim['رقم الجوال'] ?? pilgrim.mobile ?? '';
+  const nat     = pilgrim['الجنسية'] ?? pilgrim.nationality ?? '';
+  const fields = opts.showFields || ['id','booking'];
+  const parts = [];
+  if(fields.includes('id') && id)           parts.push('🪪 ' + esc(id));
+  if(fields.includes('booking') && booking) parts.push('📋 ' + esc(booking));
+  if(fields.includes('phone') && phone)     parts.push('📞 ' + esc(phone));
+  if(fields.includes('gender')){
+    const g = _genderOf(pilgrim);
+    if(g) parts.push((g==='F'?'👩':'👨') + ' ' + (g==='F'?'أنثى':'ذكر'));
+  }
+  if(fields.includes('nationality') && nat) parts.push('🌍 ' + esc(nat));
+  const subLine = parts.join(' &nbsp;•&nbsp; ');
+  // Badges
+  const badgesHtml = Array.isArray(opts.badges) && opts.badges.length
+    ? '<span class="plc-badges">' + opts.badges.map(b =>
+        `<span class="plc-badge" style="background:${esc(b.color || 'var(--gold, #c8971a)')}">${esc(b.label)}</span>`
+      ).join('') + '</span>'
+    : '';
+  // Action button
+  const a = opts.action || {};
+  const colorMap = {
+    info:'#1a5fa8', success:'#2e7d32', warning:'#c07000',
+    danger:'#c00', brand:'var(--brown, #3d2000)'
+  };
+  const btnBg = colorMap[a.color] || a.color || 'var(--brown, #3d2000)';
+  const disabled = a.disabled ? 'disabled' : '';
+  const aria = esc(a.ariaLabel || a.label || '');
+  const actionHtml = a.label
+    ? `<button class="plc-action" onclick="${esc(a.onclick||'')}" style="background:${btnBg}" ${disabled} aria-label="${aria}" type="button">${esc(a.label)}</button>`
+    : '';
+  const cls = 'plc' + (opts.size === 'compact' ? ' plc-compact' : '') + (opts.divider ? ' plc-divider' : '');
+  return `<div class="${cls}" role="listitem">
+    <div class="plc-info">
+      <div class="plc-name">${esc(name)}${badgesHtml}</div>
+      ${subLine?`<div class="plc-sub">${subLine}</div>`:''}
+    </div>
+    ${actionHtml}
+  </div>`;
+}
+
+/**
+ * فلتر بحث موحّد لقوائم الحجاج.
+ * @param {string} query
+ * @param {Object} [opts]
+ * @param {Array<Object>} [opts.source=ALL_DATA]
+ * @param {Array<string|number>} [opts.excludeIds=[]]
+ * @param {number} [opts.limit=50]
+ * @returns {Array<Object>}
+ */
+function _filterPilgrimsByQuery(query, opts){
+  opts = opts || {};
+  const q = String(query||'').trim().toLowerCase();
+  const source = opts.source || ALL_DATA;
+  const exclude = new Set((opts.excludeIds || []).map(x => String(x)));
+  const limit = typeof opts.limit === 'number' ? opts.limit : 50;
+  const out = [];
+  for(const p of source){
+    const pid = String(p['_supabase_id'] ?? p.id ?? '');
+    if(exclude.has(pid)) continue;
+    if(q){
+      const name    = String(p['اسم الحاج'] ?? p.name ?? '').toLowerCase();
+      const id      = String(p['رقم الهوية'] ?? p.id_num ?? '');
+      const booking = String(p['رقم الحجز'] ?? p.booking_num ?? '');
+      const phone   = String(p['رقم الجوال'] ?? p.mobile ?? '');
+      if(!name.includes(q) && !id.includes(q) && !booking.includes(q) && !phone.includes(q)) continue;
+    }
+    out.push(p);
+    if(out.length >= limit) break;
+  }
+  return out;
+}
+
 function _genderOf(p){
-  const g = String(p?.['الجنس'] || '').trim().toLowerCase();
+  // v16.4: يدعم المفتاح العربي (ALL_DATA) والإنجليزي (supervisor context)
+  const g = String((p?.['الجنس'] ?? p?.gender) || '').trim().toLowerCase();
   if(!g) return null;
   if(['أنثى','أنثي','انثى','انثي','female','f'].includes(g)) return 'F';
   if(['ذكر','male','m'].includes(g)) return 'M';
