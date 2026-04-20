@@ -7070,6 +7070,7 @@ function supModalSearch() {
   }).join('');
 }
 
+// TODO: حذف هذه الدالة الميتة — المستخدمة هي supRegister في السطر 7267
 async function supRegister(id, action) {
   const field = action==='bus'?'bus_status':action==='camp'?'camp_status':null;
   const value = action==='bus'?'ركب':action==='camp'?'حضر':null;
@@ -7159,16 +7160,81 @@ async function confirmSignature() {
     else if(type==='bracelet') { updates = { bracelet_sig: sigUrl, bracelet_time: timeStr }; }
     else if(type==='bulk_nusuk') {
       const ids = window._sigBulkIds||[];
-      await Promise.all(ids.map(id => window.DB.Pilgrims.update(parseInt(id), { nusuk_card_status: 'موجودة لدى المشرف', nusuk_card_sig: sigUrl, nusuk_card_time: timeStr })));
-      ids.forEach(id => { const p=window._supPilgrims.find(x=>String(x.id)===String(id)); if(p){p.nusuk_card_status='موجودة لدى المشرف';p.nusuk_card_sig=sigUrl;p.nusuk_card_time=timeStr;} });
+      // v17.2: snapshot قبل التحديث لكل حاج
+      const beforeMap = new Map();
+      ids.forEach(bid => {
+        const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
+        beforeMap.set(String(bid), {
+          nusuk_card_status: bp ? (bp.nusuk_card_status ?? null) : null,
+          nusuk_card_sig:    bp ? (bp.nusuk_card_sig    ?? null) : null,
+          nusuk_card_time:   bp ? (bp.nusuk_card_time   ?? null) : null
+        });
+      });
+      const bulkUpdates = { nusuk_card_status: 'موجودة لدى المشرف', nusuk_card_sig: sigUrl, nusuk_card_time: timeStr };
+      await Promise.all(ids.map(bid => window.DB.Pilgrims.update(parseInt(bid), bulkUpdates)));
+      ids.forEach(bid => { const bp=window._supPilgrims.find(x=>String(x.id)===String(bid)); if(bp){bp.nusuk_card_status='موجودة لدى المشرف';bp.nusuk_card_sig=sigUrl;bp.nusuk_card_time=timeStr;} });
+
+      // v17.2: audit — N صفوف فردية + 1 صف جماعي + bulk_session
+      const bulkSessionId = (crypto.randomUUID && crypto.randomUUID())
+        || ('bulk-' + Date.now() + '-' + Math.random().toString(36).substring(2,10));
+      const bulkMeta = {
+        source: 'supervisor_bulk_receive',
+        bulk_session: bulkSessionId,
+        bulk_target_field: 'nusuk_card_status',
+        bulk_target_value: 'موجودة لدى المشرف',
+        bulk_total_count: ids.length
+      };
+      ids.forEach(bid => {
+        const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
+        const bBefore = beforeMap.get(String(bid)) || {};
+        const changes = _maskSigInChanges(_buildFieldChanges(bBefore, bulkUpdates));
+        if(!changes) return;
+        _recordAudit({
+          action_type:  'update',
+          entity_type:  'pilgrim',
+          entity_id:    String(bid),
+          entity_label: _buildPilgrimLabel(bp),
+          field_changes: changes,
+          metadata: bulkMeta
+        });
+      });
+      _recordAudit({
+        action_type:  'bulk_update',
+        entity_type:  'pilgrim',
+        entity_id:    null,
+        entity_label: 'استلام جماعي: ' + ids.length + ' بطاقة نسك',
+        field_changes: { nusuk_card_status: { before: null, after: 'موجودة لدى المشرف', note: 'bulk' } },
+        bulk_ids:   ids,
+        bulk_count: ids.length,
+        metadata: bulkMeta
+      });
+
       closeSigModal();
       showToast(`✅ تم تسجيل استلام ${ids.length} بطاقة`, 'success');
       updateSupStats(); renderSupTable(); renderSupActionBtns();
       return;
     }
 
+    // v17.2: snapshot لقيم الحقول المُحدَّثة (single nusuk / bracelet)
+    const auditKeys = Object.keys(updates);
+    const before = {};
+    auditKeys.forEach(k => { before[k] = p ? (p[k] ?? null) : null; });
+
     await window.DB.Pilgrims.update(parseInt(id), updates);
     if(p) Object.assign(p, updates);
+
+    // v17.2: audit (مع قناع التوقيع)
+    const changes = _maskSigInChanges(_buildFieldChanges(before, updates));
+    if(changes){
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(id),
+        entity_label: _buildPilgrimLabel(p),
+        field_changes: changes,
+        metadata: { source: type==='nusuk' ? 'supervisor_nusuk' : 'supervisor_bracelet' }
+      });
+    }
 
     closeSigModal();
     showToast('تم تسجيل الاستلام بالتوقيع', 'success');
@@ -7267,10 +7333,23 @@ function supModalSearch() {
 async function supRegister(id, action) {
   const field = action==='bus' ? 'bus_status' : 'camp_status';
   const value = action==='bus' ? 'ركب' : 'حضر';
+  const p = window._supPilgrims.find(x=>String(x.id)===String(id));
+  const before = { [field]: p ? (p[field] ?? null) : null };
   try {
     await window.DB.Pilgrims.update(parseInt(id), { [field]: value });
-    const p = window._supPilgrims.find(x=>String(x.id)===String(id));
     if(p) p[field] = value;
+    // v17.2: audit
+    const changes = _buildFieldChanges(before, { [field]: value });
+    if(changes){
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(id),
+        entity_label: _buildPilgrimLabel(p),
+        field_changes: changes,
+        metadata: { source: 'supervisor_' + action }
+      });
+    }
     showToast('تم التسجيل بنجاح', 'success');
     updateSupStats();
     renderSupTable();
@@ -10193,6 +10272,29 @@ function _filterAuditSyncArtifacts(updates){
   return out;
 }
 
+/**
+ * v17.2: يقنّع حقول التوقيع في field_changes (بعد _buildFieldChanges).
+ * DB يحفظ الـ URL الكامل — audit فقط يعرض "[توقيع مسجّل]".
+ */
+const SIG_FIELDS = ['nusuk_card_sig','bracelet_sig'];
+// v17.2.1: حقول لا تُستعاد عند undo (التوقيع ثابت في السجلات الأصلية — time فقط يُستعاد)
+const SIG_FIELDS_NO_UNDO = new Set(['nusuk_card_sig','bracelet_sig']);
+function _maskSigInChanges(changes){
+  if(!changes) return changes;
+  const out = {};
+  Object.keys(changes).forEach(k => {
+    if(SIG_FIELDS.includes(k)){
+      out[k] = {
+        before: changes[k].before ? '[توقيع سابق]' : null,
+        after:  changes[k].after  ? '[توقيع مسجّل]' : null
+      };
+    } else {
+      out[k] = changes[k];
+    }
+  });
+  return out;
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // ===== v17.1: واجهة سجل العمليات (Audit Log UI) =====
 // ═══════════════════════════════════════════════════════════════════════
@@ -10223,6 +10325,15 @@ const AUDIT_ENTITY_LABELS = {
 
 // v17.1.1: حقول نُخفيها من UI فقط (DB + Undo يظلان كاملَين) — seat = نسخة من bed
 const HIDDEN_AUDIT_FIELDS = new Set(['mina_seat','arafat_seat']);
+
+// v17.2: تسميات المصادر — تُستخدم في ملخّص البطاقة + CSV export
+const AUDIT_SOURCE_LABELS = {
+  supervisor_bus:          'تسجيل إركاب 🚌',
+  supervisor_camp:         'تسجيل وصول المخيم 🏕️',
+  supervisor_nusuk:        'تسليم بطاقة نسك 🪪',
+  supervisor_bracelet:     'تسليم أسوارة 🚆',
+  supervisor_bulk_receive: 'استلام جماعي 📦'
+};
 
 // ─────── صلاحيات ───────
 function _canSeeAllAudit(){
@@ -10418,21 +10529,31 @@ function _buildAuditCard(entry){
     ? `<span style="background:#fff3cd;color:#856404;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:6px">✓ مُرتجَع</span>`
     : '';
 
-  // عنوان bulk
+  // عنوان — v17.2: إذا المصدر supervisor_* نستخدم تسمية مخصّصة
+  const src = entry.metadata?.source || '';
+  const srcLbl = AUDIT_SOURCE_LABELS[src];
   let title;
   if(entry.action_type === 'bulk_update'){
-    title = `⚡ تحديث جماعي — ${entry.bulk_count || '—'} حاج`;
+    title = srcLbl
+      ? `${srcLbl} — تحديث جماعي لـ ${entry.bulk_count || '—'} حاج`
+      : `⚡ تحديث جماعي — ${entry.bulk_count || '—'} حاج`;
   } else if(entry.action_type === 'undo'){
     title = `↶ تراجع — ${_esc(entry.entity_label || '—')}`;
+  } else if(srcLbl){
+    title = `${srcLbl} — ${_esc(entry.entity_label || '—')}`;
   } else {
     title = `${style.icon} ${style.label} — ${_esc(entry.entity_label || '—')}`;
   }
+  // v17.2: badge خاص لإجراءات المشرف
+  const supervisorBadge = src.startsWith('supervisor_')
+    ? `<span style="background:var(--brown,#7a4500);color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:6px">👨‍💼 مشرف</span>`
+    : '';
 
   return `
     <article role="article" style="background:#fff;border:1px solid var(--border,#f0e8d0);border-left:4px solid ${style.color};border-radius:10px;padding:14px 16px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
         <div style="flex:1;min-width:220px">
-          <div style="font-weight:700;color:#3d2000;font-size:14px">${undoneBadge}${title}</div>
+          <div style="font-weight:700;color:#3d2000;font-size:14px">${undoneBadge}${supervisorBadge}${title}</div>
           <div style="font-size:12px;color:#666;margin-top:4px">
             👤 ${_esc(entry.user_name || '—')}
             <span style="color:#ccc">•</span>
@@ -10648,15 +10769,17 @@ async function exportAuditCSV(){
             return _auditFieldLabel(k) + ': ' + (fc.before == null ? '—' : fc.before) + ' ← ' + (fc.after == null ? '—' : fc.after);
           }).join(' | ');
       }
+      const src = e.metadata?.source || '';
+      const opLabel = AUDIT_SOURCE_LABELS[src] || (AUDIT_ACTION_STYLES[e.action_type]?.label) || e.action_type;
       lines.push([
         _auditFormatFullTime(e.timestamp),
         e.user_name || e.user_id || '—',
         e.user_role || '—',
-        (AUDIT_ACTION_STYLES[e.action_type]?.label) || e.action_type,
+        opLabel,
         AUDIT_ENTITY_LABELS[e.entity_type] || e.entity_type,
         e.entity_label || '—',
         summary,
-        e.metadata?.source || '—',
+        src || '—',
         e.undone ? 'نعم' : 'لا'
       ].map(esc).join(','));
     });
@@ -10702,6 +10825,7 @@ function _detectUndoConflicts(current, fieldChanges){
   if(!current || !fieldChanges) return [];
   const conflicts = [];
   Object.keys(fieldChanges).forEach(k => {
+    if(SIG_FIELDS_NO_UNDO.has(k)) return; // v17.2.1: التوقيع لا يُستعاد → لا نفحصه
     const expected = fieldChanges[k].after;
     const cur = current[k];
     const normExp = (expected == null ? '' : String(expected).trim());
@@ -10726,10 +10850,19 @@ async function _undoPilgrimEntry(pilgrimId, fieldChanges, allowForce){
     if(conflicts.length && !allowForce){
       return { ok:false, conflict:true, conflicts };
     }
+    // v17.2.1: استبعاد حقول التوقيع (تبقى في DB كسجلّ رسمي)
+    let hadSig = false;
     const updates = {};
-    Object.keys(fieldChanges).forEach(k => { updates[k] = fieldChanges[k].before; });
+    Object.keys(fieldChanges).forEach(k => {
+      if(SIG_FIELDS_NO_UNDO.has(k)){ hadSig = true; return; }
+      updates[k] = fieldChanges[k].before;
+    });
+    if(Object.keys(updates).length === 0){
+      // كل التغييرات كانت حقول sig — لا شيء يُستعاد
+      return { ok:true, hadSig, noop:true };
+    }
     await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
-    return { ok:true };
+    return { ok:true, hadSig };
   } catch(e){
     return { ok:false, error: e.message };
   }
@@ -10804,12 +10937,13 @@ async function _undoAuditEntry(id){
 
     if(toProcess.length > 10) showToast(`⏳ جاري التراجع عن ${toProcess.length} حاج...`, 'info');
 
-    let ok = 0, fail = 0;
+    let ok = 0, fail = 0, sigPreserved = 0;
     const doneIds = [];
     for(const r of toProcess){
       const res = await _undoPilgrimEntry(r.entity_id, r.field_changes, true);
       if(res.ok){
         ok++;
+        if(res.hadSig) sigPreserved++;
         doneIds.push(r.entity_id);
         try { await window.DB.Audit.markUndone(r.id, window._currentUser.username); } catch(_){}
       } else {
@@ -10834,13 +10968,15 @@ async function _undoAuditEntry(id){
         bulk_session: bulkSess,
         undone_log_id: entry.id,
         force: decision === 'force',
-        failed_count: fail
+        failed_count: fail,
+        sig_preserved_count: sigPreserved
       }
     });
 
+    const sigNote = sigPreserved ? ` — التوقيع محفوظ لـ ${sigPreserved} حاج` : '';
     showToast(fail === 0
-      ? `✅ تم التراجع عن ${ok} حاج`
-      : `⚠️ نجح ${ok}، فشل ${fail} — راجع console`, fail === 0 ? 'success' : 'warning', 6000);
+      ? `✅ تم التراجع عن ${ok} حاج${sigNote}`
+      : `⚠️ نجح ${ok}، فشل ${fail} — راجع console${sigNote}`, fail === 0 ? 'success' : 'warning', 6000);
     await loadData(); // تحديث ALL_DATA
     renderAuditLog();
     return;
@@ -10898,11 +11034,17 @@ async function _undoAuditEntry(id){
       metadata: {
         source: 'audit_ui',
         undone_log_id: entry.id,
-        force
+        force,
+        sig_preserved: !!res.hadSig
       }
     });
 
-    showToast('✅ تم التراجع بنجاح', 'success');
+    // v17.2.1: toast خاص إذا فيه sig محفوظ
+    if(res.hadSig){
+      showToast('تم التراجع — التوقيع محفوظ في السجلات الأصلية', 'info', 5000);
+    } else {
+      showToast('✅ تم التراجع بنجاح', 'success');
+    }
     await loadData();
     renderAuditLog();
     return;
