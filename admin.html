@@ -10398,8 +10398,19 @@ window._testAssignmentHelpers = function(){
   return { pass, fail, total: cases.length, failures };
 };
 
-// اختبار Pipeline الـ Bulk — يستخدم _bulkPipelineAutoApprove لتخطّي modals
+/**
+ * ⚠️  لا تُشغَّل تلقائياً — تستدعي _executeBulkPipeline الحقيقية التي تُصدر showToast وتُلوِّث UI.
+ * Integration test للاستخدام اليدوي من console فقط.
+ * للتشغيل: _testBulkPipeline()
+ *
+ * يستخدم _bulkPipelineAutoApprove = true لتخطّي Preview modals، لكن toasts تظهر فعلياً.
+ */
 window._testBulkPipeline = async function(){
+  // تحذير runtime إذا لوحة الأدمن ظاهرة — toasts ستُلوِّث UI المستخدم
+  const adminEl = document.getElementById('admin-panel');
+  if(adminEl && adminEl.style.display !== 'none'){
+    console.warn('⚠️ _testBulkPipeline سيُطلق toasts حقيقية — تأكد من عدم ظهورها للمستخدم قبل المتابعة');
+  }
   const STYLE = {
     title:   'background:linear-gradient(135deg,#3d2000,#c8971a);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:bold',
     pass:    'color:#2e7d32;font-weight:600',
@@ -14316,10 +14327,14 @@ if(location.hostname === 'localhost' || location.hostname === '127.0.0.1'){
         'background:#1a5fa8;color:#fff;padding:6px 12px;border-radius:6px;font-weight:bold');
       window._testAssignmentHelpers();
     }
+    // ملاحظة: _testBulkPipeline لا يُشغَّل تلقائياً لأنه integration test
+    // يستدعي _executeBulkPipeline الحقيقية التي تُصدر showToast → تُلوِّث UI.
+    // للتشغيل اليدوي راجع التلميح أدناه.
     if(typeof window._testBulkPipeline === 'function'){
-      console.log('%c🧪 تشغيل اختبارات Bulk Pipeline (DEV mode)...',
-        'background:#1a5fa8;color:#fff;padding:6px 12px;border-radius:6px;font-weight:bold');
-      window._testBulkPipeline();
+      console.log('%c💡 اختبارات Bulk Pipeline متاحة',
+        'background:#1a5fa8;color:#fff;padding:4px 10px;border-radius:4px;font-weight:bold');
+      console.log('%c   شغّل يدوياً: _testBulkPipeline()', 'color:#c07000');
+      console.log('%c   تحذير: تُطلق toasts حقيقية (تأكد من عدم ظهورها في UI)', 'color:#888');
     }
     console.log('%c💡 لاختبار showActionModal يدوياً: _testActionModal("warning"|"error"|"success"|"info"|"split")',
       'color:#1a5fa8');
