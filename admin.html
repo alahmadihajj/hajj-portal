@@ -5431,10 +5431,23 @@ async function saveCamp(id) {
   const duplicate = allCamps.find(c => (c.camp_num||c.name) === campNum && c.location === location && c.id != id);
   if(duplicate) return showToast('رقم المخيم ' + campNum + ' موجود مسبقاً في موقع ' + location, 'warning');
   const obj = { camp_num: campNum, name: campNum, location, camp_type: campType, capacity: document.getElementById('m-camp-capacity').value.trim(), notes: document.getElementById('m-camp-notes').value.trim() };
+  // v17.3: snapshot قبل update
+  const before = id ? allCamps.find(c => c.id == id) : null;
   try {
     if(id) { await window.DB.Camps.update(parseInt(id), obj); }
     else { await window.DB.Camps.insert(obj); }
     closeModals(); renderCamps();
+    // v17.3: audit
+    _recordAudit({
+      action_type:  id ? 'update' : 'create',
+      entity_type:  'camp',
+      entity_id:    String(id || obj.camp_num),
+      entity_label: _buildCampLabel(obj),
+      field_changes: id
+        ? _buildFieldChanges(before || {}, obj)
+        : { _created: { before: null, after: obj } },
+      metadata: { source: 'admin_camps' }
+    });
   } catch(e) { showToast('خطأ في الحفظ: ' + e.message, 'error'); }
 }
 
@@ -5450,6 +5463,15 @@ async function deleteCamp(id) {
   await window.DB.Camps.delete(parseInt(id));
   showToast('تم حذف المخيم بنجاح', 'success');
   renderCamps();
+  // v17.3: audit
+  _recordAudit({
+    action_type:  'delete',
+    entity_type:  'camp',
+    entity_id:    String(id),
+    entity_label: _buildCampLabel(camp),
+    field_changes: { _deleted: { before: camp, after: null } },
+    metadata: { source: 'admin_camps' }
+  });
 }
 
 // ===== أفواج =====
@@ -5605,10 +5627,24 @@ async function saveGroup(id) {
     max_capacity: capacity ? parseInt(capacity) : null,
     notes: document.getElementById('m-g-notes').value.trim()
   };
+  // v17.3: snapshot قبل update
+  const allGroups = await getGroups();
+  const before = id ? allGroups.find(g => g.id == id) : null;
   try {
     if(id) { await window.DB.Groups.update(parseInt(id), obj); }
     else { await window.DB.Groups.insert(obj); }
     closeModals(); renderGroups(); showToast('تم الحفظ بنجاح', 'success');
+    // v17.3: audit
+    _recordAudit({
+      action_type:  id ? 'update' : 'create',
+      entity_type:  'group',
+      entity_id:    String(id || obj.num),
+      entity_label: _buildGroupLabel(obj),
+      field_changes: id
+        ? _buildFieldChanges(before || {}, obj)
+        : { _created: { before: null, after: obj } },
+      metadata: { source: 'admin_groups', ui_path: 'groups_view' }
+    });
   } catch(e) { showToast('خطأ في الحفظ: ' + e.message, 'error'); }
 }
 
@@ -6115,7 +6151,21 @@ async function closeUGModal() {
 
 async function deleteGroup(id) {
   const _ck2 = await showConfirm('هل تريد حذف هذا الفوج؟','حذف فوج','نعم، احذف','#c00','🗑️'); if(!_ck2) return;
+  // v17.3: snapshot قبل حذف
+  const allGroups = await getGroups();
+  const snap = allGroups.find(g => g.id == id);
   await window.DB.Groups.delete(parseInt(id)); renderGroups();
+  // v17.3: audit
+  if(snap){
+    _recordAudit({
+      action_type:  'delete',
+      entity_type:  'group',
+      entity_id:    String(id),
+      entity_label: _buildGroupLabel(snap),
+      field_changes: { _deleted: { before: snap, after: null } },
+      metadata: { source: 'admin_groups', ui_path: 'groups_view' }
+    });
+  }
 }
 
 // ===== حافلات =====
@@ -6394,10 +6444,24 @@ async function saveBus(id) {
     color: document.getElementById('m-b-color').value.trim(),
     entry_time: now
   };
+  // v17.3: snapshot قبل update
+  const allBuses = await window.DB.Buses.getAll();
+  const before = id ? allBuses.find(b => b.id == id) : null;
   try {
     if(id) { await window.DB.Buses.update(parseInt(id), obj); }
     else { await window.DB.Buses.insert(obj); }
     closeModals(); renderBuses(); showToast('تم الحفظ بنجاح', 'success');
+    // v17.3: audit
+    _recordAudit({
+      action_type:  id ? 'update' : 'create',
+      entity_type:  'bus',
+      entity_id:    String(id || obj.num),
+      entity_label: _buildBusLabel(obj),
+      field_changes: id
+        ? _buildFieldChanges(before || {}, obj)
+        : { _created: { before: null, after: obj } },
+      metadata: { source: 'admin_buses' }
+    });
   } catch(e) { showToast('خطأ في الحفظ: ' + e.message, 'error'); }
 }
 
@@ -6466,7 +6530,21 @@ function printBusesReport() {
 
 async function deleteBus(id) {
   const _ck3 = await showConfirm('هل تريد حذف هذه الحافلة؟','حذف حافلة','نعم، احذف','#c00','🗑️'); if(!_ck3) return;
+  // v17.3: snapshot قبل حذف
+  const allBuses = await window.DB.Buses.getAll();
+  const snap = allBuses.find(b => b.id == id);
   await window.DB.Buses.delete(parseInt(id)); renderBuses();
+  // v17.3: audit
+  if(snap){
+    _recordAudit({
+      action_type:  'delete',
+      entity_type:  'bus',
+      entity_id:    String(id),
+      entity_label: _buildBusLabel(snap),
+      field_changes: { _deleted: { before: snap, after: null } },
+      metadata: { source: 'admin_buses' }
+    });
+  }
 }
 
 // ===== مستخدمو النظام =====
@@ -6563,13 +6641,35 @@ async function saveSupervisor(existingUsername) {
   if(!username) return showToast('أدخل اسم المستخدم', 'warning');
   if(!group_num) return showToast('اختر رقم الحافلة', 'warning');
   try {
+    // v17.3: snapshot + audit
+    const users = await getSysUsers();
     if(existingUsername) {
-      const users = await getSysUsers();
       const u = users.find(x=>x.username===existingUsername);
-      if(u) await window.DB.SysUsers.update(u.id, {name, phone, city, group_num, active, role:'supervisor', ...(password?{password}:{})});
+      if(u){
+        const updates = { name, phone, city, group_num, active, role:'supervisor', ...(password?{password}:{}) };
+        await window.DB.SysUsers.update(u.id, updates);
+        const after = Object.assign({}, u, updates);
+        _recordAudit({
+          action_type:  'update',
+          entity_type:  'sysuser',
+          entity_id:    String(u.username),
+          entity_label: _buildUserLabel(after),
+          field_changes: _buildFieldChanges(u, after),
+          metadata: { source: 'admin_users', ui_path: 'supervisors_view' }
+        });
+      }
     } else {
       if(!password) return showToast('أدخل كلمة المرور', 'warning');
-      await window.DB.SysUsers.insert({ username, name, phone, city, password, role:'supervisor', group_num, active });
+      const newUser = { username, name, phone, city, password, role:'supervisor', group_num, active };
+      await window.DB.SysUsers.insert(newUser);
+      _recordAudit({
+        action_type:  'create',
+        entity_type:  'sysuser',
+        entity_id:    String(username),
+        entity_label: _buildUserLabel(newUser),
+        field_changes: { _created: { before: null, after: newUser } },
+        metadata: { source: 'admin_users', ui_path: 'supervisors_view' }
+      });
     }
     closeModals(); renderSysUsers(); showToast('تم الحفظ بنجاح', 'success');
   } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
@@ -6580,7 +6680,18 @@ async function deleteSysUser(username) {
   if(!confirmed) return;
   const users = await getSysUsers();
   const u = users.find(x=>x.username===username);
-  if(u) await window.DB.SysUsers.delete(u.id);
+  if(u){
+    await window.DB.SysUsers.delete(u.id);
+    // v17.3: audit
+    _recordAudit({
+      action_type:  'delete',
+      entity_type:  'sysuser',
+      entity_id:    String(username),
+      entity_label: _buildUserLabel(u),
+      field_changes: { _deleted: { before: u, after: null } },
+      metadata: { source: 'admin_users', ui_path: 'supervisors_view' }
+    });
+  }
   renderSysUsers();
 }
 
@@ -8245,7 +8356,21 @@ async function openGroupCfgModal(id) {
 async function deleteGroupCfg(id) {
   const ok = await showConfirm('حذف هذه المجموعة؟', 'تأكيد', 'حذف', '#c00', '🗑️');
   if(!ok) return;
+  // v17.3: snapshot قبل حذف
+  const allGroups = await getGroups();
+  const snap = allGroups.find(g => g.id == id);
   await window.DB.Groups.delete(parseInt(id)); renderGroupsCfg(); showToast('تم الحذف', 'success');
+  // v17.3: audit
+  if(snap){
+    _recordAudit({
+      action_type:  'delete',
+      entity_type:  'group',
+      entity_id:    String(id),
+      entity_label: _buildGroupLabel(snap),
+      field_changes: { _deleted: { before: snap, after: null } },
+      metadata: { source: 'admin_groups', ui_path: 'settings_groups_cfg' }
+    });
+  }
 }
 
 async function loadGeneralSettings() {
@@ -8368,15 +8493,38 @@ async function saveUser(existingUsername) {
   const active = document.getElementById('mu-active').value === 'true';
   if(!username) return showToast('أدخل اسم المستخدم', 'warning');
   try {
+    const users = await getSysUsers();
     if(existingUsername) {
-      const users = await getSysUsers();
       const u = users.find(x=>x.username===existingUsername);
       const phone = document.getElementById('mu-phone')?.value.trim()||'';
-      if(u) await window.DB.SysUsers.update(u.id, {name, phone, role, group_num, active, ...(password?{password}:{})});
+      if(u){
+        const updates = { name, phone, role, group_num, active, ...(password?{password}:{}) };
+        await window.DB.SysUsers.update(u.id, updates);
+        // v17.3: audit
+        const after = Object.assign({}, u, updates);
+        _recordAudit({
+          action_type:  'update',
+          entity_type:  'sysuser',
+          entity_id:    String(u.username),
+          entity_label: _buildUserLabel(after),
+          field_changes: _buildFieldChanges(u, after),
+          metadata: { source: 'admin_users', ui_path: 'users_view' }
+        });
+      }
     } else {
       if(!password) return showToast('أدخل كلمة المرور', 'warning');
       const phone2 = document.getElementById('mu-phone')?.value.trim()||'';
-      await window.DB.SysUsers.insert({ username, name, phone: phone2, password, role, group_num, active });
+      const newUser = { username, name, phone: phone2, password, role, group_num, active };
+      await window.DB.SysUsers.insert(newUser);
+      // v17.3: audit
+      _recordAudit({
+        action_type:  'create',
+        entity_type:  'sysuser',
+        entity_id:    String(username),
+        entity_label: _buildUserLabel(newUser),
+        field_changes: { _created: { before: null, after: newUser } },
+        metadata: { source: 'admin_users', ui_path: 'users_view' }
+      });
     }
     closeModals(); renderUsers(); showToast('تم الحفظ بنجاح', 'success');
   } catch(e) { showToast('خطأ: ' + e.message, 'error'); }
@@ -8387,7 +8535,20 @@ async function deleteUser(username) {
   if(!ok) return;
   const users = await getSysUsers();
   const u = users.find(x=>x.username===username);
-  if(u) { await window.DB.SysUsers.delete(u.id); renderUsers(); showToast('تم الحذف', 'success'); }
+  if(u) {
+    await window.DB.SysUsers.delete(u.id);
+    renderUsers();
+    showToast('تم الحذف', 'success');
+    // v17.3: audit
+    _recordAudit({
+      action_type:  'delete',
+      entity_type:  'sysuser',
+      entity_id:    String(username),
+      entity_label: _buildUserLabel(u),
+      field_changes: { _deleted: { before: u, after: null } },
+      metadata: { source: 'admin_users', ui_path: 'users_view' }
+    });
+  }
 }
 
 // ===== التعاميم =====
@@ -10210,11 +10371,29 @@ function _recordAudit(entry){
   // v17.0.1: guard دفاعي — لا تسجّل update بدون تغييرات فعلية
   if(entry.action_type === 'update' && !entry.field_changes) return;
 
+  // v17.3: reversible قواعد — update/bulk_update قابلة؛ create/delete/undo غير قابلة
   const reversible = (entry.action_type === 'update' || entry.action_type === 'bulk_update');
   const metadata = Object.assign({
     source: (entry.metadata && entry.metadata.source) || 'unknown',
     user_agent: (navigator.userAgent || '').substring(0, 200)
   }, entry.metadata || {});
+
+  // v17.3: قناع مركزي للحقول الحساسة (sig + password)
+  let field_changes = entry.field_changes;
+  if(field_changes && typeof field_changes === 'object'){
+    field_changes = _maskSensitiveInChanges(field_changes);
+    // قناع nested في _created/_deleted snapshots
+    if(field_changes._created && field_changes._created.after){
+      field_changes = Object.assign({}, field_changes, {
+        _created: { before: null, after: _maskSensitiveSnapshot(field_changes._created.after) }
+      });
+    }
+    if(field_changes._deleted && field_changes._deleted.before){
+      field_changes = Object.assign({}, field_changes, {
+        _deleted: { before: _maskSensitiveSnapshot(field_changes._deleted.before), after: null }
+      });
+    }
+  }
 
   const payload = Object.assign({
     user_id:     u.username || null, // TEXT في schema (ليس u.id)
@@ -10222,7 +10401,7 @@ function _recordAudit(entry){
     user_role:   u.role || 'unknown',
     session_id:  window._sessionId || null,
     reversible
-  }, entry, { metadata });
+  }, entry, { metadata, field_changes });
 
   // fire-and-forget — لا await (حتى لا يعطّل UX عند بطء الشبكة)
   window.DB.Audit.log(payload).catch(e => console.error('[audit]', e));
@@ -10279,20 +10458,80 @@ function _filterAuditSyncArtifacts(updates){
 const SIG_FIELDS = ['nusuk_card_sig','bracelet_sig'];
 // v17.2.1: حقول لا تُستعاد عند undo (التوقيع ثابت في السجلات الأصلية — time فقط يُستعاد)
 const SIG_FIELDS_NO_UNDO = new Set(['nusuk_card_sig','bracelet_sig']);
-function _maskSigInChanges(changes){
+
+// v17.3: خريطة الحقول الحساسة + قيمة القناع
+const SENSITIVE_FIELD_MASKS = {
+  nusuk_card_sig: '[توقيع مسجّل]',
+  bracelet_sig:   '[توقيع مسجّل]',
+  password:       '[كلمة مرور مُعدَّلة]',
+  password_hash:  '[كلمة مرور مُعدَّلة]'
+};
+
+/**
+ * v17.3: قناع الحقول الحساسة في field_changes (idempotent).
+ * DB يحفظ القيم الكاملة — audit يعرض قناعاً فقط.
+ */
+function _maskSensitiveInChanges(changes){
   if(!changes) return changes;
   const out = {};
   Object.keys(changes).forEach(k => {
-    if(SIG_FIELDS.includes(k)){
+    const mask = SENSITIVE_FIELD_MASKS[k];
+    if(mask && changes[k] && changes[k].after){
       out[k] = {
-        before: changes[k].before ? '[توقيع سابق]' : null,
-        after:  changes[k].after  ? '[توقيع مسجّل]' : null
+        before: changes[k].before ? mask : null,
+        after:  mask
       };
+      if(changes[k].note) out[k].note = changes[k].note;
     } else {
       out[k] = changes[k];
     }
   });
   return out;
+}
+
+/**
+ * v17.3: قناع snapshot كامل (للـ _created/_deleted). يُزيل الحقول الحساسة.
+ */
+function _maskSensitiveSnapshot(obj){
+  if(!obj || typeof obj !== 'object') return obj;
+  const out = {};
+  Object.keys(obj).forEach(k => {
+    const mask = SENSITIVE_FIELD_MASKS[k];
+    if(mask && obj[k]){ out[k] = mask; }
+    else { out[k] = obj[k]; }
+  });
+  return out;
+}
+
+// Backward compatibility alias (v17.2 callers)
+function _maskSigInChanges(changes){ return _maskSensitiveInChanges(changes); }
+
+// v17.3: helpers تسميات الكيانات الإدارية
+function _buildCampLabel(camp){
+  if(!camp) return '—';
+  const num  = camp.camp_num || camp.name || '?';
+  const type = camp.camp_type || 'رجال';
+  const loc  = camp.location || 'منى';
+  return 'مخيم ' + num + ' — ' + type + ' (' + loc + ')';
+}
+function _buildGroupLabel(group){
+  if(!group) return '—';
+  const num  = group.num || group.group_num || '?';
+  const name = group.name ? ' — ' + group.name : '';
+  return 'فوج ' + num + name;
+}
+function _buildBusLabel(bus){
+  if(!bus) return '—';
+  const num   = bus.num || bus.bus_num || '?';
+  const plate = bus.plate ? ' — ' + bus.plate : '';
+  return 'حافلة ' + num + plate;
+}
+function _buildUserLabel(user){
+  if(!user) return '—';
+  const name     = user.name || '—';
+  const username = user.username || '—';
+  const role     = user.role || 'viewer';
+  return name + ' (' + username + ') — ' + role;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -10326,13 +10565,17 @@ const AUDIT_ENTITY_LABELS = {
 // v17.1.1: حقول نُخفيها من UI فقط (DB + Undo يظلان كاملَين) — seat = نسخة من bed
 const HIDDEN_AUDIT_FIELDS = new Set(['mina_seat','arafat_seat']);
 
-// v17.2: تسميات المصادر — تُستخدم في ملخّص البطاقة + CSV export
+// v17.2 + v17.3: تسميات المصادر — تُستخدم في ملخّص البطاقة + CSV export
 const AUDIT_SOURCE_LABELS = {
   supervisor_bus:          'تسجيل إركاب 🚌',
   supervisor_camp:         'تسجيل وصول المخيم 🏕️',
   supervisor_nusuk:        'تسليم بطاقة نسك 🪪',
   supervisor_bracelet:     'تسليم أسوارة 🚆',
-  supervisor_bulk_receive: 'استلام جماعي 📦'
+  supervisor_bulk_receive: 'استلام جماعي 📦',
+  admin_camps:             'إدارة المخيمات 🏕️',
+  admin_groups:            'إدارة الأفواج 👥',
+  admin_buses:             'إدارة الحافلات 🚌',
+  admin_users:             'إدارة المستخدمين 👤'
 };
 
 // ─────── صلاحيات ───────
@@ -10510,18 +10753,26 @@ function _buildAuditCard(entry){
   const style = AUDIT_ACTION_STYLES[entry.action_type] || { icon:'•', label:entry.action_type, color:'#888', bg:'#f5f5f5' };
   const entityLbl = AUDIT_ENTITY_LABELS[entry.entity_type] || entry.entity_type;
   const isExpanded = window._auditState.expanded.has(entry.id);
-  const canUndo = _canUndoAudit() && entry.reversible && !entry.undone && entry.action_type !== 'undo';
+  // v17.3: استبعاد create/delete/undo من undo (كلها !reversible أصلاً، تأكيد إضافي)
+  const canUndo = _canUndoAudit() && entry.reversible && !entry.undone
+                  && !['undo','create','delete'].includes(entry.action_type);
 
-  // ملخص التغييرات (أبرزها) — v17.1.1: استبعاد الحقول المخفية
+  // ملخص التغييرات (أبرزها) — v17.1.1: استبعاد الحقول المخفية + v17.3: _created/_deleted
   let summary = '';
   if(entry.field_changes && typeof entry.field_changes === 'object'){
-    const keys = Object.keys(entry.field_changes).filter(k => !HIDDEN_AUDIT_FIELDS.has(k));
-    const first = keys.slice(0, 2).map(k => {
-      const fc = entry.field_changes[k];
-      if(fc && fc.note === 'bulk') return _auditFieldLabel(k) + ': ← ' + _auditFormatValue(fc.after);
-      return _auditFieldLabel(k) + ': ' + _auditFormatValue(fc.before) + ' ← ' + _auditFormatValue(fc.after);
-    }).join(' • ');
-    summary = first + (keys.length > 2 ? ' <span style="color:#999">(+' + (keys.length - 2) + ')</span>' : '');
+    if(entry.field_changes._created){
+      summary = '<span style="color:#1a7a1a">🆕 عنصر جديد</span>';
+    } else if(entry.field_changes._deleted){
+      summary = '<span style="color:#c00">🗑️ تم حذف العنصر</span>';
+    } else {
+      const keys = Object.keys(entry.field_changes).filter(k => !HIDDEN_AUDIT_FIELDS.has(k));
+      const first = keys.slice(0, 2).map(k => {
+        const fc = entry.field_changes[k];
+        if(fc && fc.note === 'bulk') return _auditFieldLabel(k) + ': ← ' + _auditFormatValue(fc.after);
+        return _auditFieldLabel(k) + ': ' + _auditFormatValue(fc.before) + ' ← ' + _auditFormatValue(fc.after);
+      }).join(' • ');
+      summary = first + (keys.length > 2 ? ' <span style="color:#999">(+' + (keys.length - 2) + ')</span>' : '');
+    }
   }
 
   // شريط "مُرتجَع"
@@ -10529,11 +10780,15 @@ function _buildAuditCard(entry){
     ? `<span style="background:#fff3cd;color:#856404;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-right:6px">✓ مُرتجَع</span>`
     : '';
 
-  // عنوان — v17.2: إذا المصدر supervisor_* نستخدم تسمية مخصّصة
+  // عنوان — v17.2/v17.3: إذا المصدر supervisor_*/admin_* نستخدم تسمية مخصّصة
   const src = entry.metadata?.source || '';
   const srcLbl = AUDIT_SOURCE_LABELS[src];
   let title;
-  if(entry.action_type === 'bulk_update'){
+  if(entry.action_type === 'create'){
+    title = `➕ إنشاء — ${_esc(entry.entity_label || '—')}`;
+  } else if(entry.action_type === 'delete'){
+    title = `🗑️ حذف — ${_esc(entry.entity_label || '—')}`;
+  } else if(entry.action_type === 'bulk_update'){
     title = srcLbl
       ? `${srcLbl} — تحديث جماعي لـ ${entry.bulk_count || '—'} حاج`
       : `⚡ تحديث جماعي — ${entry.bulk_count || '—'} حاج`;
@@ -10575,6 +10830,25 @@ function _buildAuditCard(entry){
     </article>`;
 }
 
+// v17.3: عرض snapshot كامل لعنصر (create/delete) كجدول key/value
+const _SNAPSHOT_EXCLUDE = new Set(['id','created_at','updated_at']);
+function _renderEntitySnapshot(title, obj, color){
+  if(!obj || typeof obj !== 'object') return '';
+  const keys = Object.keys(obj).filter(k => !_SNAPSHOT_EXCLUDE.has(k));
+  let html = `<div style="font-size:13px;font-weight:700;color:${color};margin-bottom:6px">${title}:</div>`;
+  html += `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px">`;
+  keys.forEach(k => {
+    const v = obj[k];
+    const label = _auditFieldLabel(k);
+    html += `<tr>
+      <td style="padding:6px 8px;border:1px solid #eee;font-weight:600;width:40%;background:#faf7ee">${_esc(label)}</td>
+      <td style="padding:6px 8px;border:1px solid #eee">${_auditFormatValue(v)}</td>
+    </tr>`;
+  });
+  html += `</table>`;
+  return html;
+}
+
 // ─────── Expand / Collapse تفاصيل ───────
 async function _expandAuditCard(id){
   const container = document.getElementById('audit-details-'+id);
@@ -10595,30 +10869,37 @@ async function _expandAuditCard(id){
   const btn = container.previousElementSibling?.querySelector('button[aria-expanded]');
   if(btn){ btn.setAttribute('aria-expanded','true'); btn.innerHTML = '▲ إخفاء'; }
 
-  // جدول التغييرات — v17.1.1: استبعاد الحقول المخفية
+  // جدول التغييرات — v17.1.1: استبعاد المخفية + v17.3: _created/_deleted
   let html = '';
   if(entry.field_changes && Object.keys(entry.field_changes).length){
-    const visibleKeys = Object.keys(entry.field_changes).filter(k => !HIDDEN_AUDIT_FIELDS.has(k));
-    if(visibleKeys.length){
-      html += `<div style="font-size:13px;font-weight:700;color:#555;margin-bottom:6px">📝 التغييرات:</div>`;
-      html += `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px">
-        <thead><tr style="background:#faf7ee">
-          <th style="text-align:right;padding:6px 8px;border:1px solid #eee">الحقل</th>
-          <th style="text-align:right;padding:6px 8px;border:1px solid #eee">قبل</th>
-          <th style="text-align:right;padding:6px 8px;border:1px solid #eee">بعد</th>
-        </tr></thead><tbody>`;
-      visibleKeys.forEach(k => {
-        const fc = entry.field_changes[k];
-        const note = fc.note ? ` <span style="color:#999;font-size:11px">(${_esc(fc.note)})</span>` : '';
-        html += `<tr>
-          <td style="padding:6px 8px;border:1px solid #eee;font-weight:600">${_esc(_auditFieldLabel(k))}${note}</td>
-          <td style="padding:6px 8px;border:1px solid #eee;color:#c00">${_auditFormatValue(fc.before)}</td>
-          <td style="padding:6px 8px;border:1px solid #eee;color:#1a7a1a">${_auditFormatValue(fc.after)}</td>
-        </tr>`;
-      });
-      html += `</tbody></table>`;
+    // v17.3: create / delete — snapshot كامل
+    if(entry.field_changes._created && entry.field_changes._created.after){
+      html += _renderEntitySnapshot('🆕 بيانات العنصر الجديد', entry.field_changes._created.after, '#1a7a1a');
+    } else if(entry.field_changes._deleted && entry.field_changes._deleted.before){
+      html += _renderEntitySnapshot('🗑️ بيانات العنصر قبل الحذف', entry.field_changes._deleted.before, '#c00');
     } else {
-      html += `<div style="color:#888;font-size:12px;font-style:italic;padding:8px 0">تغييرات نظامية داخلية فقط.</div>`;
+      const visibleKeys = Object.keys(entry.field_changes).filter(k => !HIDDEN_AUDIT_FIELDS.has(k));
+      if(visibleKeys.length){
+        html += `<div style="font-size:13px;font-weight:700;color:#555;margin-bottom:6px">📝 التغييرات:</div>`;
+        html += `<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px">
+          <thead><tr style="background:#faf7ee">
+            <th style="text-align:right;padding:6px 8px;border:1px solid #eee">الحقل</th>
+            <th style="text-align:right;padding:6px 8px;border:1px solid #eee">قبل</th>
+            <th style="text-align:right;padding:6px 8px;border:1px solid #eee">بعد</th>
+          </tr></thead><tbody>`;
+        visibleKeys.forEach(k => {
+          const fc = entry.field_changes[k];
+          const note = fc.note ? ` <span style="color:#999;font-size:11px">(${_esc(fc.note)})</span>` : '';
+          html += `<tr>
+            <td style="padding:6px 8px;border:1px solid #eee;font-weight:600">${_esc(_auditFieldLabel(k))}${note}</td>
+            <td style="padding:6px 8px;border:1px solid #eee;color:#c00">${_auditFormatValue(fc.before)}</td>
+            <td style="padding:6px 8px;border:1px solid #eee;color:#1a7a1a">${_auditFormatValue(fc.after)}</td>
+          </tr>`;
+        });
+        html += `</tbody></table>`;
+      } else {
+        html += `<div style="color:#888;font-size:12px;font-style:italic;padding:8px 0">تغييرات نظامية داخلية فقط.</div>`;
+      }
     }
   }
 
