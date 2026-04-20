@@ -374,18 +374,39 @@ const Audit = {
     const { error } = await _db.from('audit_log').insert(entry);
     if (error) throw error;
   },
-  async getAll(filters) {
-    // skeleton — يُستخدم في v17.1 (لوحة UI للسجلّ)
-    const { data, error } = await _db
-      .from('audit_log')
-      .select('*')
-      .order('timestamp', { ascending: false })
-      .limit(500);
+
+  /**
+   * v17.1: fetch with pagination + filters.
+   * @param {Object} filters — {page, pageSize, action_type, entity_type, user_id, dateFrom, dateTo, search}
+   * @returns {Promise<{data, total, page, pageSize}>}
+   */
+  async getAll(filters = {}) {
+    let q = _db.from('audit_log').select('*', { count: 'exact' });
+    if (filters.action_type) q = q.eq('action_type', filters.action_type);
+    if (filters.entity_type) q = q.eq('entity_type', filters.entity_type);
+    if (filters.user_id)     q = q.eq('user_id',     filters.user_id);
+    if (filters.dateFrom)    q = q.gte('timestamp',  filters.dateFrom);
+    if (filters.dateTo)      q = q.lte('timestamp',  filters.dateTo);
+    if (filters.search) {
+      const s = String(filters.search).replace(/[%,]/g, ' ').trim();
+      if (s) q = q.or(`entity_label.ilike.%${s}%,user_name.ilike.%${s}%`);
+    }
+    q = q.order('timestamp', { ascending: false });
+    const pageSize = filters.pageSize || 50;
+    const page = Math.max(1, filters.page || 1);
+    q = q.range((page - 1) * pageSize, page * pageSize - 1);
+    const { data, count, error } = await q;
     if (error) throw error;
-    return data || [];
+    return { data: data || [], total: count || 0, page, pageSize };
   },
+
+  async getById(id) {
+    const { data, error } = await _db.from('audit_log').select('*').eq('id', id).single();
+    if (error) return null;
+    return data;
+  },
+
   async getByEntity(entityType, entityId) {
-    // skeleton — للاستعلامات السياقية في v17.2
     const { data, error } = await _db
       .from('audit_log')
       .select('*')
@@ -395,8 +416,44 @@ const Audit = {
     if (error) throw error;
     return data || [];
   },
+
+  /**
+   * v17.1: fetch all individual entries sharing a bulk_session (for bulk undo).
+   */
+  async getBulkRelated(bulkSession) {
+    if (!bulkSession) return [];
+    const { data, error } = await _db
+      .from('audit_log')
+      .select('*')
+      .eq('action_type', 'update')
+      .eq('metadata->>bulk_session', bulkSession);
+    if (error) throw error;
+    return data || [];
+  },
+
+  /**
+   * v17.1: lightweight stats for header bar (counts only, no data rows).
+   */
+  async getStats() {
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    const dayStartISO = dayStart.toISOString();
+    const base = () => _db.from('audit_log').select('*', { count: 'exact', head: true });
+    const [todayRes, updateRes, bulkRes, undoneRes] = await Promise.all([
+      base().gte('timestamp', dayStartISO),
+      base().gte('timestamp', dayStartISO).eq('action_type', 'update'),
+      base().gte('timestamp', dayStartISO).eq('action_type', 'bulk_update'),
+      base().eq('undone', true)
+    ]);
+    return {
+      today:   todayRes.count   || 0,
+      updates: updateRes.count  || 0,
+      bulks:   bulkRes.count    || 0,
+      undones: undoneRes.count  || 0
+    };
+  },
+
   async markUndone(id, undoneBy) {
-    // skeleton — للـ undo الموسَّع في v17.2
     const { error } = await _db
       .from('audit_log')
       .update({ undone: true, undone_at: new Date().toISOString(), undone_by: undoneBy })
