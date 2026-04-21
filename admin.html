@@ -1954,6 +1954,19 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       background: rgba(255,255,255,.3);
       color: #fff;
     }
+    /* v20.3 Phase 2: Badge إشعار للبطاقات الجاهزة */
+    @keyframes supBadgePulse {
+      0%,100% { transform: scale(1);   box-shadow: 0 0 0 0   rgba(204,0,0,0.55); }
+      50%     { transform: scale(1.12); box-shadow: 0 0 0 7px rgba(204,0,0,0); }
+    }
+    .sup-badge-new {
+      position: absolute; top: -6px; left: -6px;
+      min-width: 22px; height: 22px; padding: 0 6px;
+      background: #c00; color: #fff; border: 2px solid #fff;
+      border-radius: 999px; font-size: 11px; font-weight: 800;
+      display: inline-flex; align-items: center; justify-content: center;
+      animation: supBadgePulse 1.6s ease-in-out infinite;
+    }
   </style>
 
   <!-- v18.0c: شريط التسجيل الجماعي (يظهر عند التحديد) -->

@@ -19,7 +19,12 @@
 //   - admin.html:   _formatTimeAgo, _currentUser, _devSettings, _sessionId, window.DB, HTML elements
 // ═══════════════════════════════════════════════════════════════════════
 
-// ===== استلام بطاقات نسك دفعة واحدة للمشرف =====
+// ═══════════════════════════════════════════════════════════════════════
+// v20.3 Phase 2: استلام بطاقات نسك دفعة واحدة — جدول تفصيلي + استبعاد فردي
+// ═══════════════════════════════════════════════════════════════════════
+window._sigBulkExcluded = null; // Set<id>
+window._sigBulkReady    = [];   // cached ready pilgrims for re-render
+
 function openSupBulkAck() {
   const ready = window._supPilgrims.filter(p=>p.nusuk_card_status==='موجودة لدى الإدارة');
   if(!ready.length) { showToast('لا توجد بطاقات جاهزة للاستلام', 'warning'); return; }
@@ -32,20 +37,105 @@ function openSupBulkAck() {
   const dateStr = now.toLocaleDateString('ar-SA-u-ca-islamic');
   const timeStr = now.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
 
+  // Reset state
+  window._sigBulkExcluded = new Set();
+  window._sigBulkReady    = ready;
+  window._sigType         = 'bulk_nusuk';
+
   document.getElementById('sig-modal-title').textContent = '🪪 إقرار استلام بطاقات نسك — دفعة واحدة';
+  const searchHtml = ready.length > 10
+    ? `<input id="sup-bulk-search" type="text" placeholder="🔍 بحث بالاسم أو رقم الهوية..." oninput="_filterSupBulkTable()" style="width:100%;padding:8px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:12px;font-family:inherit;margin-bottom:8px;direction:rtl">`
+    : '';
+
   document.getElementById('sig-pilgrim-name').innerHTML = `
-    <div style="background:#fff8e1;border-radius:8px;padding:12px;font-size:12px;line-height:2;text-align:right;direction:rtl">
-      اسم الحملة: <strong>${companyName}${license}</strong><br>
-      اسم المشرف: <strong>${user.name||user.username||'—'}</strong><br>
-      رقم الحافلة: <strong>${user.group_num||'—'}</strong><br>
-      عدد البطاقات: <strong>${ready.length} بطاقة</strong><br>
-      التاريخ: <strong>${dateStr}</strong> &nbsp; الوقت: <strong>${timeStr}</strong><br><br>
-      <em>أقر بأنني استلمت البطاقات المذكورة لتوزيعها على الحجاج حسب الكشوفات المعتمدة.</em>
+    <div style="text-align:right;direction:rtl">
+      <div style="background:#fff8e1;border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.8;margin-bottom:10px">
+        <strong>الحملة:</strong> ${_esc(companyName+license)}<br>
+        <strong>المشرف:</strong> ${_esc(user.name||user.username||'—')} &nbsp;•&nbsp; <strong>الحافلة:</strong> ${_esc(String(user.group_num||'—'))}<br>
+        <strong>التاريخ:</strong> ${_esc(dateStr)} &nbsp;•&nbsp; <strong>الوقت:</strong> ${_esc(timeStr)}
+      </div>
+      ${searchHtml}
+      <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;margin-bottom:8px;max-height:220px;overflow-y:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead style="background:#f5f5f5;position:sticky;top:0;z-index:1">
+            <tr>
+              <th style="padding:7px 4px;font-weight:700;color:#7a4500;width:30px;border-bottom:1px solid #e0e0e0">#</th>
+              <th style="padding:7px 8px;font-weight:700;color:#7a4500;text-align:right;border-bottom:1px solid #e0e0e0">اسم الحاج</th>
+              <th style="padding:7px 8px;font-weight:700;color:#7a4500;width:92px;text-align:center;border-bottom:1px solid #e0e0e0;direction:ltr">الهوية</th>
+              <th style="padding:7px 4px;font-weight:700;color:#c00;width:40px;text-align:center;border-bottom:1px solid #e0e0e0" title="استبعاد">—</th>
+            </tr>
+          </thead>
+          <tbody id="sup-bulk-tbody"></tbody>
+        </table>
+      </div>
+      <div id="sup-bulk-counter" style="background:#fff3e0;border:1px solid #c8971a;border-radius:8px;padding:8px 12px;font-size:12px;color:#7a4500;text-align:center;font-weight:700;margin-bottom:8px"></div>
+      <div style="font-size:11px;color:#666;text-align:center;line-height:1.6;margin-bottom:4px">
+        <em>أقر بأنني استلمت البطاقات المذكورة أعلاه لتوزيعها على الحجاج حسب الكشوفات المعتمدة.</em>
+      </div>
     </div>`;
-  window._sigType = 'bulk_nusuk';
-  window._sigBulkIds = ready.map(p=>p.id);
+  _renderSupBulkTable();
   clearSigCanvas();
   document.getElementById('sig-modal').style.display = 'flex';
+}
+
+function _renderSupBulkTable() {
+  const ready    = window._sigBulkReady || [];
+  const excluded = window._sigBulkExcluded || new Set();
+  const q = (document.getElementById('sup-bulk-search')?.value||'').toLowerCase().trim();
+  const tbody = document.getElementById('sup-bulk-tbody');
+  if(!tbody) return;
+
+  const filtered = q
+    ? ready.filter(p => (p.name||'').toLowerCase().includes(q) || (p.id_num||'').includes(q))
+    : ready;
+
+  tbody.innerHTML = filtered.map((p,i) => {
+    const isExcl = excluded.has(p.id);
+    return `<tr style="border-bottom:1px solid #f5f5f5;${isExcl?'background:#fafafa;opacity:0.55':''}">
+      <td style="padding:7px 4px;text-align:center;color:#999;font-size:11px">${i+1}</td>
+      <td style="padding:7px 8px;font-weight:600;color:${isExcl?'#999':'#333'};${isExcl?'text-decoration:line-through':''}">${_esc(p.name||'—')}</td>
+      <td style="padding:7px 8px;text-align:center;color:#666;font-size:11px;direction:ltr;${isExcl?'text-decoration:line-through':''}">${_esc(p.id_num||'—')}</td>
+      <td style="padding:7px 4px;text-align:center">
+        ${isExcl
+          ? `<button onclick="_toggleSupBulkExcluded('${p.id}')" title="إعادة" style="background:#1a7a1a;color:#fff;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:13px;font-family:inherit;line-height:1">↩</button>`
+          : `<button onclick="_toggleSupBulkExcluded('${p.id}')" title="استبعاد" style="background:#fde8e8;color:#c00;border:1.5px solid #c00;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;font-family:inherit;line-height:1;font-weight:700">✕</button>`}
+      </td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="4" style="padding:20px;text-align:center;color:#888;font-size:12px">لا توجد نتائج مطابقة</td></tr>`;
+
+  _updateSupBulkCounter();
+}
+
+function _toggleSupBulkExcluded(id) {
+  const excluded = window._sigBulkExcluded;
+  if(!excluded) return;
+  if(excluded.has(id)) excluded.delete(id);
+  else                 excluded.add(id);
+  _renderSupBulkTable();
+}
+
+function _filterSupBulkTable() {
+  _renderSupBulkTable();
+}
+
+function _updateSupBulkCounter() {
+  const ready    = window._sigBulkReady || [];
+  const excluded = window._sigBulkExcluded || new Set();
+  const included = ready.length - excluded.size;
+  const counter  = document.getElementById('sup-bulk-counter');
+  if(!counter) return;
+
+  if(included === 0){
+    counter.style.background = '#fde8e8';
+    counter.style.borderColor = '#c00';
+    counter.style.color = '#c00';
+    counter.innerHTML = `⚠️ يجب اختيار بطاقة واحدة على الأقل`;
+  } else {
+    counter.style.background = '#fff3e0';
+    counter.style.borderColor = '#c8971a';
+    counter.style.color = '#7a4500';
+    counter.innerHTML = `✓ سيتم توقيع <strong>${included}</strong> بطاقة${excluded.size?` &nbsp;•&nbsp; مستبعدة: <strong>${excluded.size}</strong>`:''}`;
+  }
 }
 
 
@@ -77,8 +167,8 @@ async function loadSupervisorPanel(user) {
 
   // إعداد أزرار العمليات
   renderSupActionBtns();
-  // إظهار/إخفاء أعمدة الجدول
-  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة لدى المشرف');
+  // v20.3: إظهار/إخفاء أعمدة الجدول — أي نشاط نسك يُظهر العمود
+  const hasNusuk = window._supPilgrims.some(p=>['موجودة لدى الإدارة','موجودة لدى المشرف','مسلّمة للحاج'].includes(p.nusuk_card_status));
   if(document.getElementById('sup-th-nusuk')) document.getElementById('sup-th-nusuk').style.display = hasNusuk?'':'none';
   if(document.getElementById('sup-th-bracelet')) document.getElementById('sup-th-bracelet').style.display = window._supSettings.braceletAvailable?'':'none';
 
@@ -90,15 +180,19 @@ async function loadSupervisorPanel(user) {
 function renderSupActionBtns() {
   const container = document.getElementById('sup-action-btns');
   if(!container) return;
-  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة لدى المشرف');
-  const hasBracelet = window._supSettings.braceletAvailable;
-  const cols = 2 + (hasNusuk?1:0) + (hasBracelet?1:0);
+  // v20.3: فصل منطقي — استلام من الإدارة (📦) مقابل تسليم للحاج (🪪)
+  const readyPilgrims   = window._supPilgrims.filter(p=>p.nusuk_card_status==='موجودة لدى الإدارة');
+  const hasNusukReady   = readyPilgrims.length > 0;
+  const hasNusukWithSup = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة لدى المشرف');
+  const readyCount      = readyPilgrims.length;
+  const hasBracelet     = window._supSettings.braceletAvailable;
+  const cols = 2 + (hasNusukWithSup?1:0) + (hasNusukReady?1:0) + (hasBracelet?1:0);
   container.style.gridTemplateColumns = `repeat(${cols},1fr)`;
   container.innerHTML = `
     <button onclick="openSupAction('bus')" style="background:#1a7a1a;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🚌 إركاب</button>
     <button onclick="openSupAction('camp')" style="background:#1a5fa8;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🏕️ وصول المخيم</button>
-    ${hasNusuk?`<button onclick="openSupAction('nusuk')" style="background:#7a4500;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🪪 بطاقة نسك</button>`:''} 
-    ${hasNusuk?`<button onclick="openSupBulkAck()" style="background:#c8971a;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📦 استلام دفعة</button>`:''}
+    ${hasNusukWithSup?`<button onclick="openSupAction('nusuk')" style="background:#7a4500;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🪪 بطاقة نسك</button>`:''}
+    ${hasNusukReady?`<button onclick="openSupBulkAck()" style="position:relative;background:#c8971a;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📦 استلام دفعة<span class="sup-badge-new" aria-label="${readyCount} بطاقة جاهزة">${readyCount}</span></button>`:''}
     ${hasBracelet?`<button onclick="openSupAction('bracelet')" style="background:#444;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🚆 أسوارة</button>`:''}
   `;
 }
@@ -114,7 +208,8 @@ function updateSupStats() {
 
 function renderSupTable() {
   const q = (document.getElementById('sup-search')?.value||'').toLowerCase();
-  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة لدى المشرف'||p.nusuk_card_status==='مسلّمة للحاج');
+  // v20.3: أي نشاط نسك يُظهر العمود (يشمل 'موجودة لدى الإدارة' أيضاً)
+  const hasNusuk = window._supPilgrims.some(p=>['موجودة لدى الإدارة','موجودة لدى المشرف','مسلّمة للحاج'].includes(p.nusuk_card_status));
   const hasBracelet = window._supSettings.braceletAvailable;
 
   // v18.0b: إظهار/إخفاء الفلاتر الشرطية
@@ -331,7 +426,12 @@ async function confirmSignature() {
     if(type==='nusuk') { updates = { nusuk_card_status: 'مسلّمة للحاج', nusuk_card_sig: sigUrl, nusuk_card_time: timeStr }; }
     else if(type==='bracelet') { updates = { bracelet_sig: sigUrl, bracelet_time: timeStr }; }
     else if(type==='bulk_nusuk') {
-      const ids = window._sigBulkIds||[];
+      // v20.3: استخراج ids من ready - excluded (بدل _sigBulkIds الثابتة)
+      const ready    = window._sigBulkReady || [];
+      const excluded = window._sigBulkExcluded || new Set();
+      const ids = ready.filter(p => !excluded.has(p.id)).map(p => p.id);
+      if(!ids.length) { showToast('⚠️ يجب اختيار بطاقة واحدة على الأقل', 'warning'); return; }
+
       // v17.2: snapshot قبل التحديث لكل حاج
       const beforeMap = new Map();
       ids.forEach(bid => {
@@ -347,6 +447,7 @@ async function confirmSignature() {
       ids.forEach(bid => { const bp=window._supPilgrims.find(x=>String(x.id)===String(bid)); if(bp){bp.nusuk_card_status='موجودة لدى المشرف';bp.nusuk_card_sig=sigUrl;bp.nusuk_card_time=timeStr;} });
 
       // v17.2: audit — N صفوف فردية + 1 صف جماعي + bulk_session
+      // v20.3: bus_num + إحصائيات الاستبعاد
       const bulkSessionId = (crypto.randomUUID && crypto.randomUUID())
         || ('bulk-' + Date.now() + '-' + Math.random().toString(36).substring(2,10));
       const bulkMeta = {
@@ -354,8 +455,14 @@ async function confirmSignature() {
         bulk_session: bulkSessionId,
         bulk_target_field: 'nusuk_card_status',
         bulk_target_value: 'موجودة لدى المشرف',
-        bulk_total_count: ids.length
+        bulk_total_count: ids.length,
+        bus_num: user && user.group_num != null ? String(user.group_num) : null,
+        total_included: ids.length
       };
+      if(excluded.size > 0){
+        bulkMeta.total_excluded    = excluded.size;
+        bulkMeta.excluded_pilgrims = [...excluded].map(String);
+      }
       ids.forEach(bid => {
         const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
         const bBefore = beforeMap.get(String(bid)) || {};
@@ -382,7 +489,11 @@ async function confirmSignature() {
       });
 
       closeSigModal();
-      showToast(`✅ تم تسجيل استلام ${ids.length} بطاقة`, 'success');
+      const exclMsg = excluded.size ? ` • تم استبعاد ${excluded.size}` : '';
+      showToast(`✅ تم تسجيل استلام ${ids.length} بطاقة${exclMsg}`, 'success');
+      // v20.3: تنظيف state
+      window._sigBulkReady = [];
+      window._sigBulkExcluded = null;
       updateSupStats(); renderSupTable(); renderSupActionBtns();
       return;
     }
