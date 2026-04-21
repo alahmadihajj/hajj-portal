@@ -1875,7 +1875,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   </div>
 
   <!-- إحصائيات سريعة -->
-  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:16px 16px 0">
+  <div id="sup-stats-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:16px 16px 0">
     <div style="background:#fff;border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)">
       <div id="sup-total" style="font-size:22px;font-weight:700;color:#3d2000">0</div>
       <div style="font-size:11px;color:#888;margin-top:2px">الإجمالي</div>
@@ -1966,6 +1966,121 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       border-radius: 999px; font-size: 11px; font-weight: 800;
       display: inline-flex; align-items: center; justify-content: center;
       animation: supBadgePulse 1.6s ease-in-out infinite;
+    }
+
+    /* ═══════════════════════════════════════════════════════════ */
+    /* v22.9: بوابة المشرف — Responsive Mobile-First              */
+    /* ═══════════════════════════════════════════════════════════ */
+
+    /* Tablet (≤768px) */
+    @media (max-width: 768px) {
+      #supervisor-panel { font-size: 13px; }
+      #sup-stats-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 6px !important;
+      }
+      #sup-action-btns {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+
+    /* Mobile (≤480px) */
+    @media (max-width: 480px) {
+      /* إحصائيات 2×N */
+      #sup-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+        padding: 12px 10px 0 !important;
+      }
+      #sup-stats-grid > div { padding: 10px 6px !important; }
+      #sup-total, #sup-boarded, #sup-arrived, #sup-nusuk, #sup-bracelet {
+        font-size: 18px !important;
+      }
+
+      /* أزرار العمليات */
+      #sup-action-btns button {
+        padding: 12px 6px !important;
+        font-size: 12px !important;
+        min-height: 44px;
+      }
+
+      /* البحث — 16px يمنع zoom iOS */
+      #sup-search { font-size: 16px !important; }
+
+      /* تحويل الجدول إلى بطاقات */
+      #sup-table {
+        display: block;
+        background: transparent !important;
+        box-shadow: none !important;
+        border-radius: 0;
+      }
+      #sup-table thead { display: none; }
+      #sup-table tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      #sup-table tbody tr {
+        display: block !important;
+        background: #fff !important;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #f0e8d0;
+      }
+      #sup-table tbody td {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0 !important;
+        border-bottom: 1px dashed #f0f0f0;
+        text-align: right !important;
+        font-size: 13px;
+      }
+      /* col 1: checkbox — مدمج، بلا فاصل */
+      #sup-table tbody td:nth-child(1) {
+        justify-content: flex-start !important;
+        padding-bottom: 0 !important;
+        border-bottom: none !important;
+        margin-bottom: 4px;
+      }
+      /* col 2: الاسم — عنوان البطاقة */
+      #sup-table tbody td:nth-child(2) {
+        font-weight: 700 !important;
+        font-size: 15px !important;
+        color: #3d2000 !important;
+        border-bottom: 2px solid #f0e8d0 !important;
+        padding-bottom: 10px !important;
+        margin-bottom: 4px;
+        display: block !important;
+        text-align: right !important;
+      }
+      /* تسميات للحالات (col 3-6) */
+      #sup-table tbody td:nth-child(3)::before { content: "🚌 الإركاب:"; font-weight: 600; color: #888; }
+      #sup-table tbody td:nth-child(4)::before { content: "🏕️ المخيم:";  font-weight: 600; color: #888; }
+      #sup-table tbody td:nth-child(5)::before { content: "🪪 نسك:";     font-weight: 600; color: #888; }
+      #sup-table tbody td:nth-child(6)::before { content: "🚆 أسوارة:";   font-weight: 600; color: #888; }
+      /* آخر عمود: زر ✏️ — بلا label، أعلى */
+      #sup-table tbody td:last-child {
+        justify-content: flex-end !important;
+        padding-top: 10px !important;
+        margin-top: 4px;
+        border-top: 1px solid #f5ead0;
+        border-bottom: none !important;
+      }
+      #sup-table tbody td:last-child::before { content: ""; }
+
+      /* Modal العمليات على الجوال */
+      #sup-modal > div {
+        max-width: calc(100vw - 20px) !important;
+        margin: 10px auto !important;
+        padding: 16px !important;
+      }
+    }
+
+    /* Touch-friendly (min 44px للأزرار) */
+    @media (hover: none) and (pointer: coarse) {
+      #supervisor-panel button { min-height: 44px; }
     }
   </style>
 
