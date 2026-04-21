@@ -1889,6 +1889,56 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
     <input id="sup-search" type="text" placeholder="🔍 ابحث بالاسم أو رقم الهوية..." oninput="renderSupTable()" style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;box-sizing:border-box;direction:rtl">
   </div>
 
+  <!-- v18.0b: فلاتر ذكية + counter ديناميكي -->
+  <div id="sup-filter-row" style="padding:0 16px 12px;display:flex;gap:6px;flex-wrap:wrap;overflow-x:auto">
+    <button data-filter="unboarded"   class="sup-filter-chip">🚌 لم يركب <span class="sup-filter-count">0</span></button>
+    <button data-filter="not_arrived" class="sup-filter-chip">🏕️ لم يصل <span class="sup-filter-count">0</span></button>
+    <button data-filter="no_nusuk"    class="sup-filter-chip sup-filter-nusuk"    style="display:none">🪪 لم يستلم نسك <span class="sup-filter-count">0</span></button>
+    <button data-filter="no_bracelet" class="sup-filter-chip sup-filter-bracelet" style="display:none">🚆 لم يستلم أسوارة <span class="sup-filter-count">0</span></button>
+  </div>
+  <style>
+    .sup-filter-chip {
+      padding: 8px 14px;
+      border: 1.5px solid #e0e0e0;
+      background: #fff;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      white-space: nowrap;
+      transition: all .2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 36px;
+    }
+    .sup-filter-chip:hover {
+      border-color: #c8971a;
+      background: #fff8e8;
+    }
+    .sup-filter-chip.sup-filter-active {
+      background: #c8971a;
+      border-color: #c8971a;
+      color: #fff;
+    }
+    .sup-filter-count {
+      background: #f0f0f0;
+      color: #666;
+      border-radius: 10px;
+      padding: 1px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      min-width: 20px;
+      text-align: center;
+    }
+    .sup-filter-chip.sup-filter-active .sup-filter-count {
+      background: rgba(255,255,255,.3);
+      color: #fff;
+    }
+  </style>
+
   <!-- جدول الحجاج -->
   <div style="padding:0 16px 20px;overflow-x:auto">
     <table id="sup-table" style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)">
@@ -7152,13 +7202,38 @@ function updateSupStats() {
 
 function renderSupTable() {
   const q = (document.getElementById('sup-search')?.value||'').toLowerCase();
-  const list = window._supPilgrims.filter(p=>!q||(p.name||'').toLowerCase().includes(q)||(p.id_num||'').includes(q));
-  const tbody = document.getElementById('sup-tbody');
-  const empty = document.getElementById('sup-empty');
-  if(!list.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display='none';
   const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة'||p.nusuk_card_status==='مسلمة');
   const hasBracelet = window._supSettings.braceletAvailable;
+
+  // v18.0b: إظهار/إخفاء الفلاتر الشرطية
+  const nChip = document.querySelector('.sup-filter-nusuk');
+  const bChip = document.querySelector('.sup-filter-bracelet');
+  if(nChip) nChip.style.display = hasNusuk    ? 'flex' : 'none';
+  if(bChip) bChip.style.display = hasBracelet ? 'flex' : 'none';
+
+  // v18.0b: فلترة بالبحث + الفلتر النشط
+  let list = window._supPilgrims.filter(p=>!q||(p.name||'').toLowerCase().includes(q)||(p.id_num||'').includes(q));
+  const f = window._supActiveFilter;
+  if(f){
+    list = list.filter(p => {
+      if(f === 'unboarded')    return p.bus_status  !== 'ركب';
+      if(f === 'not_arrived')  return p.camp_status !== 'حضر';
+      if(f === 'no_nusuk')     return p.nusuk_card_status !== 'مسلمة';
+      if(f === 'no_bracelet')  return !p.bracelet_time;
+      return true;
+    });
+  }
+
+  const tbody = document.getElementById('sup-tbody');
+  const empty = document.getElementById('sup-empty');
+  if(!list.length){
+    tbody.innerHTML='';
+    empty.style.display='block';
+    empty.textContent = f ? '📭 لا يوجد حجاج مطابقون للفلتر' : 'لا يوجد حجاج في هذه الحافلة';
+    _countSupFilters();
+    return;
+  }
+  empty.style.display='none';
   tbody.innerHTML = list.map(p => {
     const boarded = p.bus_status==='ركب';
     const arrived = p.camp_status==='حضر';
@@ -7176,6 +7251,24 @@ function renderSupTable() {
       </td>
     </tr>`;
   }).join('');
+
+  _countSupFilters();
+}
+
+// v18.0b: حساب counter لكل فلتر (يُستدعى بعد كل renderSupTable)
+function _countSupFilters(){
+  const p = window._supPilgrims || [];
+  const counts = {
+    unboarded:   p.filter(x => x.bus_status  !== 'ركب').length,
+    not_arrived: p.filter(x => x.camp_status !== 'حضر').length,
+    no_nusuk:    p.filter(x => x.nusuk_card_status !== 'مسلمة').length,
+    no_bracelet: p.filter(x => !x.bracelet_time).length
+  };
+  document.querySelectorAll('.sup-filter-chip').forEach(btn => {
+    const f = btn.dataset.filter;
+    const c = btn.querySelector('.sup-filter-count');
+    if(c) c.textContent = counts[f] != null ? counts[f] : 0;
+  });
 }
 
 function openSupAction(action) {
@@ -7420,6 +7513,28 @@ function supervisorLogout() {
   window._supPilgrims = [];
   window._currentUser = null;
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// ===== v18.0b: فلاتر ذكية (state + event listener) =====
+// ═══════════════════════════════════════════════════════════════════════
+
+window._supActiveFilter = null;
+
+document.addEventListener('click', (e) => {
+  const chip = e.target && e.target.closest ? e.target.closest('.sup-filter-chip') : null;
+  if(!chip) return;
+  const filter = chip.dataset.filter;
+  if(!filter) return;
+  if(window._supActiveFilter === filter){
+    window._supActiveFilter = null;
+    chip.classList.remove('sup-filter-active');
+  } else {
+    document.querySelectorAll('.sup-filter-chip').forEach(b => b.classList.remove('sup-filter-active'));
+    chip.classList.add('sup-filter-active');
+    window._supActiveFilter = filter;
+  }
+  if(typeof renderSupTable === 'function') renderSupTable();
+});
 
 // ═══════════════════════════════════════════════════════════════════════
 // ===== v18.0a: تاريخ عمليات المشرف (Supervisor History) =====
