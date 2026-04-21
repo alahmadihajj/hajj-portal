@@ -414,12 +414,12 @@ async function confirmSignature() {
 
   try {
     // رفع التوقيع إلى Supabase Storage
+    // v20.4.1: استخدام window.DB.Storage بدل window.supabase.storage (الأخير = factory lib، ليس client)
     const blob = await new Promise(res => canvas.toBlob(res, 'image/png', 0.7));
     const fileName = `${type}_${id}_${Date.now()}.png`;
-    const { data, error } = await window.supabase.storage.from('signatures').upload(fileName, blob, { upsert: true });
-    if(error) throw error;
-    const { data: urlData } = window.supabase.storage.from('signatures').getPublicUrl(fileName);
-    const sigUrl = urlData.publicUrl;
+    await window.DB.Storage.uploadSignature(fileName, blob);
+    const sigUrl = window.DB.Storage.getSignaturePublicUrl(fileName);
+    if(!sigUrl) throw new Error('تعذّر الحصول على رابط التوقيع');
 
     // حفظ في Supabase
     let updates = {};

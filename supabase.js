@@ -467,7 +467,22 @@ const Audit = {
   }
 };
 
+// ===== v20.4.1: Storage Helper =====
+// حل مشكلة "Cannot read properties of undefined (reading 'from')" في supervisor.js
+// السبب القديم: window.supabase هو factory (v2 lib) لا client — يجب استخدام _db
+const Storage = {
+  async uploadSignature(fileName, blob){
+    const { data, error } = await _db.storage.from('signatures').upload(fileName, blob, { upsert: true });
+    if(error) throw error;
+    return data;
+  },
+  getSignaturePublicUrl(fileName){
+    const { data } = _db.storage.from('signatures').getPublicUrl(fileName);
+    return (data && data.publicUrl) || '';
+  }
+};
+
 // تعريف DB عالمياً
-window.DB = { Pilgrims, Announcements, Camps, Groups, Buses, SysUsers, Requests, Staff, Settings, Surveys, Audit };
+window.DB = { Pilgrims, Announcements, Camps, Groups, Buses, SysUsers, Requests, Staff, Settings, Surveys, Audit, Storage };
 window.dispatchEvent(new Event('db-ready'));
 console.log('✅ Supabase متصل بنجاح');
