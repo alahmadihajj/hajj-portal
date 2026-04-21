@@ -555,7 +555,14 @@ async function confirmSignature() {
 
     closeSigModal();
     showToast('تم تسجيل الاستلام بالتوقيع', 'success');
-    updateSupStats(); renderSupTable();
+    // v20.4.2: refresh كامل للـ UI بعد DB update — KPIs + جدول + أزرار + modal (دفاعي)
+    updateSupStats();
+    renderSupTable();
+    renderSupActionBtns();
+    const supModal = document.getElementById('sup-modal');
+    if(supModal && supModal.style.display === 'flex' && typeof supModalSearch === 'function'){
+      supModalSearch();
+    }
   } catch(e) { showToast('خطأ في الحفظ: '+e.message, 'error'); }
 }
 
