@@ -429,8 +429,28 @@ async function confirmSignature() {
       // v20.3: استخراج ids من ready - excluded (بدل _sigBulkIds الثابتة)
       const ready    = window._sigBulkReady || [];
       const excluded = window._sigBulkExcluded || new Set();
-      const ids = ready.filter(p => !excluded.has(p.id)).map(p => p.id);
+      let ids = ready.filter(p => !excluded.has(p.id)).map(p => p.id);
       if(!ids.length) { showToast('⚠️ يجب اختيار بطاقة واحدة على الأقل', 'warning'); return; }
+
+      // v20.4: فحص عزل دفاعي — استبعاد أي حاج لا ينتمي لحافلة المشرف
+      const supBus = user && user.group_num != null ? String(user.group_num) : null;
+      const isolationSkipped = [];
+      if(supBus){
+        ids = ids.filter(bid => {
+          const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
+          const bpBus = bp && bp.bus_num != null ? String(bp.bus_num) : null;
+          if(bpBus !== supBus){
+            isolationSkipped.push(String(bid));
+            console.warn('[isolation] pilgrim', bid, 'bus:', bpBus, '!= supervisor bus:', supBus);
+            return false;
+          }
+          return true;
+        });
+      }
+      if(!ids.length){
+        showToast('🔒 خطأ عزل: لا يوجد حاج من حافلتك في الدفعة', 'error');
+        return;
+      }
 
       // v17.2: snapshot قبل التحديث لكل حاج
       const beforeMap = new Map();
@@ -463,6 +483,10 @@ async function confirmSignature() {
         bulkMeta.total_excluded    = excluded.size;
         bulkMeta.excluded_pilgrims = [...excluded].map(String);
       }
+      if(isolationSkipped.length > 0){
+        bulkMeta.isolation_skipped   = true;
+        bulkMeta.isolation_mismatch  = isolationSkipped;
+      }
       ids.forEach(bid => {
         const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
         const bBefore = beforeMap.get(String(bid)) || {};
@@ -489,12 +513,22 @@ async function confirmSignature() {
       });
 
       closeSigModal();
-      const exclMsg = excluded.size ? ` • تم استبعاد ${excluded.size}` : '';
-      showToast(`✅ تم تسجيل استلام ${ids.length} بطاقة${exclMsg}`, 'success');
+      const exclMsg = excluded.size ? ` • استبعاد يدوي: ${excluded.size}` : '';
+      const isoMsg  = isolationSkipped.length ? ` • عزل تلقائي: ${isolationSkipped.length}` : '';
+      showToast(`✅ تم تسجيل استلام ${ids.length} بطاقة${exclMsg}${isoMsg}`, isolationSkipped.length ? 'warning' : 'success');
       // v20.3: تنظيف state
       window._sigBulkReady = [];
       window._sigBulkExcluded = null;
       updateSupStats(); renderSupTable(); renderSupActionBtns();
+      return;
+    }
+
+    // v20.4: فحص عزل دفاعي — single sig (nusuk / bracelet)
+    const supBus = user && user.group_num != null ? String(user.group_num) : null;
+    const pBus   = p && p.bus_num != null ? String(p.bus_num) : null;
+    if(supBus && pBus !== supBus){
+      console.warn('[isolation] single sig blocked — pilgrim', id, 'bus:', pBus, '!= supervisor bus:', supBus);
+      showToast('🔒 خطأ عزل: هذا الحاج ليس من حافلتك', 'error');
       return;
     }
 

@@ -930,6 +930,10 @@ function openPilgrimAck(pilgrimId, pilgrim) {
     <div style="border:2px dashed #c8971a;border-radius:10px;overflow:hidden;background:#fafafa;margin-bottom:10px">
       <canvas id="pilgrim-ack-canvas" width="420" height="150" style="width:100%;display:block;touch-action:none;cursor:crosshair"></canvas>
     </div>
+    <label style="display:flex;gap:8px;align-items:center;background:#fffbf0;border:1.5px solid #e0d5c5;border-radius:8px;padding:10px 12px;font-size:12px;color:#3d2000;margin-bottom:10px;direction:rtl;cursor:pointer">
+      <input type="checkbox" id="pilgrim-ack-print" checked style="width:16px;height:16px;accent-color:#7a4500;cursor:pointer">
+      <span>🖨️ فتح صفحة طباعة للإقرار بعد الحفظ (يمكن حفظها كـ PDF)</span>
+    </label>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <button onclick="clearCanvas('pilgrim-ack-canvas')" style="padding:10px;background:#f5f5f5;border:none;border-radius:8px;cursor:pointer;font-family:inherit">🗑️ مسح</button>
       <button onclick="confirmPilgrimAck(${pilgrimId})" style="padding:10px;background:#1a7a1a;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit">✅ تأكيد الاستلام</button>
@@ -945,6 +949,8 @@ async function confirmPilgrimAck(pilgrimId) {
   if(!allChecked) { showToast('يرجى الموافقة على جميع البنود أولاً', 'warning'); return; }
   const canvas = document.getElementById('pilgrim-ack-canvas');
   if(!canvas || isCanvasBlank(canvas)) { showToast('يرجى التوقيع أولاً', 'warning'); return; }
+  // v20.4: قراءة تفضيل الطباعة (مُفعَّل افتراضياً)
+  const shouldPrint = !!document.getElementById('pilgrim-ack-print')?.checked;
   const sig = canvas.toDataURL('image/png', 0.7);
   const now = new Date().toLocaleString('ar-SA');
 
@@ -985,6 +991,10 @@ async function confirmPilgrimAck(pilgrimId) {
 
     showToast('تم تسجيل استلام الحاج', 'success');
     closeModals(); render();
+    // v20.4: فتح صفحة الإقرار للطباعة/Save as PDF (اختياري، مُفعَّل افتراضياً)
+    if(shouldPrint && typeof viewPilgrimAck === 'function'){
+      setTimeout(() => viewPilgrimAck(pilgrimId), 200);
+    }
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
 
