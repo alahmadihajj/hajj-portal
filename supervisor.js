@@ -452,24 +452,42 @@ async function confirmSignature() {
         return;
       }
 
-      // v17.2: snapshot قبل التحديث لكل حاج
+      // v22.0: UUID يُولَّد أولاً ويُخزَّن في nusuk_supervisor_ack_id (لربط جميع بطاقات الدفعة بنفس الإقرار)
+      const bulkSessionId = (crypto.randomUUID && crypto.randomUUID())
+        || ('bulk-' + Date.now() + '-' + Math.random().toString(36).substring(2,10));
+
+      // v22.0: snapshot قبل التحديث — حقول المشرف المنفصلة
       const beforeMap = new Map();
       ids.forEach(bid => {
         const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
         beforeMap.set(String(bid), {
-          nusuk_card_status: bp ? (bp.nusuk_card_status ?? null) : null,
-          nusuk_card_sig:    bp ? (bp.nusuk_card_sig    ?? null) : null,
-          nusuk_card_time:   bp ? (bp.nusuk_card_time   ?? null) : null
+          nusuk_card_status:       bp ? (bp.nusuk_card_status       ?? null) : null,
+          nusuk_supervisor_sig:    bp ? (bp.nusuk_supervisor_sig    ?? null) : null,
+          nusuk_supervisor_time:   bp ? (bp.nusuk_supervisor_time   ?? null) : null,
+          nusuk_supervisor_ack_id: bp ? (bp.nusuk_supervisor_ack_id ?? null) : null
         });
       });
-      const bulkUpdates = { nusuk_card_status: 'موجودة لدى المشرف', nusuk_card_sig: sigUrl, nusuk_card_time: timeStr };
+      // v22.0: استلام المشرف يكتب في nusuk_supervisor_* (منفصل عن nusuk_card_* الذي يحتفظ بتوقيع الحاج)
+      const bulkUpdates = {
+        nusuk_card_status:       'موجودة لدى المشرف',
+        nusuk_supervisor_sig:    sigUrl,
+        nusuk_supervisor_time:   timeStr,
+        nusuk_supervisor_ack_id: bulkSessionId
+      };
       await Promise.all(ids.map(bid => window.DB.Pilgrims.update(parseInt(bid), bulkUpdates)));
-      ids.forEach(bid => { const bp=window._supPilgrims.find(x=>String(x.id)===String(bid)); if(bp){bp.nusuk_card_status='موجودة لدى المشرف';bp.nusuk_card_sig=sigUrl;bp.nusuk_card_time=timeStr;} });
+      ids.forEach(bid => {
+        const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
+        if(bp){
+          bp.nusuk_card_status       = 'موجودة لدى المشرف';
+          bp.nusuk_supervisor_sig    = sigUrl;
+          bp.nusuk_supervisor_time   = timeStr;
+          bp.nusuk_supervisor_ack_id = bulkSessionId;
+        }
+      });
 
       // v17.2: audit — N صفوف فردية + 1 صف جماعي + bulk_session
       // v20.3: bus_num + إحصائيات الاستبعاد
-      const bulkSessionId = (crypto.randomUUID && crypto.randomUUID())
-        || ('bulk-' + Date.now() + '-' + Math.random().toString(36).substring(2,10));
+      // v22.0: bulkSessionId نُوِّلد أعلاه
       const bulkMeta = {
         source: 'supervisor_bulk_receive',
         bulk_session: bulkSessionId,
@@ -506,7 +524,11 @@ async function confirmSignature() {
         entity_type:  'pilgrim',
         entity_id:    null,
         entity_label: 'استلام جماعي: ' + ids.length + ' بطاقة نسك',
-        field_changes: { nusuk_card_status: { before: null, after: 'موجودة لدى المشرف', note: 'bulk' } },
+        field_changes: {
+          nusuk_card_status:       { before: null, after: 'موجودة لدى المشرف', note: 'bulk' },
+          nusuk_supervisor_sig:    { before: null, after: sigUrl,               note: 'bulk' },
+          nusuk_supervisor_ack_id: { before: null, after: bulkSessionId,        note: 'bulk' }
+        },
         bulk_ids:   ids,
         bulk_count: ids.length,
         metadata: bulkMeta

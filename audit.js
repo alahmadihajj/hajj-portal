@@ -138,16 +138,18 @@ function _filterAuditSyncArtifacts(updates){
  * v17.2: يقنّع حقول التوقيع في field_changes (بعد _buildFieldChanges).
  * DB يحفظ الـ URL الكامل — audit فقط يعرض "[توقيع مسجّل]".
  */
-const SIG_FIELDS = ['nusuk_card_sig','bracelet_sig'];
+// v22.0: إضافة nusuk_supervisor_sig — توقيع استلام المشرف من الإدارة (منفصل عن توقيع الحاج)
+const SIG_FIELDS = ['nusuk_card_sig','nusuk_supervisor_sig','bracelet_sig'];
 // v17.2.1: حقول لا تُستعاد عند undo (التوقيع ثابت في السجلات الأصلية — time فقط يُستعاد)
-const SIG_FIELDS_NO_UNDO = new Set(['nusuk_card_sig','bracelet_sig']);
+const SIG_FIELDS_NO_UNDO = new Set(['nusuk_card_sig','nusuk_supervisor_sig','bracelet_sig']);
 
-// v17.3: خريطة الحقول الحساسة + قيمة القناع
+// v17.3 + v22.0: خريطة الحقول الحساسة + قيمة القناع
 const SENSITIVE_FIELD_MASKS = {
-  nusuk_card_sig: '[توقيع مسجّل]',
-  bracelet_sig:   '[توقيع مسجّل]',
-  password:       '[كلمة مرور مُعدَّلة]',
-  password_hash:  '[كلمة مرور مُعدَّلة]'
+  nusuk_card_sig:       '[توقيع مسجّل]',
+  nusuk_supervisor_sig: '[توقيع مسجّل]',
+  bracelet_sig:         '[توقيع مسجّل]',
+  password:             '[كلمة مرور مُعدَّلة]',
+  password_hash:        '[كلمة مرور مُعدَّلة]'
 };
 
 /**
@@ -303,9 +305,13 @@ function _auditFieldLabel(f){
     bus_status:'حالة الإركاب', camp_status:'حالة الحضور',
     bus_num:'رقم الحافلة', group_num:'رقم الفوج',
     nusuk_card_status:'حالة بطاقة نسك',
+    nusuk_card_sig:'توقيع الحاج (نسك)', nusuk_card_time:'وقت تسليم الحاج',
+    nusuk_supervisor_sig:'توقيع المشرف (نسك)', nusuk_supervisor_time:'وقت استلام المشرف',
+    nusuk_supervisor_ack_id:'معرّف إقرار المشرف',
     mina_camp:'مخيم منى', mina_bed:'سرير منى', mina_seat:'مقعد منى',
     arafat_camp:'مخيم عرفات', arafat_bed:'سرير عرفات', arafat_seat:'مقعد عرفات',
-    supervisor_name:'اسم المشرف', supervisor_phone:'جوال المشرف'
+    supervisor_name:'اسم المشرف', supervisor_phone:'جوال المشرف',
+    id_num:'رقم الهوية'
   };
   return map[f] || f;
 }

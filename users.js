@@ -174,6 +174,7 @@ async function renderSysUsers() {
           <tr style="background:linear-gradient(135deg,#3d2000,#7a4500);color:#fff">
             <th style="padding:12px 14px;text-align:center">#</th>
             <th style="padding:12px 14px;text-align:right">👤 الاسم</th>
+            <th style="padding:12px 14px;text-align:center">🪪 رقم الهوية</th>
             <th style="padding:12px 14px;text-align:center">📱 الجوال</th>
             <th style="padding:12px 14px;text-align:center">📍 المدينة</th>
             <th style="padding:12px 14px;text-align:center">🚌 الحافلة</th>
@@ -189,6 +190,7 @@ async function renderSysUsers() {
               <div style="font-weight:700;color:#3d2000">${u.name||u.username}</div>
               <div style="font-size:11px;color:#999;margin-top:2px">🔑 ${u.username}</div>
             </td>
+            <td style="padding:11px 14px;text-align:center;direction:ltr;font-size:12px;color:${u.id_num?'#555':'#ccc'}">${u.id_num||'—'}</td>
             <td style="padding:11px 14px;text-align:center;direction:ltr">${u.phone?`<a href="tel:${u.phone}" style="color:#1a5fa8;text-decoration:none;font-weight:600">${u.phone}</a>`:'<span style="color:#ccc">—</span>'}</td>
             <td style="padding:11px 14px;text-align:center">${u.city||'<span style="color:#ccc">—</span>'}</td>
             <td style="padding:11px 14px;text-align:center">${u.group_num?`<span style="background:#3d2000;color:#fff;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700">🚌 ${u.group_num}</span>`:'<span style="color:#ccc">—</span>'}</td>
@@ -218,6 +220,7 @@ async function openSupervisorModal(username) {
     <h3 class="modal-title">🎯 ${username?'تعديل':'إضافة'} مشرف حجاج</h3>
     <div class="form-row"><label>اسم المستخدم (للدخول)</label><input type="text" id="sv-username" value="${u.username||''}" placeholder="رقم الجوال أو الهوية" ${username?'readonly':''}></div>
     <div class="form-row"><label>الاسم الكامل</label><input type="text" id="sv-name" value="${u.name||''}" placeholder="اسم المشرف"></div>
+    <div class="form-row"><label>🪪 رقم الهوية / الإقامة</label><input type="text" id="sv-id-num" value="${u.id_num||''}" placeholder="يظهر في إقرار الاستلام" style="direction:ltr"></div>
     <div class="form-row"><label>📱 رقم الجوال</label><input type="text" id="sv-phone" value="${u.phone||''}" placeholder="0500000000"></div>
     <div class="form-row"><label>📍 المدينة</label><input type="text" id="sv-city" value="${u.city||''}" placeholder="جدة، الرياض..."></div>
     <div class="form-row"><label>كلمة المرور ${username?'(اتركها فارغة للإبقاء)':''}</label><input type="password" id="sv-password" placeholder="••••••••"></div>
@@ -242,6 +245,7 @@ async function openSupervisorModal(username) {
 async function saveSupervisor(existingUsername) {
   const username = document.getElementById('sv-username').value.trim();
   const name = document.getElementById('sv-name').value.trim();
+  const id_num = document.getElementById('sv-id-num').value.trim(); // v22.0
   const phone = document.getElementById('sv-phone').value.trim();
   const city = document.getElementById('sv-city').value.trim();
   const password = document.getElementById('sv-password').value.trim();
@@ -255,7 +259,7 @@ async function saveSupervisor(existingUsername) {
     if(existingUsername) {
       const u = users.find(x=>x.username===existingUsername);
       if(u){
-        const updates = { name, phone, city, group_num, active, role:'supervisor', ...(password?{password}:{}) };
+        const updates = { name, id_num, phone, city, group_num, active, role:'supervisor', ...(password?{password}:{}) };
         await window.DB.SysUsers.update(u.id, updates);
         const after = Object.assign({}, u, updates);
         _recordAudit({
@@ -269,7 +273,7 @@ async function saveSupervisor(existingUsername) {
       }
     } else {
       if(!password) return showToast('أدخل كلمة المرور', 'warning');
-      const newUser = { username, name, phone, city, password, role:'supervisor', group_num, active };
+      const newUser = { username, name, id_num, phone, city, password, role:'supervisor', group_num, active };
       await window.DB.SysUsers.insert(newUser);
       _recordAudit({
         action_type:  'create',
