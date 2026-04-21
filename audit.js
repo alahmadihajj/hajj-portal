@@ -24,9 +24,20 @@
 // ===== v17.0 Phase 1: Audit Log Helpers =====
 
 /**
+ * v20.0: يُحدِّد ما إذا كان المستخدم الحالي هو السوبر أدمن المبرمج (المطوّر الأساسي).
+ * المصدر: SYSTEM_CONFIG.superAdmin.username (config.js) — fallback للـ hardcoded.
+ */
+function _isDevUser(){
+  const u = window._currentUser && window._currentUser.username;
+  const devId = (typeof SYSTEM_CONFIG !== 'undefined' && SYSTEM_CONFIG.superAdmin && SYSTEM_CONFIG.superAdmin.username) || '1057653261';
+  return !!(u && String(u) === String(devId));
+}
+
+/**
  * يُسجّل حدثاً في audit_log — fire-and-forget.
  * فشل التسجيل لا يُوقف الحفظ (.catch يطبع فقط).
  * يُضيف تلقائياً: user_*, session_id, reversible, metadata.user_agent.
+ * v20.0: يضيف metadata.is_dev + metadata.dev_hidden لو المستخدم = المطوّر (تسجيل سري).
  * @param {Object} entry — {action_type, entity_type, entity_id, entity_label, field_changes?, bulk_ids?, bulk_count?, metadata?}
  */
 function _recordAudit(entry){
@@ -35,6 +46,13 @@ function _recordAudit(entry){
 
   // v17.0.1: guard دفاعي — لا تسجّل update بدون تغييرات فعلية
   if(entry.action_type === 'update' && !entry.field_changes) return;
+
+  // v20.0: حقن علامة المطوّر — التسجيل يستمر، UI يُخفيه افتراضياً
+  if(_isDevUser()){
+    entry.metadata = entry.metadata || {};
+    entry.metadata.is_dev     = true;
+    entry.metadata.dev_hidden = true;
+  }
 
   // v17.3: reversible قواعد — update/bulk_update قابلة؛ create/delete/undo غير قابلة
   const reversible = (entry.action_type === 'update' || entry.action_type === 'bulk_update');
@@ -358,12 +376,30 @@ async function renderAuditLog(){
   if(window._currentUser?.role === 'supervisor'){
     filters.user_id = window._currentUser.username;
   }
+  // v20.0: إخفاء عمليات المطوّر افتراضياً (إلا لو toggle مفعّل من المطوّر)
+  if(!window._showDevAudit){
+    filters.exclude_dev = true;
+  }
 
   try {
     const res = await window.DB.Audit.getAll(filters);
     window._auditState.data     = res.data;
     window._auditState.total    = res.total;
     window._auditState.loading  = false;
+
+    // v20.0: badge 🔓 إذا وضع المطوّر مفعّل (حصراً للمطوّر)
+    const statsEl = document.getElementById('audit-stats');
+    if(statsEl){
+      const existingBadge = document.getElementById('dev-audit-badge');
+      if(existingBadge) existingBadge.remove();
+      if(window._showDevAudit && _isDevUser()){
+        const badge = document.createElement('div');
+        badge.id = 'dev-audit-badge';
+        badge.style.cssText = 'background:#c00;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;margin-bottom:10px;text-align:center';
+        badge.textContent = '🔓 وضع المطوّر مفعّل — عمليات المطوّر ظاهرة';
+        statsEl.parentNode.insertBefore(badge, statsEl);
+      }
+    }
 
     if(!res.data.length){
       results.innerHTML = `
@@ -999,3 +1035,27 @@ async function _undoAuditEntry(id){
   // ───── undo على undo (re-apply) أو أنواع أخرى ─────
   return showToast('هذا النوع غير مدعوم للتراجع حالياً', 'warning');
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// ===== v20.0: Keyboard toggle — Ctrl+Shift+D للمطوّر فقط =====
+// ═══════════════════════════════════════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  if(!(e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd'))) return;
+  if(!_isDevUser()) return; // حماية: فقط المطوّر
+  e.preventDefault();
+  window._showDevAudit = !window._showDevAudit;
+  const msg = window._showDevAudit
+    ? '🔓 وضع المطوّر: عمليات المطوّر ظاهرة'
+    : '🔒 وضع المطوّر: عمليات المطوّر مخفيّة';
+  if(typeof showToast === 'function') showToast(msg, 'info', 3000);
+  // إعادة رسم Audit tab لو مفتوح
+  const auditPanel = document.getElementById('tab-audit');
+  if(auditPanel && auditPanel.style.display !== 'none' && typeof renderAuditLog === 'function'){
+    renderAuditLog();
+  }
+  // إعادة رسم Dashboard activity لو الـ tab مفتوح
+  const dashPanel = document.getElementById('tab-dashboard');
+  if(dashPanel && dashPanel.style.display !== 'none' && typeof _renderDashActivity === 'function'){
+    _renderDashActivity();
+  }
+});

@@ -377,7 +377,8 @@ const Audit = {
 
   /**
    * v17.1: fetch with pagination + filters.
-   * @param {Object} filters — {page, pageSize, action_type, entity_type, user_id, dateFrom, dateTo, search}
+   * v20.0: exclude_dev — يستبعد سجلات السوبر أدمن المبرمج (metadata.dev_hidden=true)
+   * @param {Object} filters — {page, pageSize, action_type, entity_type, user_id, dateFrom, dateTo, search, exclude_dev}
    * @returns {Promise<{data, total, page, pageSize}>}
    */
   async getAll(filters = {}) {
@@ -390,6 +391,10 @@ const Audit = {
     if (filters.search) {
       const s = String(filters.search).replace(/[%,]/g, ' ').trim();
       if (s) q = q.or(`entity_label.ilike.%${s}%,user_name.ilike.%${s}%`);
+    }
+    // v20.0: إخفاء عمليات المطوّر — يشمل السجلات القديمة بلا metadata (is.null) + الصريحة false
+    if (filters.exclude_dev) {
+      q = q.or('metadata->>dev_hidden.is.null,metadata->>dev_hidden.eq.false');
     }
     q = q.order('timestamp', { ascending: false });
     const pageSize = filters.pageSize || 50;

@@ -207,7 +207,10 @@ async function _renderDashActivity(){
   if(!list) return;
   list.innerHTML = '<div style="text-align:center;padding:20px;color:#888">⏳ جاري التحميل...</div>';
   try {
-    const result = await window.DB.Audit.getAll({ pageSize: 10, page: 1 });
+    // v20.0: إخفاء عمليات المطوّر افتراضياً من Dashboard activity
+    const filters = { pageSize: 10, page: 1 };
+    if(!window._showDevAudit) filters.exclude_dev = true;
+    const result = await window.DB.Audit.getAll(filters);
     const activities = result.data || [];
     if(!activities.length){ list.innerHTML = '<div class="dash-alert-empty">لا توجد عمليات بعد</div>'; return; }
     const iconMap = { update:'🔄', create:'➕', delete:'🗑️', bulk_update:'⚡', bulk_delete:'🗑️', undo:'↶' };
