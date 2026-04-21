@@ -208,7 +208,7 @@ async function showCampPilgrims(campNum, location) {
       </select>
       <select id="cv-f-bus" onchange="filterCampView()" style="padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit">
         <option value="">🚌 كل الحافلات</option>
-        ${[...new Set(pilgrims.map(p=>p['رقم الحافلة الخاصة بك']).filter(Boolean))].sort((a,b)=>Number(a)-Number(b)).map(v=>`<option value="${v}">حافلة ${v}</option>`).join('')}
+        ${[...new Set(pilgrims.map(p=>p['رقم الحافلة الخاصة بك']).filter(b => b && String(b).trim() && String(b).trim() !== '-'))].sort((a,b)=>Number(a)-Number(b)).map(v=>`<option value="${v}">حافلة ${v}</option>`).join('')}
       </select>
       <button onclick="document.getElementById('cv-search').value='';['cv-f-city','cv-f-nat','cv-f-gender','cv-f-bus'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});filterCampView()"
         style="padding:7px 12px;background:#eee;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit">↺</button>
@@ -922,7 +922,7 @@ function _buildFiltersBar(data, prefix, onchange) {
   const cities = [...new Set(data.map(p=>p['المدينة']).filter(Boolean))].sort();
   const nats = [...new Set(data.map(p=>p['الجنسية']).filter(Boolean))].sort();
   const genders = [...new Set(data.map(p=>p['الجنس']).filter(Boolean))].sort();
-  const buses = [...new Set(data.map(p=>p['رقم الحافلة الخاصة بك']).filter(Boolean))].sort((a,b)=>Number(a)-Number(b));
+  const buses = [...new Set(data.map(p=>p['رقم الحافلة الخاصة بك']).filter(b => b && String(b).trim() && String(b).trim() !== '-'))].sort((a,b)=>Number(a)-Number(b));
   const sel = v => `style="padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit"`;
   return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
     <input id="${prefix}-search" type="text" placeholder="🔍 بحث بالاسم أو الهوية أو الجوال..."

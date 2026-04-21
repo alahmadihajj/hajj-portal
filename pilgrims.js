@@ -71,7 +71,8 @@ function _buildBulkValueOptions(field, valSel){
       staticOpts[field].map(v=>`<option value="${v}">${v}</option>`).join('');
     valSel.disabled = false;
   } else if(field === 'bus_num'){
-    const buses = [...new Set(ALL_DATA.map(p=>p['رقم الحافلة الخاصة بك']).filter(Boolean))].sort((a,b)=>Number(a)-Number(b));
+    // v22.5.1: استبعاد '-' والقيم الفارغة
+    const buses = [...new Set(ALL_DATA.map(p=>p['رقم الحافلة الخاصة بك']).filter(b => b && String(b).trim() && String(b).trim() !== '-'))].sort((a,b)=>Number(a)-Number(b));
     valSel.innerHTML = '<option value="">— اختر الحافلة —</option>' +
       buses.map(b=>`<option value="${b}">حافلة ${b}</option>`).join('');
     valSel.disabled = false;

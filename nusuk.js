@@ -43,7 +43,11 @@ function _hasSupervisorAck(pilgrim){
 function initNusukBusFilter() {
   const sel = document.getElementById('nusuk-bus-filter');
   if(!sel) return;
-  const buses = [...new Set(ALL_DATA.map(p=>p['رقم الحافلة الخاصة بك']).filter(Boolean))].sort();
+  // v22.5.1: استبعاد '-' والقيم الفارغة + ترتيب رقمي صحيح
+  const buses = [...new Set(
+    ALL_DATA.map(p => p['رقم الحافلة الخاصة بك'])
+      .filter(b => b && String(b).trim() && String(b).trim() !== '-')
+  )].sort((a, b) => Number(a) - Number(b));
   sel.innerHTML = '<option value="">🚌 كل الحافلات</option>' + buses.map(b=>`<option value="${b}">حافلة ${b}</option>`).join('');
 }
 

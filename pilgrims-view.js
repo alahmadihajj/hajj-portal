@@ -534,7 +534,7 @@ function showUnassignedPilgrims(location) {
             </select>
             <select id="ua-f-bus" onchange="filterUATable()" style="padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;font-family:inherit">
               <option value="">🚌 كل الحافلات</option>
-              ${[...new Set(unassigned.map(p=>p['رقم الحافلة الخاصة بك']).filter(Boolean))].sort((a,b)=>Number(a)-Number(b)).map(v=>`<option value="${v}">حافلة ${v}</option>`).join('')}
+              ${[...new Set(unassigned.map(p=>p['رقم الحافلة الخاصة بك']).filter(b => b && String(b).trim() && String(b).trim() !== '-'))].sort((a,b)=>Number(a)-Number(b)).map(v=>`<option value="${v}">حافلة ${v}</option>`).join('')}
             </select>
             <button onclick="resetUATable()" style="padding:7px 12px;background:#eee;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;white-space:nowrap">↺</button>
           </div>
