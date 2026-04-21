@@ -11195,9 +11195,19 @@ function _checkSingleMoveSplit(pilgrimId, newCamp, loc){
   const campField = loc === 'mina' ? 'mina_camp' : 'arafat_camp';
   const me = ALL_DATA.find(p => String(p['_supabase_id']) === String(pilgrimId));
   if(!me) return { willSplit: false, groupSize: 0, inOldCamp: [], inOtherCamps: [], unassigned: [], bookingKey: '' };
+  const newC = String(newCamp||'').trim();
+  // v10.6: نقل لنفس المخيم الحالي = no-op → لا تفكيك (بغضّ النظر عن حالة الزملاء)
+  const myCurrentCamp = String(me[campField]||'').trim();
+  if(myCurrentCamp === newC){
+    return {
+      willSplit: false,
+      groupSize: _getBookingMates(pilgrimId).length,
+      inOldCamp: [], inOtherCamps: [], unassigned: [],
+      bookingKey: String(me['booking_ref']||me['رقم الحجز']||'')
+    };
+  }
   const mates = _getBookingMates(pilgrimId).filter(m => String(m['_supabase_id']) !== String(pilgrimId));
   if(!mates.length) return { willSplit: false, groupSize: 1, inOldCamp: [], inOtherCamps: [], unassigned: [], bookingKey: String(me['booking_ref']||me['رقم الحجز']||'') };
-  const newC = String(newCamp||'').trim();
   const inNewCamp  = mates.filter(m => String(m[campField]||'').trim() === newC);
   const unassigned = mates.filter(m => !String(m[campField]||'').trim());
   const inOtherCamps = mates.filter(m => {
