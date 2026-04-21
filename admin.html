@@ -1842,7 +1842,10 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
           <div id="sup-company-name" style="font-size:14px;font-weight:700;margin-top:1px"></div>
         </div>
       </div>
-      <button onclick="supervisorLogout()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600">🚪 خروج</button>
+      <div style="display:flex;gap:6px">
+        <button onclick="openSupHistory()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600">📜 عملياتي</button>
+        <button onclick="supervisorLogout()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600">🚪 خروج</button>
+      </div>
     </div>
     <!-- بيانات المشرف -->
     <div style="padding:12px 20px 14px;display:flex;align-items:center;gap:10px">
@@ -1930,6 +1933,45 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       <button onclick="closeSigModal()" style="margin-top:10px;width:100%;padding:10px;background:#fff;border:1px solid #ddd;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;color:#888">إلغاء</button>
     </div>
   </div>
+
+  <!-- ===== v18.0a: Modal تاريخ عمليات المشرف ===== -->
+  <div id="sup-history-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:16px">
+    <div style="background:#fff;border-radius:16px;padding:20px;width:100%;max-width:520px;max-height:90vh;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h3 style="font-size:17px;font-weight:700;color:#3d2000;margin:0">📜 عملياتي</h3>
+        <button onclick="closeSupHistory()" style="background:#f5f5f5;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:inherit">✕</button>
+      </div>
+      <div id="sup-hist-tabs" style="display:flex;gap:4px;margin-bottom:12px;background:#f5f5f5;padding:4px;border-radius:10px">
+        <button data-period="today"     class="sup-hist-tab sup-hist-tab-active">اليوم</button>
+        <button data-period="yesterday" class="sup-hist-tab">أمس</button>
+        <button data-period="week"      class="sup-hist-tab">هذا الأسبوع</button>
+        <button data-period="all"       class="sup-hist-tab">الكل</button>
+      </div>
+      <div id="sup-hist-counter" style="font-size:12px;color:#666;margin-bottom:8px;text-align:center"></div>
+      <div id="sup-hist-loading" style="display:none;text-align:center;padding:40px;color:#888">⏳ جاري التحميل...</div>
+      <div id="sup-hist-empty"   style="display:none;text-align:center;padding:40px;color:#888">📭 لا توجد عمليات في هذه الفترة</div>
+      <div id="sup-hist-results" style="overflow-y:auto;flex:1;min-height:200px"></div>
+    </div>
+  </div>
+  <style>
+    .sup-hist-tab {
+      flex: 1;
+      padding: 8px 4px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      transition: all .2s ease;
+    }
+    .sup-hist-tab-active {
+      background: var(--gold, #c8971a);
+      color: #fff;
+    }
+  </style>
   </div>
 </div>
 
@@ -7378,6 +7420,119 @@ function supervisorLogout() {
   window._supPilgrims = [];
   window._currentUser = null;
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// ===== v18.0a: تاريخ عمليات المشرف (Supervisor History) =====
+// ═══════════════════════════════════════════════════════════════════════
+
+window._supHistState = { period: 'today', data: [] };
+
+async function openSupHistory(){
+  document.getElementById('sup-history-modal').style.display = 'flex';
+  window._supHistState.period = 'today';
+  _updateSupHistTabs();
+  await _loadSupHistory();
+}
+
+function closeSupHistory(){
+  document.getElementById('sup-history-modal').style.display = 'none';
+}
+
+function _updateSupHistTabs(){
+  document.querySelectorAll('.sup-hist-tab').forEach(btn => {
+    if(btn.dataset.period === window._supHistState.period) btn.classList.add('sup-hist-tab-active');
+    else btn.classList.remove('sup-hist-tab-active');
+  });
+}
+
+async function _loadSupHistory(){
+  const username = window._currentUser?.username;
+  if(!username){
+    document.getElementById('sup-hist-results').innerHTML = '<div style="text-align:center;padding:40px;color:#c00">لا يمكن تحديد المستخدم</div>';
+    return;
+  }
+
+  const loading = document.getElementById('sup-hist-loading');
+  const results = document.getElementById('sup-hist-results');
+  const empty   = document.getElementById('sup-hist-empty');
+  const counter = document.getElementById('sup-hist-counter');
+
+  loading.style.display = 'block';
+  results.innerHTML = '';
+  empty.style.display = 'none';
+  counter.textContent = '';
+
+  try {
+    const filters = { user_id: username, pageSize: 100, page: 1 };
+    const now = new Date();
+    if(window._supHistState.period === 'today'){
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      filters.dateFrom = todayStart.toISOString();
+    } else if(window._supHistState.period === 'yesterday'){
+      const yest = new Date(); yest.setDate(yest.getDate() - 1); yest.setHours(0,0,0,0);
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      filters.dateFrom = yest.toISOString();
+      filters.dateTo   = todayStart.toISOString();
+    } else if(window._supHistState.period === 'week'){
+      const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7); weekAgo.setHours(0,0,0,0);
+      filters.dateFrom = weekAgo.toISOString();
+    }
+    // 'all' → بدون نطاق
+
+    const result = await window.DB.Audit.getAll(filters);
+    const data = result.data || [];
+    window._supHistState.data = data;
+
+    loading.style.display = 'none';
+    counter.textContent = data.length + ' عملية';
+
+    if(!data.length){
+      empty.style.display = 'block';
+      return;
+    }
+    results.innerHTML = data.map(_buildSupHistCard).join('');
+  } catch(e){
+    console.error('[sup-history]', e);
+    loading.style.display = 'none';
+    results.innerHTML = '<div style="text-align:center;padding:40px;color:#c00">❌ خطأ في التحميل: '+((e&&e.message)||'')+'</div>';
+  }
+}
+
+function _buildSupHistCard(entry){
+  const source = (entry.metadata && entry.metadata.source) || 'unknown';
+  const labels = {
+    supervisor_bus:          { icon:'🚌', label:'إركاب',              color:'#1a7a1a' },
+    supervisor_camp:         { icon:'🏕️', label:'وصول مخيم',          color:'#1a5fa8' },
+    supervisor_nusuk:        { icon:'🪪', label:'تسليم بطاقة نسك',    color:'#7a4500' },
+    supervisor_bracelet:     { icon:'🚆', label:'تسليم أسوارة',       color:'#444'    },
+    supervisor_bulk_receive: { icon:'📦', label:'استلام جماعي',        color:'#c8971a' }
+  };
+  const s = labels[source] || { icon:'📝', label:'عملية', color:'#888' };
+  const ts = entry.timestamp ? new Date(entry.timestamp).getTime() : Date.now();
+  const time = _formatTimeAgo(ts);
+  const entityLabel = entry.entity_label || (entry.bulk_count ? (entry.bulk_count + ' حاج') : '—');
+
+  return '<div style="background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:12px;margin-bottom:8px;border-right:4px solid ' + s.color + '">'
+       +   '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+       +     '<div style="font-weight:700;color:' + s.color + ';font-size:14px">' + s.icon + ' ' + s.label + '</div>'
+       +     '<div style="font-size:11px;color:#888">' + _esc(time) + '</div>'
+       +   '</div>'
+       +   '<div style="font-size:13px;color:#333">' + _esc(entityLabel) + '</div>'
+       + '</div>';
+}
+
+// v18.0a: event delegation للـ tabs
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  if(t && t.classList && t.classList.contains('sup-hist-tab')){
+    const period = t.dataset.period;
+    if(period && period !== window._supHistState.period){
+      window._supHistState.period = period;
+      _updateSupHistTabs();
+      _loadSupHistory();
+    }
+  }
+});
 
 // ===== إعدادات النظام =====
 
