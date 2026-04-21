@@ -1939,11 +1939,28 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
     }
   </style>
 
+  <!-- v18.0c: شريط التسجيل الجماعي (يظهر عند التحديد) -->
+  <div id="sup-bulk-bar" style="display:none;padding:12px 16px;background:linear-gradient(135deg,#3d2000,#7a4500);color:#fff;margin:0 16px 12px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.2);position:sticky;top:0;z-index:100">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:14px;font-weight:700">✓ <span id="sup-bulk-count">0</span> محدّد</span>
+        <button onclick="_selectUnregistered('bus')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">تحديد غير المسجّلين (إركاب)</button>
+        <button onclick="_selectUnregistered('camp')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">تحديد غير الواصلين</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button onclick="_supBulkAction('bus')"  style="background:#1a7a1a;border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🚌 إركاب الكل</button>
+        <button onclick="_supBulkAction('camp')" style="background:#1a5fa8;border:none;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🏕️ وصول الكل</button>
+        <button onclick="_clearSupBulkSelection()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:8px 10px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
   <!-- جدول الحجاج -->
   <div style="padding:0 16px 20px;overflow-x:auto">
     <table id="sup-table" style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)">
       <thead>
         <tr style="background:linear-gradient(135deg,#3d2000,#7a4500);color:#fff">
+          <th style="width:36px;padding:10px 4px;text-align:center"><input type="checkbox" id="sup-check-all" onchange="_toggleSupCheckAll(this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:#c8971a"></th>
           <th style="padding:10px 8px;text-align:right;font-size:12px;font-weight:600">الاسم</th>
           <th style="padding:10px 8px;text-align:center;font-size:11px;font-weight:600">🚌</th>
           <th style="padding:10px 8px;text-align:center;font-size:11px;font-weight:600">🏕️</th>
@@ -7241,6 +7258,7 @@ function renderSupTable() {
     const nusukReady = p.nusuk_card_status==='موجودة';
     const braceletDone = !!p.bracelet_time;
     return `<tr style="border-bottom:1px solid #f0e8d0">
+      <td style="padding:8px 4px;text-align:center"><input type="checkbox" class="sup-row-check" data-id="${p.id}" onchange="_updateSupBulkBar()" style="width:18px;height:18px;cursor:pointer;accent-color:#c8971a"></td>
       <td style="padding:8px;font-size:12px;font-weight:600">${p.name||'—'}<br><span style="font-size:10px;color:#999;font-weight:400">${p.id_num||''}</span></td>
       <td style="padding:8px;text-align:center"><span style="background:${boarded?'#e8f8e8':'#fde8e8'};color:${boarded?'#1a7a1a':'#c00'};padding:3px 8px;border-radius:20px;font-size:11px">${boarded?'✅':'⏳'}</span></td>
       <td style="padding:8px;text-align:center"><span style="background:${arrived?'#e8f0fd':'#fde8e8'};color:${arrived?'#1a5fa8':'#c00'};padding:3px 8px;border-radius:20px;font-size:11px">${arrived?'✅':'⏳'}</span></td>
@@ -7253,6 +7271,7 @@ function renderSupTable() {
   }).join('');
 
   _countSupFilters();
+  _updateSupBulkBar();
 }
 
 // v18.0b: حساب counter لكل فلتر (يُستدعى بعد كل renderSupTable)
@@ -7512,6 +7531,136 @@ function supervisorLogout() {
   document.getElementById('login-screen').style.display = 'flex';
   window._supPilgrims = [];
   window._currentUser = null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ===== v18.0c: تسجيل جماعي من الجدول =====
+// ═══════════════════════════════════════════════════════════════════════
+
+function _updateSupBulkBar(){
+  const checked = document.querySelectorAll('.sup-row-check:checked');
+  const bar = document.getElementById('sup-bulk-bar');
+  const countEl = document.getElementById('sup-bulk-count');
+  if(countEl) countEl.textContent = checked.length;
+  if(bar) bar.style.display = checked.length > 0 ? 'block' : 'none';
+  const all = document.querySelectorAll('.sup-row-check');
+  const allEl = document.getElementById('sup-check-all');
+  if(allEl && all.length > 0){
+    allEl.checked = checked.length === all.length;
+    allEl.indeterminate = checked.length > 0 && checked.length < all.length;
+  } else if(allEl){
+    allEl.checked = false; allEl.indeterminate = false;
+  }
+}
+
+function _toggleSupCheckAll(checked){
+  document.querySelectorAll('.sup-row-check').forEach(cb => { cb.checked = checked; });
+  _updateSupBulkBar();
+}
+
+function _clearSupBulkSelection(){
+  document.querySelectorAll('.sup-row-check').forEach(cb => cb.checked = false);
+  const allEl = document.getElementById('sup-check-all');
+  if(allEl){ allEl.checked = false; allEl.indeterminate = false; }
+  _updateSupBulkBar();
+}
+
+function _selectUnregistered(action){
+  _clearSupBulkSelection();
+  document.querySelectorAll('.sup-row-check').forEach(cb => {
+    const pid = cb.dataset.id;
+    const p = (window._supPilgrims || []).find(x => String(x.id) === String(pid));
+    if(!p) return;
+    let shouldSelect = false;
+    if(action === 'bus')       shouldSelect = p.bus_status  !== 'ركب';
+    else if(action === 'camp') shouldSelect = p.camp_status !== 'حضر';
+    if(shouldSelect) cb.checked = true;
+  });
+  _updateSupBulkBar();
+}
+
+async function _supBulkAction(action){
+  const checked = [...document.querySelectorAll('.sup-row-check:checked')].map(cb => cb.dataset.id);
+  if(!checked.length){ showToast('حدّد حاجاً واحداً على الأقل', 'warning'); return; }
+
+  const labels = {
+    bus:  { icon:'🚌', action:'تسجيل إركاب', value:'ركب', field:'bus_status' },
+    camp: { icon:'🏕️', action:'تسجيل وصول', value:'حضر', field:'camp_status' }
+  };
+  const L = labels[action];
+  if(!L) return;
+
+  const confirmed = await showConfirm(
+    `سيتم ${L.action} لـ ${checked.length} حاج.`,
+    `${L.icon} تأكيد العملية`,
+    'نعم، نفّذ',
+    '#c8971a',
+    L.icon
+  );
+  if(!confirmed) return;
+
+  showToast(`جاري ${L.action}...`, 'info');
+
+  const bulkSession = (crypto.randomUUID && crypto.randomUUID())
+    || ('bulk-' + Date.now() + '-' + Math.random().toString(36).substring(2,10));
+
+  let ok = 0, fail = 0;
+  for(const pid of checked){
+    const p = (window._supPilgrims || []).find(x => String(x.id) === String(pid));
+    const before = { [L.field]: p ? (p[L.field] ?? null) : null };
+    const updates = { [L.field]: L.value };
+    try {
+      await window.DB.Pilgrims.update(parseInt(pid), updates);
+      if(p) p[L.field] = L.value;
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(pid),
+        entity_label: _buildPilgrimLabel(p || { name: '—', id_num: pid }),
+        field_changes: _buildFieldChanges(before, updates),
+        metadata: {
+          source: 'supervisor_' + action,
+          bulk_session: bulkSession,
+          bulk_target_field: L.field,
+          bulk_target_value: L.value,
+          bulk_total_count: checked.length,
+          ui_path: 'supervisor_table_bulk'
+        }
+      });
+      ok++;
+    } catch(e){
+      fail++;
+      console.error('[sup-bulk]', 'pilgrim_id:'+pid, 'error:'+e.message);
+    }
+  }
+
+  // صف ملخّص جماعي (لو نجح واحد على الأقل)
+  if(ok > 0){
+    _recordAudit({
+      action_type:  'bulk_update',
+      entity_type:  'pilgrim',
+      entity_id:    null,
+      entity_label: `${L.icon} ${L.action} جماعي — ${ok} حاج`,
+      field_changes: { [L.field]: { before: null, after: L.value, note: 'bulk' } },
+      bulk_ids:   checked,
+      bulk_count: ok,
+      metadata: {
+        source: 'supervisor_' + action,
+        bulk_session: bulkSession,
+        bulk_target_field: L.field,
+        bulk_target_value: L.value,
+        bulk_total_count: ok,
+        ui_path: 'supervisor_table_bulk'
+      }
+    });
+  }
+
+  _clearSupBulkSelection();
+  renderSupTable();
+  updateSupStats();
+
+  if(fail === 0) showToast(`تم ${L.action} بنجاح لـ ${ok} حاج`, 'success');
+  else           showToast(`نجح ${ok} • فشل ${fail} (راجع console)`, 'warning');
 }
 
 // ═══════════════════════════════════════════════════════════════════════
