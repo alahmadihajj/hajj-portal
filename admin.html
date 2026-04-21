@@ -2010,6 +2010,24 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       /* v22.10: تبديل الجدول بـ بطاقات .item-card للجوال */
       #sup-table-wrap { display: none !important; }
       #sup-cards-wrap { display: flex !important; }
+      /* v22.11: منع .item-card في بوابة المشرف من الانقلاب عمودياً */
+      /* override لقاعدة السطر 778 @media(max-width:600px) */
+      #sup-cards-wrap .item-card {
+        flex-direction: row !important;
+        align-items: flex-start !important;
+      }
+      #sup-cards-wrap .item-card-body {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+      }
+      #sup-cards-wrap .item-card-title {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      }
+      #sup-cards-wrap .item-card-actions {
+        width: auto !important;
+        flex-shrink: 0 !important;
+      }
 
       /* Modal العمليات على الجوال */
       #sup-modal > div {

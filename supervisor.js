@@ -325,18 +325,19 @@ function _renderSupCards(list, hasNusuk, hasBracelet){
       ? (braceletDone ? chip('#e8f8e8','#1a7a1a','🚆 مسلّمة') : chip('#f5f5f5','#888','🚆 —'))
       : '';
 
-    return `<div class="item-card">
-      <div class="item-card-body">
+    // v22.11: inline defensive — min-width:0 + flex-direction:row + word-wrap
+    return `<div class="item-card" style="flex-direction:row !important;align-items:flex-start">
+      <div class="item-card-body" style="min-width:0;flex:1 1 auto">
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-          <input type="checkbox" class="sup-row-check" data-id="${p.id}" onchange="_updateSupBulkBar()" style="width:18px;height:18px;cursor:pointer;accent-color:#c8971a">
-          <div class="item-card-title" style="margin:0">${_esc(p.name||'—')}</div>
+          <input type="checkbox" class="sup-row-check" data-id="${p.id}" onchange="_updateSupBulkBar()" style="width:18px;height:18px;cursor:pointer;accent-color:#c8971a;flex-shrink:0">
+          <div class="item-card-title" style="margin:0;word-wrap:break-word;overflow-wrap:break-word;min-width:0">${_esc(p.name||'—')}</div>
         </div>
         <div class="item-card-sub" style="direction:ltr;text-align:right">🪪 ${_esc(p.id_num||'—')}</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
           ${busChip}${campChip}${nusukChip}${braceletChip}
         </div>
       </div>
-      <div class="item-card-actions">
+      <div class="item-card-actions" style="flex-shrink:0;width:auto">
         <button class="btn-edit" onclick="openQuickAction('${p.id}')" title="تسجيل / تعديل">✏️</button>
       </div>
     </div>`;
