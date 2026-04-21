@@ -19,6 +19,22 @@ const NUSUK_STATUSES = ['لم تطبع','في الطباعة','موجودة لد
 const NUSUK_COLORS  = ['#888','#1a5fa8','#c8971a','#7a4500','#1a7a1a'];
 const NUSUK_BG      = ['#f5f5f5','#e8f0fd','#fff3e0','#fdf0e0','#e8f8e8'];
 
+// ═══════════════════════════════════════════════════════════════════════
+// v20.2 Phase 1: قواعد حماية البطاقات الموقَّعة
+// ═══════════════════════════════════════════════════════════════════════
+// يدعم ALL_DATA shape (Arabic keys) + supervisor shape (English keys)
+function _isNusukLocked(pilgrim){
+  if(!pilgrim) return false;
+  return !!(pilgrim['نسك_sig'] || pilgrim.nusuk_card_sig);
+}
+function _isSuperAdmin(){
+  return !!(window._currentUser && window._currentUser.role === 'superadmin');
+}
+function _canReopenNusuk(){
+  const r = window._currentUser && window._currentUser.role;
+  return r === 'admin' || r === 'superadmin';
+}
+
 function initNusukBusFilter() {
   const sel = document.getElementById('nusuk-bus-filter');
   if(!sel) return;
@@ -216,8 +232,24 @@ function clearNusukSelection() {
 async function applyBulkNusuk() {
   const status = document.getElementById('nusuk-bulk-status').value;
   if(!status) { showToast('اختر الحالة الجديدة أولاً', 'warning'); return; }
-  const ids = [...document.querySelectorAll('.nusuk-row-check:checked')].map(c=>c.dataset.id);
-  if(!ids.length) return;
+  const allIds = [...document.querySelectorAll('.nusuk-row-check:checked')].map(c=>c.dataset.id);
+  if(!allIds.length) return;
+
+  // v20.2: فلترة المقفولة (superadmin يتجاوز)
+  const isSuper = _isSuperAdmin();
+  const lockedSkipped = [];
+  const ids = allIds.filter(id => {
+    const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(id));
+    const current = r?.['حالة بطاقة نسك'] || 'لم تطبع';
+    const locked = _isNusukLocked(r) && current !== status;
+    if(locked && !isSuper){ lockedSkipped.push(id); return false; }
+    return true;
+  });
+
+  if(!ids.length){
+    showToast(`🔒 جميع المحدَّدين (${lockedSkipped.length}) موقَّعون — استخدم 🔓 فتح القفل للتعديل`, 'warning');
+    return;
+  }
 
   // v20.1: snapshot قبل التحديث لكل حاج (لـ audit)
   const beforeMap = new Map();
@@ -243,6 +275,10 @@ async function applyBulkNusuk() {
       bulk_target_value: status,
       bulk_total_count: ids.length
     };
+    if(isSuper && lockedSkipped.length === 0 && allIds.some(id => {
+      const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(id));
+      return _isNusukLocked(r);
+    })) bulkMeta.bypass_lock = true;
     ids.forEach(id => {
       const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(id));
       const changes = _buildFieldChanges(beforeMap.get(String(id)) || {}, { nusuk_card_status: status });
@@ -267,15 +303,26 @@ async function applyBulkNusuk() {
       metadata: bulkMeta
     });
 
-    showToast(`✅ تم تحديث ${ids.length} حاج`, 'success');
+    const skipMsg = lockedSkipped.length ? ` • تم تخطّي ${lockedSkipped.length} موقَّع` : '';
+    showToast(`✅ تم تحديث ${ids.length} حاج${skipMsg}`, lockedSkipped.length ? 'warning' : 'success');
     clearNusukSelection();
     renderNusukTable(window._nusukFilter);
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
 
 async function quickNusukUpdate(pilgrimId, status, selectEl) {
+  const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId))||{};
+  const currentStatus = pilgrim['حالة بطاقة نسك']||'لم تطبع';
+
+  // v20.2: فحص القفل — superadmin يتجاوز مع bypass_lock في audit
+  const bypassLock = _isNusukLocked(pilgrim) && status !== currentStatus && _isSuperAdmin();
+  if(_isNusukLocked(pilgrim) && status !== currentStatus && !_isSuperAdmin()){
+    if(selectEl) selectEl.value = currentStatus;
+    showToast('🔒 البطاقة موقَّعة — استخدم 🔓 فتح القفل من Quick Edit', 'warning');
+    return;
+  }
+
   if(status==='موجودة لدى المشرف'||status==='مسلّمة للحاج') {
-    const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId))||{};
     if(status==='موجودة لدى المشرف') { openSupAck(pilgrimId, pilgrim); return; }
     if(status==='مسلّمة للحاج') { openPilgrimAck(pilgrimId, pilgrim); return; }
   }
@@ -283,7 +330,23 @@ async function quickNusukUpdate(pilgrimId, status, selectEl) {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), { nusuk_card_status: status });
     const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
     if(r) r['حالة بطاقة نسك'] = status;
-    showToast('تم تحديث الحالة', 'success');
+
+    // v20.2: audit — يشمل bypass_lock للـ superadmin
+    const changes = _buildFieldChanges({ nusuk_card_status: currentStatus }, { nusuk_card_status: status });
+    if(changes){
+      const meta = { source: 'admin_nusuk_quick' };
+      if(bypassLock) meta.bypass_lock = true;
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(pilgrimId),
+        entity_label: _buildPilgrimLabel(r),
+        field_changes: changes,
+        metadata: meta
+      });
+    }
+
+    showToast(bypassLock ? '⚡ تم التعديل (تجاوز قفل — superadmin)' : 'تم تحديث الحالة', 'success');
     renderNusukTable(window._nusukFilter);
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }

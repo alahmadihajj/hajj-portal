@@ -425,6 +425,13 @@ async function openPilgrimAssign(pilgrimId) {
   const currentMinaCamp = minaCamps.find(c => (c.camp_num||c.name) === pilgrim['mina_camp']);
   const currentArafatCamp = arafatCamps.find(c => (c.camp_num||c.name) === pilgrim['arafat_camp']);
 
+  // v20.2: حالة قفل بطاقة نسك + صلاحيات
+  const nusukLocked = _isNusukLocked(pilgrim);
+  const canReopen = nusukLocked && _canReopenNusuk();
+  const canEditLocked = nusukLocked && _isSuperAdmin();
+  const nusukDisabled = nusukLocked && !canEditLocked;
+  const nusukSigTime = pilgrim['نسك_time'] || '';
+
   openModal(`
     <h3 class="modal-title">✏️ تسكين الحاج: ${pilgrim['اسم الحاج']||''}</h3>
     <div style="background:#fffbf0;border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:#666">
@@ -487,14 +494,20 @@ async function openPilgrimAssign(pilgrimId) {
     <hr style="border:none;border-top:1px solid #eee;margin:16px 0">
     <div style="background:#fffbf0;border-radius:10px;padding:14px">
       <div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:10px">🪪 حالة بطاقة نسك</div>
-      <select id="pa-nusuk-status" style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit">
+      ${nusukLocked ? `<div style="background:#fff3e0;border:1px solid #c8971a;border-radius:8px;padding:10px 12px;font-size:12px;color:#7a4500;margin-bottom:10px;direction:rtl;line-height:1.7">
+        🔒 <strong>البطاقة موقَّعة</strong>${nusukSigTime?' في '+nusukSigTime:''} — ${canReopen?'استخدم زر <strong>🔓 فتح القفل</strong> للتعديل':'راجع الإدارة لفتح القفل'}
+      </div>` : ''}
+      <select id="pa-nusuk-status" ${nusukDisabled?'disabled':''} style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit${nusukDisabled?';background:#f0f0f0;cursor:not-allowed;color:#888':''}">
         <option value="لم تطبع" ${(pilgrim['حالة بطاقة نسك']||'لم تطبع')==='لم تطبع'?'selected':''}>⬜ لم تطبع</option>
         <option value="في الطباعة" ${pilgrim['حالة بطاقة نسك']==='في الطباعة'?'selected':''}>🔄 في الطباعة</option>
         <option value="موجودة لدى الإدارة" ${pilgrim['حالة بطاقة نسك']==='موجودة لدى الإدارة'?'selected':''}>📦 موجودة لدى الإدارة</option>
         <option value="موجودة لدى المشرف" ${pilgrim['حالة بطاقة نسك']==='موجودة لدى المشرف'?'selected':''}>👤 موجودة لدى المشرف</option>
         <option value="مسلّمة للحاج" ${pilgrim['حالة بطاقة نسك']==='مسلّمة للحاج'?'selected':''}>✅ مسلّمة للحاج</option>
       </select>
-      <button onclick="saveNusukStatus(${pilgrimId})" style="margin-top:10px;width:100%;padding:10px;background:#7a4500;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">💾 حفظ حالة البطاقة</button>
+      <div style="display:grid;grid-template-columns:${canReopen?'1fr auto':'1fr'};gap:8px;margin-top:10px">
+        <button onclick="saveNusukStatus(${pilgrimId})" ${nusukDisabled?'disabled':''} style="padding:10px;background:${nusukDisabled?'#ccc':'#7a4500'};color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:${nusukDisabled?'not-allowed':'pointer'};font-family:inherit">💾 حفظ حالة البطاقة</button>
+        ${canReopen?`<button onclick="openNusukReopenModal(${pilgrimId})" style="padding:10px 14px;background:#c00;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap" title="إعادة فتح البطاقة للتعديل">🔓 فتح القفل</button>`:''}
+      </div>
     </div>`);
 
   // حفظ البيانات للتحديث عند تغيير المخيم
@@ -629,6 +642,16 @@ function updateArafatBeds() {
 async function saveNusukStatus(pilgrimId) {
   const status = document.getElementById('pa-nusuk-status').value;
   const pilgrim = ALL_DATA.find(r=>String(r['_supabase_id'])===String(pilgrimId))||{};
+  const currentStatus = pilgrim['حالة بطاقة نسك']||'لم تطبع';
+
+  // v20.2: فحص القفل — superadmin يتجاوز مع bypass_lock
+  const bypassLock = _isNusukLocked(pilgrim) && status !== currentStatus && _isSuperAdmin();
+  if(_isNusukLocked(pilgrim) && status !== currentStatus && !_isSuperAdmin()){
+    showToast('🔒 البطاقة موقَّعة — استخدم 🔓 فتح القفل', 'warning');
+    const sel = document.getElementById('pa-nusuk-status');
+    if(sel) sel.value = currentStatus;
+    return;
+  }
 
   // إذا تغيرت الحالة إلى "موجودة لدى المشرف" → فتح إقرار المشرف
   if(status === 'موجودة لدى المشرف') {
@@ -648,9 +671,159 @@ async function saveNusukStatus(pilgrimId) {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), { nusuk_card_status: status });
     const r = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
     if(r) r['حالة بطاقة نسك'] = status;
-    showToast('تم تحديث حالة البطاقة', 'success');
+
+    // v20.2: audit — يشمل bypass_lock للـ superadmin
+    const changes = _buildFieldChanges({ nusuk_card_status: currentStatus }, { nusuk_card_status: status });
+    if(changes){
+      const meta = { source: 'admin_nusuk_quick' };
+      if(bypassLock) meta.bypass_lock = true;
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(pilgrimId),
+        entity_label: _buildPilgrimLabel(r),
+        field_changes: changes,
+        metadata: meta
+      });
+    }
+
+    showToast(bypassLock ? '⚡ تم التعديل (تجاوز قفل — superadmin)' : 'تم تحديث حالة البطاقة', 'success');
     closeModals(); render();
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// v20.2 Phase 1: إعادة فتح بطاقة نسك (Reopen Flow)
+// ═══════════════════════════════════════════════════════════════════════
+const NUSUK_REOPEN_REASONS = [
+  { key:'damage',  label:'🔧 تلف البطاقة',              target:'في الطباعة',          hint:'البطاقة تالفة — تحتاج طبع جديد' },
+  { key:'lost',    label:'❌ فقدان البطاقة',            target:'في الطباعة',          hint:'البطاقة مفقودة — تحتاج طبع بديل' },
+  { key:'wrong',   label:'⚠️ خطأ في التسليم لحاج خاطئ', target:'موجودة لدى المشرف',   hint:'البطاقة سليمة — إعادة تسليم لحاج صحيح' },
+  { key:'correct', label:'✏️ تصحيح بيانات الحاج',       target:'موجودة لدى المشرف',   hint:'البطاقة سليمة — تحديث إجراء إداري' },
+  { key:'other',   label:'💬 سبب آخر',                  target:'موجودة لدى المشرف',   hint:'تفاصيل إلزامية (≥10 حرف)' }
+];
+
+function openNusukReopenModal(pilgrimId){
+  const pilgrim = ALL_DATA.find(r=>String(r['_supabase_id'])===String(pilgrimId))||{};
+  const currentStatus = pilgrim['حالة بطاقة نسك']||'—';
+  const sigTime = pilgrim['نسك_time']||'—';
+
+  const reasonsHtml = NUSUK_REOPEN_REASONS.map((r,i) => `
+    <label data-reason-row="${i}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid ${i===0?'#c8971a':'#e0e0e0'};background:${i===0?'#fff3e0':'#fff'};border-radius:8px;cursor:pointer;margin-bottom:6px;transition:all 0.15s" onclick="_selectReopenReason(${i})">
+      <input type="radio" name="reopen-reason" value="${r.key}" ${i===0?'checked':''} style="width:18px;height:18px;accent-color:#c00;cursor:pointer">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:#333">${r.label}</div>
+        <div style="font-size:11px;color:#888;margin-top:3px">→ الحالة الجديدة: <strong style="color:#7a4500">${r.target}</strong> &nbsp;•&nbsp; ${r.hint}</div>
+      </div>
+    </label>
+  `).join('');
+
+  openModal(`
+    <h3 class="modal-title" style="color:#c00">🔓 فتح قفل بطاقة نسك</h3>
+    <div style="background:#fff3e0;border:1px solid #c8971a;border-radius:10px;padding:12px;font-size:12px;line-height:1.9;color:#7a4500;margin-bottom:14px;direction:rtl">
+      <strong>الحاج:</strong> ${_esc(pilgrim['اسم الحاج']||'—')}<br>
+      <strong>رقم الهوية:</strong> ${_esc(pilgrim['رقم الهوية']||'—')}<br>
+      <strong>الحالة الحالية:</strong> ${_esc(currentStatus)}<br>
+      <strong>التوقيع مسجَّل:</strong> ${_esc(sigTime)}<br>
+      <em style="color:#c00;display:block;margin-top:6px">⚠️ سيتم حذف التوقيع ووقت التسليم، وتحديث الحالة حسب السبب المختار.</em>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:8px">اختر سبب إعادة الفتح:</div>
+    <div id="reopen-reasons">${reasonsHtml}</div>
+    <div style="margin-top:12px">
+      <label style="font-size:12px;font-weight:700;color:#3d2000;display:block">تفاصيل إضافية <span id="reopen-required" style="color:#c00;display:none;font-weight:400">(إلزامي ≥10 حرف)</span></label>
+      <textarea id="reopen-details" placeholder="اكتب تفاصيل السبب..." style="width:100%;min-height:70px;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;margin-top:6px;direction:rtl;resize:vertical" oninput="_checkReopenDetails()"></textarea>
+    </div>
+    <div class="modal-btns" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button onclick="confirmNusukReopen(${pilgrimId})" id="reopen-confirm-btn" style="padding:11px;background:#c00;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🔓 تأكيد فتح القفل</button>
+      <button onclick="closeModals()" style="padding:11px;background:#f5f5f5;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">إلغاء</button>
+    </div>
+  `);
+}
+
+function _selectReopenReason(idx){
+  document.querySelectorAll('[data-reason-row]').forEach(el => {
+    el.style.background = '#fff';
+    el.style.borderColor = '#e0e0e0';
+  });
+  const row = document.querySelector('[data-reason-row="'+idx+'"]');
+  if(row){ row.style.background='#fff3e0'; row.style.borderColor='#c8971a'; }
+  const radio = row && row.querySelector('input');
+  if(radio) radio.checked = true;
+  _checkReopenDetails();
+}
+
+function _checkReopenDetails(){
+  const reason = document.querySelector('input[name="reopen-reason"]:checked')?.value;
+  const details = (document.getElementById('reopen-details')?.value || '').trim();
+  const hint = document.getElementById('reopen-required');
+  const btn = document.getElementById('reopen-confirm-btn');
+  if(!hint || !btn) return;
+  if(reason === 'other'){
+    hint.style.display = 'inline';
+    const ok = details.length >= 10;
+    hint.style.color = ok ? '#1a7a1a' : '#c00';
+    btn.disabled = !ok;
+    btn.style.opacity = ok ? '1' : '0.5';
+    btn.style.cursor = ok ? 'pointer' : 'not-allowed';
+  } else {
+    hint.style.display = 'none';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  }
+}
+
+async function confirmNusukReopen(pilgrimId){
+  const reasonKey = document.querySelector('input[name="reopen-reason"]:checked')?.value;
+  const details = (document.getElementById('reopen-details')?.value || '').trim();
+  const reasonDef = NUSUK_REOPEN_REASONS.find(r=>r.key===reasonKey);
+  if(!reasonDef){ showToast('اختر سبباً', 'warning'); return; }
+  if(reasonKey === 'other' && details.length < 10){
+    showToast('تفاصيل "سبب آخر" إلزامية (≥10 حرف)', 'warning');
+    return;
+  }
+
+  const pilgrim = ALL_DATA.find(r=>String(r['_supabase_id'])===String(pilgrimId))||{};
+  const oldStatus = pilgrim['حالة بطاقة نسك']||null;
+  const oldSig    = pilgrim['نسك_sig']||null;
+  const oldTime   = pilgrim['نسك_time']||null;
+
+  const updates = {
+    nusuk_card_status: reasonDef.target,
+    nusuk_card_sig:    null,
+    nusuk_card_time:   null
+  };
+
+  try {
+    await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+    pilgrim['حالة بطاقة نسك'] = reasonDef.target;
+    pilgrim['نسك_sig']         = '';
+    pilgrim['نسك_time']        = '';
+
+    // v20.2: audit reopen — مع السبب والتفاصيل + old_status
+    _recordAudit({
+      action_type:  'update',
+      entity_type:  'pilgrim',
+      entity_id:    String(pilgrimId),
+      entity_label: _buildPilgrimLabel(pilgrim),
+      field_changes: {
+        nusuk_card_status: { before: oldStatus, after: reasonDef.target },
+        nusuk_card_sig:    { before: oldSig,    after: null },
+        nusuk_card_time:   { before: oldTime,   after: null }
+      },
+      metadata: {
+        source: 'admin_nusuk_reopen',
+        reason_key:     reasonKey,
+        reason_label:   reasonDef.label,
+        reason_details: details || null,
+        old_status:     oldStatus
+      }
+    });
+
+    closeModals();
+    showToast(`✅ تم فتح القفل — الحالة الآن: ${reasonDef.target}`, 'success');
+    render();
+  } catch(e){ showToast('خطأ: '+e.message, 'error'); }
 }
 
 // ===== إقرار المشرف =====
@@ -706,15 +879,20 @@ async function confirmSupAck(pilgrimId) {
     }
 
     // v20.1: audit (sig مقنّع تلقائياً عبر _maskSensitiveInChanges في _recordAudit)
+    // v20.2: bypass_lock عند تجاوز superadmin لقفل 'مسلّمة للحاج'
     const changes = _buildFieldChanges(before, updates);
     if(changes){
+      const meta = { source: 'admin_nusuk_supervisor_receive' };
+      if(_isSuperAdmin() && before.nusuk_card_sig && before.nusuk_card_status === 'مسلّمة للحاج'){
+        meta.bypass_lock = true;
+      }
       _recordAudit({
         action_type:  'update',
         entity_type:  'pilgrim',
         entity_id:    String(pilgrimId),
         entity_label: _buildPilgrimLabel(r),
         field_changes: changes,
-        metadata: { source: 'admin_nusuk_supervisor_receive' }
+        metadata: meta
       });
     }
 
@@ -788,15 +966,20 @@ async function confirmPilgrimAck(pilgrimId) {
     }
 
     // v20.1: audit (sig مقنّع تلقائياً عبر _maskSensitiveInChanges في _recordAudit)
+    // v20.2: bypass_lock عند تجاوز superadmin لقفل 'مسلّمة للحاج' (إعادة توقيع)
     const changes = _buildFieldChanges(before, updates);
     if(changes){
+      const meta = { source: 'admin_nusuk_pilgrim_receive' };
+      if(_isSuperAdmin() && before.nusuk_card_sig && before.nusuk_card_status === 'مسلّمة للحاج'){
+        meta.bypass_lock = true;
+      }
       _recordAudit({
         action_type:  'update',
         entity_type:  'pilgrim',
         entity_id:    String(pilgrimId),
         entity_label: _buildPilgrimLabel(r),
         field_changes: changes,
-        metadata: { source: 'admin_nusuk_pilgrim_receive' }
+        metadata: meta
       });
     }
 

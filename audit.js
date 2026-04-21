@@ -249,16 +249,21 @@ const AUDIT_ENTITY_LABELS = {
 const HIDDEN_AUDIT_FIELDS = new Set(['mina_seat','arafat_seat']);
 
 // v17.2 + v17.3: تسميات المصادر — تُستخدم في ملخّص البطاقة + CSV export
+// v20.1/v20.2: إضافة مصادر نسك الإدارية (bulk/receive/reopen)
 const AUDIT_SOURCE_LABELS = {
-  supervisor_bus:          'تسجيل إركاب 🚌',
-  supervisor_camp:         'تسجيل وصول المخيم 🏕️',
-  supervisor_nusuk:        'تسليم بطاقة نسك 🪪',
-  supervisor_bracelet:     'تسليم أسوارة 🚆',
-  supervisor_bulk_receive: 'استلام جماعي 📦',
-  admin_camps:             'إدارة المخيمات 🏕️',
-  admin_groups:            'إدارة الأفواج 👥',
-  admin_buses:             'إدارة الحافلات 🚌',
-  admin_users:             'إدارة المستخدمين 👤'
+  supervisor_bus:                   'تسجيل إركاب 🚌',
+  supervisor_camp:                  'تسجيل وصول المخيم 🏕️',
+  supervisor_nusuk:                 'تسليم بطاقة نسك 🪪',
+  supervisor_bracelet:              'تسليم أسوارة 🚆',
+  supervisor_bulk_receive:          'استلام جماعي 📦',
+  admin_camps:                      'إدارة المخيمات 🏕️',
+  admin_groups:                     'إدارة الأفواج 👥',
+  admin_buses:                      'إدارة الحافلات 🚌',
+  admin_users:                      'إدارة المستخدمين 👤',
+  admin_nusuk_bulk:                 'تحديث جماعي نسك 📦',
+  admin_nusuk_supervisor_receive:   'استلام مشرف للبطاقة 👤',
+  admin_nusuk_pilgrim_receive:      'تسليم بطاقة للحاج 🪪',
+  admin_nusuk_reopen:               'فتح قفل بطاقة نسك 🔓'
 };
 
 // ─────── صلاحيات ───────
