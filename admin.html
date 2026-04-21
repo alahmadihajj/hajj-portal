@@ -1285,6 +1285,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15/Sortable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -2081,7 +2082,8 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
 
   <!-- تبويبات -->
   <div class="nav-tabs nav-tabs-wrap" style="display:flex;background:#fff;border-bottom:2px solid #e0d5c5;padding:0 20px;overflow-x:auto;flex-wrap:nowrap">
-    <button id="tab-data-btn" onclick="switchTab('data')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:var(--gold,#b8860b);border-bottom:3px solid var(--gold,#b8860b);margin-bottom:-2px;white-space:nowrap">📊 بيانات الحجاج</button>
+    <button id="tab-dashboard-btn" onclick="switchTab('dashboard')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:var(--gold,#b8860b);border-bottom:3px solid var(--gold,#b8860b);margin-bottom:-2px;white-space:nowrap">📊 لوحة المعلومات</button>
+    <button id="tab-data-btn" onclick="switchTab('data')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">👥 بيانات الحجاج</button>
     <button id="tab-settings-btn" onclick="switchTab('settings')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">⚙️ إعدادات النظام</button>
     <button id="tab-housing-btn" onclick="switchTab('housing')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">🗂️ الإدارة والخدمات</button>
     <button id="tab-staff-btn" onclick="switchTab('staff')" style="padding:12px 16px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:#888;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap">👨‍💼 إدارة الموظفين</button>
@@ -2819,7 +2821,75 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   </div>
 
   <!-- لوحة البيانات -->
-  <div id="tab-data" style="background:var(--surface-3);min-height:calc(100vh - 60px)">
+  <!-- ===== v19.0: تبويب لوحة المعلومات ===== -->
+  <div id="tab-dashboard" style="display:block;padding:20px;max-width:1400px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <h2 style="font-size:22px;font-weight:800;color:var(--brown,#3d2000);margin:0">📊 لوحة المعلومات</h2>
+      <button onclick="renderDashboard()" style="padding:8px 14px;background:var(--gold,#c8971a);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600">🔄 تحديث</button>
+    </div>
+    <div id="dash-kpi-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px"></div>
+    <div id="dash-charts-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px;margin-bottom:24px">
+      <div class="dash-chart-card"><h3>👥 الجنسيات</h3><canvas id="dash-chart-nationality"></canvas></div>
+      <div class="dash-chart-card"><h3>📋 حالات الحجز</h3><canvas id="dash-chart-booking"></canvas></div>
+      <div class="dash-chart-card"><h3>🕋 نوع الحاج</h3><canvas id="dash-chart-type"></canvas></div>
+      <div class="dash-chart-card"><h3>🏕️ إشغال المخيمات</h3><canvas id="dash-chart-camps"></canvas></div>
+    </div>
+    <div id="dash-bottom-row" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+      <div class="dash-panel">
+        <h3 style="margin:0 0 14px 0;font-size:16px;color:var(--brown,#3d2000)">🚨 تنبيهات حرجة</h3>
+        <div id="dash-alerts-list"></div>
+      </div>
+      <div class="dash-panel">
+        <h3 style="margin:0 0 14px 0;font-size:16px;color:var(--brown,#3d2000);display:flex;justify-content:space-between;align-items:center">
+          <span>🕐 آخر النشاطات</span>
+          <button onclick="switchTab('audit')" style="padding:4px 10px;background:transparent;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-family:inherit;font-size:11px;color:#666">عرض الكل ←</button>
+        </h3>
+        <div id="dash-activity-list"></div>
+      </div>
+    </div>
+    <div class="dash-panel">
+      <h3 style="margin:0 0 14px 0;font-size:16px;color:var(--brown,#3d2000)">⚡ اختصارات سريعة</h3>
+      <div id="dash-quick-actions" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px"></div>
+    </div>
+  </div>
+  <style>
+    .dash-panel { background: var(--surface,#fff); border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+    .dash-chart-card { background: var(--surface,#fff); border-radius:12px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+    .dash-chart-card h3 { font-size:14px; color:var(--brown,#3d2000); margin:0 0 12px 0; text-align:center; font-weight:700; }
+    .dash-chart-card canvas { max-height:280px; }
+    .dash-kpi-card { background:var(--surface,#fff); border-radius:12px; padding:18px; box-shadow:0 2px 8px rgba(0,0,0,.06); border-right:4px solid var(--gold,#c8971a); transition:all .25s ease; }
+    .dash-kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+    .dash-kpi-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .dash-kpi-icon { font-size:24px; }
+    .dash-kpi-value { font-size:30px; font-weight:800; color:var(--brown,#3d2000); line-height:1.1; }
+    .dash-kpi-label { font-size:12px; color:#666; margin-top:4px; }
+    .dash-kpi-progress { height:4px; background:#f0f0f0; border-radius:2px; margin-top:10px; overflow:hidden; }
+    .dash-kpi-progress-bar { height:100%; border-radius:2px; transition: width .5s ease; }
+    .dash-alert-item { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:8px; margin-bottom:6px; cursor:pointer; transition: all .2s; background:#fafafa; }
+    .dash-alert-item:hover { background:#f0f0f0; transform:translateX(-2px); }
+    .dash-alert-high   { border-right:4px solid #c00; }
+    .dash-alert-medium { border-right:4px solid #c07000; }
+    .dash-alert-low    { border-right:4px solid #1a5fa8; }
+    .dash-alert-icon { font-size:16px; }
+    .dash-alert-text { flex:1; font-size:13px; font-weight:600; color:#333; }
+    .dash-alert-action { padding:4px 10px; border:1px solid #ddd; background:#fff; border-radius:6px; font-size:11px; color:#666; cursor:pointer; font-family:inherit; }
+    .dash-alert-empty { text-align:center; padding:40px 20px; color:#999; font-size:14px; }
+    .dash-activity-item { display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid #f0f0f0; }
+    .dash-activity-item:last-child { border-bottom:none; }
+    .dash-activity-icon { font-size:14px; background:#f5f5f5; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .dash-activity-content { flex:1; min-width:0; }
+    .dash-activity-text { font-size:13px; color:#333; line-height:1.4; overflow:hidden; text-overflow:ellipsis; }
+    .dash-activity-time { font-size:11px; color:#888; margin-top:2px; }
+    .dash-quick-btn { display:flex; align-items:center; gap:12px; padding:14px 16px; background:#fff; border:2px solid #eee; border-radius:10px; cursor:pointer; font-family:inherit; transition:all .25s ease; min-height:64px; text-align:right; direction:rtl; }
+    .dash-quick-btn:hover { border-color:var(--gold,#c8971a); background:#fff8e8; transform:scale(1.02); }
+    .dash-quick-btn-icon { font-size:26px; flex-shrink:0; }
+    .dash-quick-btn-label { font-size:14px; font-weight:700; color:var(--brown,#3d2000); }
+    @media (max-width:900px){ #dash-bottom-row { grid-template-columns:1fr !important; } }
+    @media (max-width:768px){ #dash-kpi-grid { grid-template-columns:repeat(2,1fr) !important; } #dash-charts-grid { grid-template-columns:1fr !important; } .dash-kpi-value { font-size:24px; } }
+    @media (max-width:480px){ #dash-kpi-grid { grid-template-columns:1fr !important; } }
+  </style>
+
+  <div id="tab-data" style="display:none;background:var(--surface-3);min-height:calc(100vh - 60px)">
   <div class="stats">
     <div class="stat total"><div class="num" id="s-total" style="color:#3d2000">0</div><div class="lbl">إجمالي الحجاج</div></div>
     <div class="stat confirmed"><div class="num" id="s-confirmed" style="color:#1a7a1a">0</div><div class="lbl">حجز مؤكد</div></div>
@@ -3135,6 +3205,11 @@ async function loadData() {
     applyFilters();
     _loadSystemGroups();
     console.log('✅ تم تحميل', ALL_DATA.length, 'حاج من Supabase');
+    // v19.0: تحديث Dashboard إذا كان التبويب النشط (افتراضياً بعد login)
+    const dashPanel = document.getElementById('tab-dashboard');
+    if(dashPanel && dashPanel.style.display !== 'none' && typeof renderDashboard === 'function'){
+      renderDashboard();
+    }
   } catch(e) {
     console.error('❌ خطأ في تحميل البيانات:', e);
     showToast('خطأ في الاتصال بقاعدة البيانات', 'error');
@@ -7125,7 +7200,7 @@ async function saveVisibilitySettings() {
 function switchTab(tab) {
   // تنظيف snapshot الـ undo عند تغيير التبويب — يمنع undo خاطئ في سياق مختلف
   window._lastBulkSnapshot = null;
-  const tabs = ['data','settings','housing','staff','ann','surveys','users','audit'];
+  const tabs = ['dashboard','data','settings','housing','staff','ann','surveys','users','audit'];
   tabs.forEach(t => {
     const panel = document.getElementById('tab-'+t);
     const btn = document.getElementById('tab-'+t+'-btn');
@@ -7141,6 +7216,7 @@ function switchTab(tab) {
   const pag = document.getElementById('pagination');
   if(pag) pag.style.display = tab==='data' ? '' : 'none';
   if(tab==='data') document.getElementById('tab-data').style.display='';
+  if(tab==='dashboard') renderDashboard();
   if(tab==='settings') { loadVisibilitySettings(); loadPilgrimPortalSettings(); showDevBtnIfSuperAdmin(); }
   if(tab==='housing') renderHousingSection();
   if(tab==='staff') renderStaff();
@@ -7152,6 +7228,242 @@ function switchTab(tab) {
   if(activeBtn && typeof activeBtn.scrollIntoView === 'function'){
     try { activeBtn.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'}); } catch(_){}
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ===== v19.0: Dashboard تحليلي =====
+// ═══════════════════════════════════════════════════════════════════════
+
+window._dashCharts = {};
+
+async function renderDashboard(){
+  try {
+    _renderDashKPI();
+    _renderDashCharts();
+    _renderDashAlerts();
+    _renderDashQuickActions();
+    await _renderDashActivity();
+  } catch(e){ console.error('[dashboard]', e); }
+}
+
+function _renderDashKPI(){
+  const grid = document.getElementById('dash-kpi-grid');
+  if(!grid) return;
+  const total = (window.ALL_DATA||[]).length;
+  if(!total){
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#999">لا توجد بيانات حجاج بعد</div>';
+    return;
+  }
+  const confirmed    = ALL_DATA.filter(p => p['حالة الحجز'] === 'مؤكد').length;
+  const paid         = ALL_DATA.filter(p => p['حالة الدفع'] === 'مدفوع').length;
+  const minaHoused   = ALL_DATA.filter(p => p.mina_camp && p.mina_bed).length;
+  const arafatHoused = ALL_DATA.filter(p => p.arafat_camp && p.arafat_bed).length;
+  const boarded      = ALL_DATA.filter(p => p['حالة الإركاب'] === 'ركب').length;
+  const kpis = [
+    { icon:'👥', label:'إجمالي الحجاج',  value:total,         max:total, color:'#7a4500' },
+    { icon:'✅', label:'حجوزات مؤكّدة', value:confirmed,     max:total, color:'#2e7d32' },
+    { icon:'💰', label:'مدفوعات',        value:paid,          max:total, color:'#c8971a' },
+    { icon:'🏕️', label:'تسكين منى',     value:minaHoused,    max:total, color:'#1a5fa8' },
+    { icon:'🏕️', label:'تسكين عرفات',  value:arafatHoused,  max:total, color:'#7a4500' },
+    { icon:'🚌', label:'إركاب',          value:boarded,       max:total, color:'#1a7a1a' }
+  ];
+  const progressColor = pct => pct < 30 ? '#c00' : (pct < 80 ? '#c07000' : '#2e7d32');
+  grid.innerHTML = kpis.map(k => {
+    const pct = k.max > 0 ? Math.round((k.value / k.max) * 100) : 0;
+    return `<div class="dash-kpi-card" style="border-right-color:${k.color}">
+      <div class="dash-kpi-header">
+        <div class="dash-kpi-icon">${k.icon}</div>
+        <div style="font-size:11px;color:#999;font-weight:600">${pct}%</div>
+      </div>
+      <div class="dash-kpi-value">${k.value.toLocaleString('ar-EG')}</div>
+      <div class="dash-kpi-label">${k.label}</div>
+      <div class="dash-kpi-progress"><div class="dash-kpi-progress-bar" style="width:${pct}%;background:${progressColor(pct)}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function _renderDashCharts(){
+  if(typeof Chart === 'undefined'){ console.warn('[dashboard] Chart.js not loaded'); return; }
+  Object.values(window._dashCharts).forEach(c => { try { c.destroy(); } catch(_){} });
+  window._dashCharts = {};
+
+  // 1) Nationality Pie — top 5 + أخرى
+  const natCounts = {};
+  (ALL_DATA||[]).forEach(p => {
+    const n = p['الجنسية'] || 'غير محدّد';
+    natCounts[n] = (natCounts[n] || 0) + 1;
+  });
+  const natEntries = Object.entries(natCounts).sort((a,b) => b[1]-a[1]);
+  const top5 = natEntries.slice(0,5);
+  const others = natEntries.slice(5).reduce((s, x) => s + x[1], 0);
+  if(others > 0) top5.push(['أخرى', others]);
+  const natCanvas = document.getElementById('dash-chart-nationality');
+  if(natCanvas && top5.length){
+    window._dashCharts.nationality = new Chart(natCanvas, {
+      type: 'pie',
+      data: { labels: top5.map(x=>x[0]), datasets: [{ data: top5.map(x=>x[1]), backgroundColor: ['#c8971a','#7a4500','#1a5fa8','#2e7d32','#c07000','#999'] }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 } } } } }
+    });
+  }
+
+  // 2) Booking Status Bar
+  const bookingStatuses = ['مؤكد','ملغي','معلق','مكتمل'];
+  const bookingCounts = bookingStatuses.map(s => (ALL_DATA||[]).filter(p => p['حالة الحجز']===s).length);
+  const bookingCanvas = document.getElementById('dash-chart-booking');
+  if(bookingCanvas){
+    window._dashCharts.booking = new Chart(bookingCanvas, {
+      type: 'bar',
+      data: { labels: bookingStatuses, datasets: [{ data: bookingCounts, backgroundColor: ['#2e7d32','#c00','#c07000','#1a5fa8'] }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
+    });
+  }
+
+  // 3) Pilgrim Type Doughnut
+  const typeCounts = {};
+  (ALL_DATA||[]).forEach(p => {
+    const t = p['نوع الحاج'] || 'غير محدّد';
+    typeCounts[t] = (typeCounts[t] || 0) + 1;
+  });
+  const typeCanvas = document.getElementById('dash-chart-type');
+  if(typeCanvas && Object.keys(typeCounts).length){
+    window._dashCharts.type = new Chart(typeCanvas, {
+      type: 'doughnut',
+      data: { labels: Object.keys(typeCounts), datasets: [{ data: Object.values(typeCounts), backgroundColor: ['#c8971a','#1a5fa8','#2e7d32','#7a4500','#c07000','#7a3fa8'] }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 } } } } }
+    });
+  }
+
+  // 4) Camps Occupancy — horizontal bar
+  const campOcc = {};
+  (ALL_DATA||[]).forEach(p => {
+    if(p.mina_camp){
+      if(!campOcc[p.mina_camp]) campOcc[p.mina_camp] = { occupied:0, capacity:0 };
+      campOcc[p.mina_camp].occupied++;
+    }
+  });
+  if(window._campsCache){
+    window._campsCache.forEach(c => {
+      const num = c.camp_num || c.name;
+      if(campOcc[num]) campOcc[num].capacity = parseInt(c.capacity) || 0;
+    });
+  }
+  const top10 = Object.entries(campOcc)
+    .map(([num,d]) => ({ num, occupied:d.occupied, capacity:d.capacity, pct: d.capacity>0 ? (d.occupied/d.capacity)*100 : 0 }))
+    .sort((a,b) => b.pct - a.pct).slice(0,10);
+  const campsCanvas = document.getElementById('dash-chart-camps');
+  if(campsCanvas && top10.length){
+    window._dashCharts.camps = new Chart(campsCanvas, {
+      type: 'bar',
+      data: { labels: top10.map(c => 'مخيم ' + c.num), datasets: [{
+        label: 'الإشغال (%)', data: top10.map(c => Math.round(c.pct)),
+        backgroundColor: top10.map(c => c.pct >= 95 ? '#c00' : (c.pct >= 75 ? '#c07000' : '#2e7d32'))
+      }] },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true, max:100 } } }
+    });
+  }
+}
+
+function _renderDashAlerts(){
+  const list = document.getElementById('dash-alerts-list');
+  if(!list) return;
+  const alerts = [];
+  const all = window.ALL_DATA || [];
+
+  const noMina = all.filter(p => !p.mina_camp).length;
+  if(noMina > 0) alerts.push({ priority:'high', icon:'🔴', text: noMina + ' حاج بدون مخيم منى', onclick:()=>switchTab('data') });
+
+  const noArafat = all.filter(p => !p.arafat_camp).length;
+  if(noArafat > 0) alerts.push({ priority:'high', icon:'🔴', text: noArafat + ' حاج بدون مخيم عرفات', onclick:()=>switchTab('data') });
+
+  const unpaid = all.filter(p => p['حالة الدفع'] === 'غير مدفوع').length;
+  if(unpaid > 0) alerts.push({ priority:'medium', icon:'🟡', text: unpaid + ' حاج لم يسدّد', onclick:()=>switchTab('data') });
+
+  let crowdedCamps = 0;
+  if(window._campsCache){
+    const campOcc = {};
+    all.forEach(p => { if(p.mina_camp) campOcc[p.mina_camp] = (campOcc[p.mina_camp]||0) + 1; });
+    window._campsCache.forEach(c => {
+      const num = c.camp_num || c.name;
+      const cap = parseInt(c.capacity) || 0;
+      const occ = campOcc[num] || 0;
+      if(cap > 0 && occ/cap >= 0.95) crowdedCamps++;
+    });
+  }
+  if(crowdedCamps > 0) alerts.push({
+    priority:'medium', icon:'🟡', text: crowdedCamps + ' مخيم مكتظّ (>95%)',
+    onclick:()=>{ switchTab('housing'); setTimeout(()=>showHousingSection('camps'), 150); }
+  });
+
+  const notBoarded = all.filter(p => p['حالة الإركاب'] !== 'ركب').length;
+  if(notBoarded > 0 && all.length > 0) alerts.push({ priority:'low', icon:'🔵', text: notBoarded + ' حاج لم يركب', onclick:()=>switchTab('data') });
+
+  const noNusuk = all.filter(p => {
+    const s = p['حالة بطاقة نسك'];
+    return s !== 'مسلّمة للحاج' && s !== 'مسلمة';
+  }).length;
+  if(noNusuk > 0 && all.length > 0) alerts.push({ priority:'low', icon:'🔵', text: noNusuk + ' حاج لم يستلم بطاقة نسك', onclick:()=>switchTab('data') });
+
+  const order = { high:0, medium:1, low:2 };
+  alerts.sort((a,b) => order[a.priority] - order[b.priority]);
+
+  if(!alerts.length){
+    list.innerHTML = '<div class="dash-alert-empty">✨ كل شيء بخير!</div>';
+    return;
+  }
+  list.innerHTML = alerts.map((a,i) => `<div class="dash-alert-item dash-alert-${a.priority}" data-idx="${i}">
+    <span class="dash-alert-icon">${a.icon}</span>
+    <span class="dash-alert-text">${a.text}</span>
+    <button class="dash-alert-action">عرض ←</button>
+  </div>`).join('');
+  list.querySelectorAll('.dash-alert-item').forEach((el,i) => {
+    el.addEventListener('click', () => { if(alerts[i].onclick) alerts[i].onclick(); });
+  });
+}
+
+async function _renderDashActivity(){
+  const list = document.getElementById('dash-activity-list');
+  if(!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:#888">⏳ جاري التحميل...</div>';
+  try {
+    const result = await window.DB.Audit.getAll({ pageSize: 10, page: 1 });
+    const activities = result.data || [];
+    if(!activities.length){ list.innerHTML = '<div class="dash-alert-empty">لا توجد عمليات بعد</div>'; return; }
+    const iconMap = { update:'🔄', create:'➕', delete:'🗑️', bulk_update:'⚡', bulk_delete:'🗑️', undo:'↶' };
+    list.innerHTML = activities.map(entry => {
+      const time = (typeof _formatTimeAgo === 'function')
+        ? _formatTimeAgo(new Date(entry.timestamp).getTime())
+        : new Date(entry.timestamp).toLocaleString('ar-EG');
+      const icon = iconMap[entry.action_type] || '📝';
+      const user = entry.user_name || entry.user_id || '—';
+      const label = entry.entity_label || (entry.bulk_count ? (entry.bulk_count + ' عنصر') : '—');
+      return `<div class="dash-activity-item">
+        <span class="dash-activity-icon">${icon}</span>
+        <div class="dash-activity-content">
+          <div class="dash-activity-text"><b>${_esc(user)}</b> — ${_esc(label)}</div>
+          <div class="dash-activity-time">${_esc(time)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){
+    console.error('[dash-activity]', e);
+    list.innerHTML = '<div class="dash-alert-empty">❌ تعذّر تحميل النشاطات</div>';
+  }
+}
+
+function _renderDashQuickActions(){
+  const container = document.getElementById('dash-quick-actions');
+  if(!container) return;
+  const actions = [
+    { icon:'📥', label:'استيراد Excel',        onclick: "switchTab('settings');setTimeout(function(){if(typeof switchCfg==='function')switchCfg('import')},150)" },
+    { icon:'🏕️', label:'إدارة المخيمات',      onclick: "switchTab('housing');setTimeout(function(){if(typeof showHousingSection==='function')showHousingSection('camps')},150)" },
+    { icon:'👤', label:'إدارة المستخدمين',   onclick: "switchTab('users')" },
+    { icon:'📢', label:'نشر تعميم',            onclick: "switchTab('ann')" },
+    { icon:'📜', label:'سجل العمليات',        onclick: "switchTab('audit')" }
+  ];
+  container.innerHTML = actions.map(a => `<button class="dash-quick-btn" onclick="${a.onclick}">
+    <span class="dash-quick-btn-icon">${a.icon}</span>
+    <span class="dash-quick-btn-label">${a.label}</span>
+  </button>`).join('');
 }
 
 // ===== واجهة مشرف المجموعة =====
