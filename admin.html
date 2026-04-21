@@ -2007,68 +2007,9 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       /* البحث — 16px يمنع zoom iOS */
       #sup-search { font-size: 16px !important; }
 
-      /* تحويل الجدول إلى بطاقات */
-      #sup-table {
-        display: block;
-        background: transparent !important;
-        box-shadow: none !important;
-        border-radius: 0;
-      }
-      #sup-table thead { display: none; }
-      #sup-table tbody {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      #sup-table tbody tr {
-        display: block !important;
-        background: #fff !important;
-        border-radius: 12px;
-        padding: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        border: 1px solid #f0e8d0;
-      }
-      #sup-table tbody td {
-        display: flex !important;
-        justify-content: space-between;
-        align-items: center;
-        padding: 6px 0 !important;
-        border-bottom: 1px dashed #f0f0f0;
-        text-align: right !important;
-        font-size: 13px;
-      }
-      /* col 1: checkbox — مدمج، بلا فاصل */
-      #sup-table tbody td:nth-child(1) {
-        justify-content: flex-start !important;
-        padding-bottom: 0 !important;
-        border-bottom: none !important;
-        margin-bottom: 4px;
-      }
-      /* col 2: الاسم — عنوان البطاقة */
-      #sup-table tbody td:nth-child(2) {
-        font-weight: 700 !important;
-        font-size: 15px !important;
-        color: #3d2000 !important;
-        border-bottom: 2px solid #f0e8d0 !important;
-        padding-bottom: 10px !important;
-        margin-bottom: 4px;
-        display: block !important;
-        text-align: right !important;
-      }
-      /* تسميات للحالات (col 3-6) */
-      #sup-table tbody td:nth-child(3)::before { content: "🚌 الإركاب:"; font-weight: 600; color: #888; }
-      #sup-table tbody td:nth-child(4)::before { content: "🏕️ المخيم:";  font-weight: 600; color: #888; }
-      #sup-table tbody td:nth-child(5)::before { content: "🪪 نسك:";     font-weight: 600; color: #888; }
-      #sup-table tbody td:nth-child(6)::before { content: "🚆 أسوارة:";   font-weight: 600; color: #888; }
-      /* آخر عمود: زر ✏️ — بلا label، أعلى */
-      #sup-table tbody td:last-child {
-        justify-content: flex-end !important;
-        padding-top: 10px !important;
-        margin-top: 4px;
-        border-top: 1px solid #f5ead0;
-        border-bottom: none !important;
-      }
-      #sup-table tbody td:last-child::before { content: ""; }
+      /* v22.10: تبديل الجدول بـ بطاقات .item-card للجوال */
+      #sup-table-wrap { display: none !important; }
+      #sup-cards-wrap { display: flex !important; }
 
       /* Modal العمليات على الجوال */
       #sup-modal > div {
@@ -2100,8 +2041,8 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
     </div>
   </div>
 
-  <!-- جدول الحجاج -->
-  <div style="padding:0 16px 20px;overflow-x:auto">
+  <!-- جدول الحجاج (Desktop) -->
+  <div id="sup-table-wrap" style="padding:0 16px 20px;overflow-x:auto">
     <table id="sup-table" style="width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)">
       <thead>
         <tr style="background:linear-gradient(135deg,#3d2000,#7a4500);color:#fff">
@@ -2116,8 +2057,10 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       </thead>
       <tbody id="sup-tbody"></tbody>
     </table>
-    <div id="sup-empty" style="display:none;text-align:center;padding:40px;color:#888">لا يوجد حجاج في هذه الحافلة</div>
   </div>
+  <!-- v22.10: بطاقات الحجاج (Mobile) — نفس نمط .item-card -->
+  <div id="sup-cards-wrap" style="display:none;padding:0 16px 20px;flex-direction:column;gap:10px"></div>
+  <div id="sup-empty" style="display:none;text-align:center;padding:40px;color:#888">لا يوجد حجاج في هذه الحافلة</div>
 
   <!-- نافذة تسجيل سريع -->
   <div id="sup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:20px">

@@ -255,8 +255,10 @@ function renderSupTable() {
 
   const tbody = document.getElementById('sup-tbody');
   const empty = document.getElementById('sup-empty');
+  const cardsWrap = document.getElementById('sup-cards-wrap');
   if(!list.length){
     tbody.innerHTML='';
+    if(cardsWrap) cardsWrap.innerHTML = '';
     empty.style.display='block';
     empty.textContent = f ? '📭 لا يوجد حجاج مطابقون للفلتر' : 'لا يوجد حجاج في هذه الحافلة';
     _countSupFilters();
@@ -282,8 +284,63 @@ function renderSupTable() {
     </tr>`;
   }).join('');
 
+  // v22.10: رسم بطاقات المشرف (للجوال)
+  _renderSupCards(list, hasNusuk, hasBracelet);
+
   _countSupFilters();
   _updateSupBulkBar();
+}
+
+// v22.10: بطاقات المشرف للجوال — نفس نمط .item-card
+function _renderSupCards(list, hasNusuk, hasBracelet){
+  const wrap = document.getElementById('sup-cards-wrap');
+  if(!wrap) return;
+  wrap.innerHTML = list.map(p => {
+    const boarded        = p.bus_status === 'ركب';
+    const arrived        = p.camp_status === 'حضر';
+    const nusukDelivered = p.nusuk_card_status === 'مسلّمة للحاج';
+    const nusukReady     = p.nusuk_card_status === 'موجودة لدى المشرف';
+    const nusukAtAdmin   = p.nusuk_card_status === 'موجودة لدى الإدارة';
+    const braceletDone   = !!p.bracelet_time;
+
+    const chip = (bg, color, text) =>
+      `<span style="background:${bg};color:${color};padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap">${text}</span>`;
+
+    const busChip = boarded
+      ? chip('#e8f8e8','#1a7a1a','🚌 ركب')
+      : chip('#fde8e8','#c00','🚌 لم يركب');
+    const campChip = arrived
+      ? chip('#e8f0fd','#1a5fa8','🏕️ حضر')
+      : chip('#fde8e8','#c00','🏕️ لم يصل');
+
+    let nusukChip = '';
+    if(hasNusuk){
+      if(nusukDelivered)    nusukChip = chip('#fff3e0','#7a4500','🪪 مسلّمة');
+      else if(nusukReady)   nusukChip = chip('#fdf5e8','#c07000','🪪 جاهزة');
+      else if(nusukAtAdmin) nusukChip = chip('#f0f8ff','#1a5fa8','🪪 بالإدارة');
+      else                  nusukChip = chip('#f5f5f5','#888','🪪 —');
+    }
+
+    const braceletChip = hasBracelet
+      ? (braceletDone ? chip('#e8f8e8','#1a7a1a','🚆 مسلّمة') : chip('#f5f5f5','#888','🚆 —'))
+      : '';
+
+    return `<div class="item-card">
+      <div class="item-card-body">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+          <input type="checkbox" class="sup-row-check" data-id="${p.id}" onchange="_updateSupBulkBar()" style="width:18px;height:18px;cursor:pointer;accent-color:#c8971a">
+          <div class="item-card-title" style="margin:0">${_esc(p.name||'—')}</div>
+        </div>
+        <div class="item-card-sub" style="direction:ltr;text-align:right">🪪 ${_esc(p.id_num||'—')}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+          ${busChip}${campChip}${nusukChip}${braceletChip}
+        </div>
+      </div>
+      <div class="item-card-actions">
+        <button class="btn-edit" onclick="openQuickAction('${p.id}')" title="تسجيل / تعديل">✏️</button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // v18.0b: حساب counter لكل فلتر (يُستدعى بعد كل renderSupTable)
