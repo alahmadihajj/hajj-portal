@@ -2482,6 +2482,19 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
         </div>
         <div id="dev-stamp-current" style="font-size:12px;color:#888;margin-top:4px"></div>
       </div>
+      <div class="form-row">
+        <label>اسم ممثل الشركة للإقرارات</label>
+        <input type="text" id="dev-rep-name" placeholder="مثال: محمد أحمد السالم">
+        <small style="color:#888;font-size:11px;display:block;margin-top:4px">يظهر اسمه في إقرار المشرف وإقرار الحاج</small>
+      </div>
+      <div class="form-row">
+        <label>توقيع ممثل الشركة</label>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input type="file" id="dev-rep-sig-file" accept="image/*" onchange="previewRepSig(this)" style="flex:1;min-width:0">
+          <img id="dev-rep-sig-preview" src="" style="height:60px;width:120px;object-fit:contain;border:1px solid #ddd;border-radius:8px;display:none">
+        </div>
+        <div id="dev-rep-sig-current" style="font-size:12px;color:#888;margin-top:4px"></div>
+      </div>
       <button onclick="saveDevSettings()" style="margin-top:16px;width:100%;padding:14px;background:#c00;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">💾 حفظ إعدادات النظام</button>
     </div>
 

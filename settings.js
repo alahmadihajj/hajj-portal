@@ -486,6 +486,15 @@ async function loadDevSettings() {
         if(p) { p.src=d.stamp; p.style.display='block'; }
         if(c) c.textContent = '✅ يوجد ختم محفوظ';
       }
+      // v22.5: ممثل الشركة
+      const rn = document.getElementById('dev-rep-name');
+      if(rn) rn.value = d.rep_name || '';
+      if(d.rep_sig) {
+        const rp = document.getElementById('dev-rep-sig-preview');
+        const rc = document.getElementById('dev-rep-sig-current');
+        if(rp) { rp.src = d.rep_sig; rp.style.display = 'block'; }
+        if(rc) rc.textContent = '✅ يوجد توقيع محفوظ';
+      }
     }
   } catch(e) { console.error(e); }
 }
@@ -553,6 +562,33 @@ function previewStamp(input) {
   reader.readAsDataURL(file);
 }
 
+// v22.5: معاينة توقيع ممثل الشركة (نمط previewStamp — base64 compressed MAX 200px)
+function previewRepSig(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 200;
+      let w = img.width, h = img.height;
+      if(w > MAX || h > MAX) {
+        if(w > h) { h = Math.round(h * MAX/w); w = MAX; }
+        else { w = Math.round(w * MAX/h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/png', 0.8);
+      const preview = document.getElementById('dev-rep-sig-preview');
+      if(preview) { preview.src = compressed; preview.style.display = 'block'; }
+      input._compressedData = compressed;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 async function saveDevSettings() {
   const companyName = document.getElementById('dev-company-name').value.trim();
   const license = document.getElementById('dev-license').value.trim();
@@ -574,7 +610,15 @@ async function saveDevSettings() {
     const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(logoFile);
   });
 
-  const settings = { companyName, license, season, stamp, logo };
+  // v22.5: ممثل الشركة
+  const rep_name = (document.getElementById('dev-rep-name')?.value || '').trim();
+  const repSigFile = document.getElementById('dev-rep-sig-file')?.files?.[0];
+  let rep_sig = window._devSettings.rep_sig || '';
+  if(repSigFile) rep_sig = repSigFile._compressedData || await new Promise(res => {
+    const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(repSigFile);
+  });
+
+  const settings = { companyName, license, season, stamp, logo, rep_name, rep_sig };
   try {
     await window.DB.Settings.set('dev_settings', settings);
     window._devSettings = settings;

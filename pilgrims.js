@@ -907,6 +907,8 @@ function openPilgrimAck(pilgrimId, pilgrim) {
   const companyName = dev.companyName||'';
   const license = dev.license || '';
   const stamp = dev.stamp || '';
+  const repName = dev.rep_name || '';   // v22.5
+  const repSig  = dev.rep_sig  || '';   // v22.5
   const now = new Date();
   const dateStr = now.toLocaleDateString('ar-SA-u-ca-islamic');
   const timeStr = now.toLocaleTimeString('ar-SA', {hour:'2-digit',minute:'2-digit'});
@@ -958,12 +960,22 @@ function openPilgrimAck(pilgrimId, pilgrim) {
       وأتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.
     </div>
 
-    <div style="text-align:center;padding:10px;border:1px dashed #d0c098;border-radius:8px;background:#fdfbf5;margin-bottom:14px">
-      <div style="font-size:11px;color:#999;margin-bottom:6px">ختم الشركة الرسمي</div>
-      ${stamp
-        ? `<img src="${_esc(stamp)}" alt="ختم الشركة" style="max-width:70px;max-height:70px;object-fit:contain">`
-        : `<div style="height:50px;line-height:50px;color:#ccc;font-size:11px">— لا يوجد ختم مرفوع —</div>`}
+    ${(repName || repSig || stamp) ? `
+    <div style="text-align:center;padding:14px;border:1.5px dashed #c8971a;border-radius:10px;background:#fdfbf5;margin-bottom:14px">
+      <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600">ممثل الشركة</div>
+      ${repName ? `<div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:10px">${_esc(repName)}</div>` : ''}
+      <div style="display:flex;gap:16px;justify-content:center;align-items:flex-start;flex-wrap:wrap">
+        ${repSig ? `<div style="text-align:center">
+          <img src="${_esc(repSig)}" alt="توقيع الممثل" style="max-width:120px;max-height:60px;object-fit:contain;border:1px solid #eee;border-radius:4px;background:#fff">
+          <div style="font-size:10px;color:#aaa;margin-top:4px">التوقيع</div>
+        </div>` : ''}
+        ${stamp ? `<div style="text-align:center">
+          <img src="${_esc(stamp)}" alt="الختم" style="max-width:70px;max-height:70px;object-fit:contain">
+          <div style="font-size:10px;color:#aaa;margin-top:4px">الختم</div>
+        </div>` : ''}
+      </div>
     </div>
+    ` : ''}
 
     <div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:6px;direction:rtl">✍️ توقيع الحاج</div>
     <div style="border:2px dashed #c8971a;border-radius:10px;overflow:hidden;background:#fafafa;margin-bottom:10px">

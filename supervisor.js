@@ -936,6 +936,8 @@ async function openBulkAckReceipt(opts){
   const companyName = dev.companyName || '';
   const license = dev.license || '';
   const stamp = dev.stamp || '';
+  const repName = dev.rep_name || '';   // v22.5
+  const repSig  = dev.rep_sig  || '';   // v22.5
   const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   const now = new Date();
@@ -1032,11 +1034,29 @@ async function openBulkAckReceipt(opts){
       ${sigUrl?`<img class="sig-img" src="${esc(sigUrl)}" alt="توقيع المشرف">`:'<div class="sig-placeholder"></div>'}
       <div style="margin-top:6px;font-size:12px;font-weight:600">${esc(supName)}</div>
     </div>
+    ${(repName || repSig || stamp) ? `
+    <div class="sig-box">
+      <label>ممثل الشركة</label>
+      ${repName?`<div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:8px">${esc(repName)}</div>`:''}
+      <div style="display:flex;gap:14px;justify-content:center;align-items:flex-start">
+        ${repSig?`<div style="text-align:center">
+          <img src="${esc(repSig)}" alt="توقيع الممثل" style="max-width:120px;max-height:60px;object-fit:contain;border:1px solid #eee;border-radius:4px;background:#fafafa">
+          <div style="font-size:10px;color:#888;margin-top:3px">التوقيع</div>
+        </div>`:''}
+        ${stamp?`<div style="text-align:center">
+          <img src="${esc(stamp)}" alt="ختم" style="max-width:70px;max-height:70px;object-fit:contain">
+          <div style="font-size:10px;color:#888;margin-top:3px">الختم</div>
+        </div>`:''}
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#666">${esc(companyName)}</div>
+    </div>
+    ` : `
     <div class="sig-box">
       <label>ممثل الشركة والختم الرسمي</label>
-      ${stamp?`<img class="stamp" src="${esc(stamp)}" alt="ختم">`:'<div class="sig-placeholder"></div>'}
+      <div class="sig-placeholder"></div>
       <div style="margin-top:6px;font-size:12px;font-weight:600">${esc(companyName)}</div>
     </div>
+    `}
   </div>
   <div class="footer">
     تم إنشاء هذا الإقرار إلكترونياً &nbsp;•&nbsp; معرّف: <span style="direction:ltr">${esc(ackId)}</span>
