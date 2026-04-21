@@ -905,35 +905,76 @@ async function confirmSupAck(pilgrimId) {
 function openPilgrimAck(pilgrimId, pilgrim) {
   const dev = window._devSettings || {};
   const companyName = dev.companyName||'';
-  const license = dev.license ? ` — رقم الترخيص: ${dev.license}` : '';
+  const license = dev.license || '';
+  const stamp = dev.stamp || '';
   const now = new Date();
   const dateStr = now.toLocaleDateString('ar-SA-u-ca-islamic');
   const timeStr = now.toLocaleTimeString('ar-SA', {hour:'2-digit',minute:'2-digit'});
+  const name  = pilgrim['اسم الحاج']||'—';
+  const idNum = pilgrim['رقم الهوية']||'—';
+  const phone = pilgrim['رقم الجوال']||'—';
+
+  // v22.2: تصميم رسمي — شعار + ترخيص + 4 تعهّدات مرقّمة + ختم + التوقيع
   openModal(`
-    <h3 class="modal-title">📋 تعهد استلام بطاقة نسك</h3>
-    <div style="background:#fff8e1;border-radius:10px;padding:14px;font-size:12px;line-height:2;color:#333;margin-bottom:12px;direction:rtl">
-      أنا الحاج / ـة: <strong>${pilgrim['اسم الحاج']||'—'}</strong><br>
-      رقم الهوية / الإقامة: <strong>${pilgrim['رقم الهوية']||'—'}</strong><br>
-      رقم الجوال: <strong>${pilgrim['رقم الجوال']||'—'}</strong><br>
-      أقر بأنني استلمت بطاقة "نسك" من: <strong>${companyName}${license}</strong><br>
-      بتاريخ: <strong>${dateStr}</strong> &nbsp; الوقت: <strong>${timeStr}</strong>
+    <style>#modal-overlay .modal-box{max-width:560px}</style>
+    <div style="border-bottom:3px solid #3d2000;padding-bottom:12px;margin-bottom:14px;text-align:center">
+      <div style="margin-bottom:6px">${_buildPrintLogoHTML(55)}</div>
+      <div style="font-size:14px;font-weight:800;color:#3d2000">${_esc(companyName||'—')}</div>
+      ${license?`<div style="font-size:11px;color:#777;margin-top:2px">رقم الترخيص: ${_esc(license)}</div>`:''}
+      <div style="font-size:15px;font-weight:700;color:#7a4500;margin-top:10px">📋 تعهد استلام بطاقة نسك</div>
     </div>
-    <div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:8px">أتعهد بما يلي:</div>
-    <div style="font-size:12px;line-height:2.2;color:#333;direction:rtl">
-      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:4px"><input type="checkbox" id="ack1" style="margin-top:4px"> المحافظة على بطاقة نسك وعدم فقدانها أو إتلافها.</label>
-      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:4px"><input type="checkbox" id="ack2" style="margin-top:4px"> إبراز البطاقة عند الطلب في جميع مراحل التنقل وأداء المناسك.</label>
-      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:4px"><input type="checkbox" id="ack3" style="margin-top:4px"> الالتزام بالتعليمات والإرشادات المرتبطة باستخدام البطاقة.</label>
-      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px"><input type="checkbox" id="ack4" style="margin-top:4px"> إبلاغ الحملة فوراً في حال فقدان البطاقة أو وجود أي مشكلة.</label>
+
+    <div style="background:#fffbf0;border:1px solid #e0d5c5;border-radius:10px;padding:12px 14px;font-size:12px;line-height:2;color:#333;margin-bottom:12px;direction:rtl">
+      <strong>الحاج/ـة:</strong> ${_esc(name)}<br>
+      <strong>🪪 رقم الهوية/الإقامة:</strong> <span style="direction:ltr">${_esc(idNum)}</span><br>
+      <strong>📱 رقم الجوال:</strong> <span style="direction:ltr">${_esc(phone)}</span><br>
+      <strong>📅 التاريخ:</strong> ${_esc(dateStr)} &nbsp;•&nbsp; <strong>🕒 الوقت:</strong> ${_esc(timeStr)}
     </div>
-    <p style="font-size:11px;color:#888;direction:rtl;margin-bottom:10px">وأتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.</p>
-    <div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:8px">✍️ توقيع الحاج</div>
+
+    <div style="font-size:12px;color:#333;margin-bottom:10px;direction:rtl;line-height:1.9">
+      أقر أنا المذكور/ـة أعلاه بأنني استلمت بطاقة "نسك" الخاصة بي من <strong>${_esc(companyName||'الشركة')}</strong>، وأتعهد بما يلي:
+    </div>
+
+    <div style="background:#fff;border:1.5px solid #e0d5c5;border-radius:10px;padding:10px 14px;margin-bottom:10px;direction:rtl">
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:12px;line-height:1.9;cursor:pointer">
+        <input type="checkbox" id="ack1" style="margin-top:4px;width:16px;height:16px;accent-color:#1a7a1a;cursor:pointer">
+        <span><strong style="color:#7a4500">1.</strong> المحافظة على بطاقة نسك وعدم فقدانها أو إتلافها.</span>
+      </label>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:12px;line-height:1.9;cursor:pointer">
+        <input type="checkbox" id="ack2" style="margin-top:4px;width:16px;height:16px;accent-color:#1a7a1a;cursor:pointer">
+        <span><strong style="color:#7a4500">2.</strong> إبراز البطاقة عند الطلب في جميع مراحل التنقل وأداء المناسك.</span>
+      </label>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:12px;line-height:1.9;cursor:pointer">
+        <input type="checkbox" id="ack3" style="margin-top:4px;width:16px;height:16px;accent-color:#1a7a1a;cursor:pointer">
+        <span><strong style="color:#7a4500">3.</strong> الالتزام بالتعليمات والإرشادات المرتبطة باستخدام البطاقة.</span>
+      </label>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:0;font-size:12px;line-height:1.9;cursor:pointer">
+        <input type="checkbox" id="ack4" style="margin-top:4px;width:16px;height:16px;accent-color:#1a7a1a;cursor:pointer">
+        <span><strong style="color:#7a4500">4.</strong> إبلاغ الحملة فوراً في حال فقدان البطاقة أو وجود أي مشكلة.</span>
+      </label>
+    </div>
+
+    <div style="font-size:11px;color:#666;direction:rtl;margin-bottom:12px;line-height:1.7;text-align:center;font-style:italic">
+      وأتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.
+    </div>
+
+    <div style="text-align:center;padding:10px;border:1px dashed #d0c098;border-radius:8px;background:#fdfbf5;margin-bottom:14px">
+      <div style="font-size:11px;color:#999;margin-bottom:6px">ختم الشركة الرسمي</div>
+      ${stamp
+        ? `<img src="${_esc(stamp)}" alt="ختم الشركة" style="max-width:70px;max-height:70px;object-fit:contain">`
+        : `<div style="height:50px;line-height:50px;color:#ccc;font-size:11px">— لا يوجد ختم مرفوع —</div>`}
+    </div>
+
+    <div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:6px;direction:rtl">✍️ توقيع الحاج</div>
     <div style="border:2px dashed #c8971a;border-radius:10px;overflow:hidden;background:#fafafa;margin-bottom:10px">
       <canvas id="pilgrim-ack-canvas" width="420" height="150" style="width:100%;display:block;touch-action:none;cursor:crosshair"></canvas>
     </div>
+
     <label style="display:flex;gap:8px;align-items:center;background:#fffbf0;border:1.5px solid #e0d5c5;border-radius:8px;padding:10px 12px;font-size:12px;color:#3d2000;margin-bottom:10px;direction:rtl;cursor:pointer">
       <input type="checkbox" id="pilgrim-ack-print" checked style="width:16px;height:16px;accent-color:#7a4500;cursor:pointer">
       <span>🖨️ فتح صفحة طباعة للإقرار بعد الحفظ (يمكن حفظها كـ PDF)</span>
     </label>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <button onclick="clearCanvas('pilgrim-ack-canvas')" style="padding:10px;background:#f5f5f5;border:none;border-radius:8px;cursor:pointer;font-family:inherit">🗑️ مسح</button>
       <button onclick="confirmPilgrimAck(${pilgrimId})" style="padding:10px;background:#1a7a1a;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit">✅ تأكيد الاستلام</button>
