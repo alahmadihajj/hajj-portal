@@ -69,8 +69,16 @@ function openSupBulkAck() {
         </table>
       </div>
       <div id="sup-bulk-counter" style="background:#fff3e0;border:1px solid #c8971a;border-radius:8px;padding:8px 12px;font-size:12px;color:#7a4500;text-align:center;font-weight:700;margin-bottom:8px"></div>
-      <div style="font-size:11px;color:#666;text-align:center;line-height:1.6;margin-bottom:8px">
-        <em>أقر بأنني استلمت البطاقات المذكورة أعلاه لتوزيعها على الحجاج حسب الكشوفات المعتمدة.</em>
+      <div style="background:#fff8e8;border:1.5px solid #c8971a;border-radius:10px;padding:12px 14px;margin-bottom:10px;direction:rtl">
+        <div style="font-weight:700;color:#3d2000;margin-bottom:8px;font-size:13px">📜 التعهّدات (يرجى القراءة قبل التوقيع):</div>
+        <ol style="margin:0;padding-right:20px;font-size:12px;line-height:1.9;color:#3d2000">
+          <li>المحافظة على البطاقات وعدم تسليمها لأي شخص غير صاحبها.</li>
+          <li>التحقق من هوية كل حاج قبل التسليم وأخذ توقيعه على الإقرار الخاص به.</li>
+          <li>الالتزام بالتعليمات والإرشادات المتعلقة بتوزيع البطاقات.</li>
+          <li>إبلاغ الحملة فوراً في حال فقدان أي بطاقة أو وجود أي مشكلة.</li>
+          <li>إعادة البطاقات غير المسلّمة إلى الإدارة بعد انتهاء الرحلة.</li>
+          <li>أتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.</li>
+        </ol>
       </div>
       <label style="display:flex;gap:8px;align-items:center;background:#fffbf0;border:1.5px solid #e0d5c5;border-radius:8px;padding:8px 10px;font-size:11px;color:#3d2000;direction:rtl;cursor:pointer;margin-bottom:4px">
         <input type="checkbox" id="sup-bulk-ack-print" checked style="width:16px;height:16px;accent-color:#7a4500;cursor:pointer">
@@ -94,7 +102,8 @@ function _renderSupBulkTable() {
     : ready;
 
   tbody.innerHTML = filtered.map((p,i) => {
-    const isExcl = excluded.has(p.id);
+    // v22.7: String(p.id) للتوافق — Set يحوي نصوصاً (من onclick template)، p.id رقم من DB
+    const isExcl = excluded.has(String(p.id));
     return `<tr style="border-bottom:1px solid #f5f5f5;${isExcl?'background:#fafafa;opacity:0.55':''}">
       <td style="padding:7px 4px;text-align:center;color:#999;font-size:11px">${i+1}</td>
       <td style="padding:7px 8px;font-weight:600;color:${isExcl?'#999':'#333'};${isExcl?'text-decoration:line-through':''}">${_esc(p.name||'—')}</td>
@@ -113,8 +122,10 @@ function _renderSupBulkTable() {
 function _toggleSupBulkExcluded(id) {
   const excluded = window._sigBulkExcluded;
   if(!excluded) return;
-  if(excluded.has(id)) excluded.delete(id);
-  else                 excluded.add(id);
+  // v22.7: توحيد على String لتجنّب عدم تطابق 5 !== "5"
+  const key = String(id);
+  if(excluded.has(key)) excluded.delete(key);
+  else                  excluded.add(key);
   _renderSupBulkTable();
 }
 
@@ -431,9 +442,10 @@ async function confirmSignature() {
     else if(type==='bracelet') { updates = { bracelet_sig: sigUrl, bracelet_time: timeStr }; }
     else if(type==='bulk_nusuk') {
       // v20.3: استخراج ids من ready - excluded (بدل _sigBulkIds الثابتة)
+      // v22.7: مقارنة String لأن Set يحوي نصوصاً
       const ready    = window._sigBulkReady || [];
       const excluded = window._sigBulkExcluded || new Set();
-      let ids = ready.filter(p => !excluded.has(p.id)).map(p => p.id);
+      let ids = ready.filter(p => !excluded.has(String(p.id))).map(p => p.id);
       if(!ids.length) { showToast('⚠️ يجب اختيار بطاقة واحدة على الأقل', 'warning'); return; }
 
       // v20.4: فحص عزل دفاعي — استبعاد أي حاج لا ينتمي لحافلة المشرف
@@ -936,6 +948,7 @@ async function openBulkAckReceipt(opts){
   const companyName = dev.companyName || '';
   const license = dev.license || '';
   const stamp = dev.stamp || '';
+  const logo  = dev.logo  || '';        // v22.7: شعار الشركة المرفوع (بدلاً من Kaaba fallback)
   const repName = dev.rep_name || '';   // v22.5
   const repSig  = dev.rep_sig  || '';   // v22.5
   const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -992,7 +1005,9 @@ async function openBulkAckReceipt(opts){
       ${license?`<div class="co-sub">رقم الترخيص: ${esc(license)}</div>`:''}
     </div>
     <div style="text-align:center">
-      ${_buildPrintLogoHTML(60)}
+      ${logo
+        ? `<img src="${esc(logo)}" alt="شعار" style="height:60px;max-width:150px;object-fit:contain;display:block;margin:0 auto 4px">`
+        : ''}
       <div class="doc-title">إقرار استلام بطاقات نسك</div>
     </div>
     <div></div>
