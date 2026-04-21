@@ -687,14 +687,37 @@ async function confirmSupAck(pilgrimId) {
   if(!canvas || isCanvasBlank(canvas)) { showToast('يرجى التوقيع أولاً', 'warning'); return; }
   const sig = canvas.toDataURL('image/png', 0.7);
   const now = new Date().toLocaleString('ar-SA');
+
+  // v20.1: snapshot قبل التحديث (لـ audit)
+  const r = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
+  const before = {
+    nusuk_card_status: r ? (r['حالة بطاقة نسك'] ?? null) : null,
+    nusuk_card_sig:    r ? (r['نسك_sig']        ?? null) : null,
+    nusuk_card_time:   r ? (r['نسك_time']       ?? null) : null
+  };
+  const updates = { nusuk_card_status: 'موجودة لدى المشرف', nusuk_card_sig: sig, nusuk_card_time: now };
+
   try {
-    await window.DB.Pilgrims.update(parseInt(pilgrimId), {
-      nusuk_card_status: 'موجودة لدى المشرف',
-      nusuk_card_sig: sig,
-      nusuk_card_time: now
-    });
-    const r = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
-    if(r) r['حالة بطاقة نسك'] = 'موجودة لدى المشرف';
+    await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+    if(r) {
+      r['حالة بطاقة نسك'] = 'موجودة لدى المشرف';
+      r['نسك_sig']        = sig;
+      r['نسك_time']       = now;
+    }
+
+    // v20.1: audit (sig مقنّع تلقائياً عبر _maskSensitiveInChanges في _recordAudit)
+    const changes = _buildFieldChanges(before, updates);
+    if(changes){
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(pilgrimId),
+        entity_label: _buildPilgrimLabel(r),
+        field_changes: changes,
+        metadata: { source: 'admin_nusuk_supervisor_receive' }
+      });
+    }
+
     showToast('تم تسجيل استلام المشرف', 'success');
     closeModals(); render();
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
@@ -746,14 +769,37 @@ async function confirmPilgrimAck(pilgrimId) {
   if(!canvas || isCanvasBlank(canvas)) { showToast('يرجى التوقيع أولاً', 'warning'); return; }
   const sig = canvas.toDataURL('image/png', 0.7);
   const now = new Date().toLocaleString('ar-SA');
+
+  // v20.1: snapshot قبل التحديث (لـ audit)
+  const r = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
+  const before = {
+    nusuk_card_status: r ? (r['حالة بطاقة نسك'] ?? null) : null,
+    nusuk_card_sig:    r ? (r['نسك_sig']        ?? null) : null,
+    nusuk_card_time:   r ? (r['نسك_time']       ?? null) : null
+  };
+  const updates = { nusuk_card_status: 'مسلّمة للحاج', nusuk_card_sig: sig, nusuk_card_time: now };
+
   try {
-    await window.DB.Pilgrims.update(parseInt(pilgrimId), {
-      nusuk_card_status: 'مسلّمة للحاج',
-      nusuk_card_sig: sig,
-      nusuk_card_time: now
-    });
-    const r = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
-    if(r) r['حالة بطاقة نسك'] = 'مسلّمة للحاج';
+    await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+    if(r) {
+      r['حالة بطاقة نسك'] = 'مسلّمة للحاج';
+      r['نسك_sig']        = sig;
+      r['نسك_time']       = now;
+    }
+
+    // v20.1: audit (sig مقنّع تلقائياً عبر _maskSensitiveInChanges في _recordAudit)
+    const changes = _buildFieldChanges(before, updates);
+    if(changes){
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(pilgrimId),
+        entity_label: _buildPilgrimLabel(r),
+        field_changes: changes,
+        metadata: { source: 'admin_nusuk_pilgrim_receive' }
+      });
+    }
+
     showToast('تم تسجيل استلام الحاج', 'success');
     closeModals(); render();
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }

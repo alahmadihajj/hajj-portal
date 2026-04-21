@@ -218,12 +218,55 @@ async function applyBulkNusuk() {
   if(!status) { showToast('اختر الحالة الجديدة أولاً', 'warning'); return; }
   const ids = [...document.querySelectorAll('.nusuk-row-check:checked')].map(c=>c.dataset.id);
   if(!ids.length) return;
+
+  // v20.1: snapshot قبل التحديث لكل حاج (لـ audit)
+  const beforeMap = new Map();
+  ids.forEach(id => {
+    const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(id));
+    beforeMap.set(String(id), { nusuk_card_status: r ? (r['حالة بطاقة نسك'] ?? null) : null });
+  });
+
   try {
     await Promise.all(ids.map(id => window.DB.Pilgrims.update(parseInt(id), { nusuk_card_status: status })));
     ids.forEach(id => {
       const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(id));
       if(r) r['حالة بطاقة نسك'] = status;
     });
+
+    // v20.1: audit — N فردية + 1 ملخّص bulk
+    const bulkSessionId = (crypto.randomUUID && crypto.randomUUID())
+      || ('bulk-' + Date.now() + '-' + Math.random().toString(36).substring(2,10));
+    const bulkMeta = {
+      source: 'admin_nusuk_bulk',
+      bulk_session: bulkSessionId,
+      bulk_target_field: 'nusuk_card_status',
+      bulk_target_value: status,
+      bulk_total_count: ids.length
+    };
+    ids.forEach(id => {
+      const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(id));
+      const changes = _buildFieldChanges(beforeMap.get(String(id)) || {}, { nusuk_card_status: status });
+      if(!changes) return;
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(id),
+        entity_label: _buildPilgrimLabel(r),
+        field_changes: changes,
+        metadata: bulkMeta
+      });
+    });
+    _recordAudit({
+      action_type:  'bulk_update',
+      entity_type:  'pilgrim',
+      entity_id:    null,
+      entity_label: `تحديث جماعي نسك: ${ids.length} حاج → ${status}`,
+      field_changes: { nusuk_card_status: { before: null, after: status, note: 'bulk' } },
+      bulk_ids:   ids,
+      bulk_count: ids.length,
+      metadata: bulkMeta
+    });
+
     showToast(`✅ تم تحديث ${ids.length} حاج`, 'success');
     clearNusukSelection();
     renderNusukTable(window._nusukFilter);

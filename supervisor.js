@@ -21,7 +21,6 @@
 
 // ===== استلام بطاقات نسك دفعة واحدة للمشرف =====
 function openSupBulkAck() {
-  const available = window._supPilgrims.filter(p=>p.nusuk_card_status==='موجودة لدى الإدارة'||!p.nusuk_card_status||p.nusuk_card_status==='لم تطبع');
   const ready = window._supPilgrims.filter(p=>p.nusuk_card_status==='موجودة لدى الإدارة');
   if(!ready.length) { showToast('لا توجد بطاقات جاهزة للاستلام', 'warning'); return; }
 
@@ -79,7 +78,7 @@ async function loadSupervisorPanel(user) {
   // إعداد أزرار العمليات
   renderSupActionBtns();
   // إظهار/إخفاء أعمدة الجدول
-  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة');
+  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة لدى المشرف');
   if(document.getElementById('sup-th-nusuk')) document.getElementById('sup-th-nusuk').style.display = hasNusuk?'':'none';
   if(document.getElementById('sup-th-bracelet')) document.getElementById('sup-th-bracelet').style.display = window._supSettings.braceletAvailable?'':'none';
 
@@ -91,7 +90,7 @@ async function loadSupervisorPanel(user) {
 function renderSupActionBtns() {
   const container = document.getElementById('sup-action-btns');
   if(!container) return;
-  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة');
+  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة لدى المشرف');
   const hasBracelet = window._supSettings.braceletAvailable;
   const cols = 2 + (hasNusuk?1:0) + (hasBracelet?1:0);
   container.style.gridTemplateColumns = `repeat(${cols},1fr)`;
@@ -109,13 +108,13 @@ function updateSupStats() {
   if(document.getElementById('sup-total')) document.getElementById('sup-total').textContent = p.length;
   if(document.getElementById('sup-boarded')) document.getElementById('sup-boarded').textContent = p.filter(x=>x.bus_status==='ركب').length;
   if(document.getElementById('sup-arrived')) document.getElementById('sup-arrived').textContent = p.filter(x=>x.camp_status==='حضر').length;
-  if(document.getElementById('sup-nusuk')) document.getElementById('sup-nusuk').textContent = p.filter(x=>x.nusuk_card_status==='مسلمة').length;
+  if(document.getElementById('sup-nusuk')) document.getElementById('sup-nusuk').textContent = p.filter(x=>x.nusuk_card_status==='مسلّمة للحاج').length;
   if(document.getElementById('sup-bracelet')) document.getElementById('sup-bracelet').textContent = p.filter(x=>x.bracelet_time).length;
 }
 
 function renderSupTable() {
   const q = (document.getElementById('sup-search')?.value||'').toLowerCase();
-  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة'||p.nusuk_card_status==='مسلمة');
+  const hasNusuk = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة لدى المشرف'||p.nusuk_card_status==='مسلّمة للحاج');
   const hasBracelet = window._supSettings.braceletAvailable;
 
   // v18.0b: إظهار/إخفاء الفلاتر الشرطية
@@ -131,7 +130,7 @@ function renderSupTable() {
     list = list.filter(p => {
       if(f === 'unboarded')    return p.bus_status  !== 'ركب';
       if(f === 'not_arrived')  return p.camp_status !== 'حضر';
-      if(f === 'no_nusuk')     return p.nusuk_card_status !== 'مسلمة';
+      if(f === 'no_nusuk')     return p.nusuk_card_status !== 'مسلّمة للحاج';
       if(f === 'no_bracelet')  return !p.bracelet_time;
       return true;
     });
@@ -150,8 +149,8 @@ function renderSupTable() {
   tbody.innerHTML = list.map(p => {
     const boarded = p.bus_status==='ركب';
     const arrived = p.camp_status==='حضر';
-    const nusukDelivered = p.nusuk_card_status==='مسلمة';
-    const nusukReady = p.nusuk_card_status==='موجودة';
+    const nusukDelivered = p.nusuk_card_status==='مسلّمة للحاج';
+    const nusukReady = p.nusuk_card_status==='موجودة لدى المشرف';
     const braceletDone = !!p.bracelet_time;
     return `<tr style="border-bottom:1px solid #f0e8d0">
       <td style="padding:8px 4px;text-align:center"><input type="checkbox" class="sup-row-check" data-id="${p.id}" onchange="_updateSupBulkBar()" style="width:18px;height:18px;cursor:pointer;accent-color:#c8971a"></td>
@@ -176,7 +175,7 @@ function _countSupFilters(){
   const counts = {
     unboarded:   p.filter(x => x.bus_status  !== 'ركب').length,
     not_arrived: p.filter(x => x.camp_status !== 'حضر').length,
-    no_nusuk:    p.filter(x => x.nusuk_card_status !== 'مسلمة').length,
+    no_nusuk:    p.filter(x => x.nusuk_card_status !== 'مسلّمة للحاج').length,
     no_bracelet: p.filter(x => !x.bracelet_time).length
   };
   document.querySelectorAll('.sup-filter-chip').forEach(btn => {
@@ -204,7 +203,7 @@ function supModalSearch() {
   let list = _filterPilgrimsByQuery(q, { source: window._supPilgrims, limit: 500 });
 
   // فلترة حسب النوع
-  if(action==='nusuk') list = list.filter(p=>p.nusuk_card_status==='موجودة'||p.nusuk_card_status==='مسلمة');
+  if(action==='nusuk') list = list.filter(p=>p.nusuk_card_status==='موجودة لدى المشرف'||p.nusuk_card_status==='مسلّمة للحاج');
 
   const el = document.getElementById('sup-modal-results');
   if(!list.length){ el.innerHTML = '<div class="plc-empty">لا يوجد نتائج</div>'; return; }
@@ -213,7 +212,7 @@ function supModalSearch() {
     let done, label, color;
     if(action==='bus'){        done=p.bus_status==='ركب';              label=done?'✅ ركب':'🚌 تسجيل إركاب';   color=done?'#888':'#1a7a1a'; }
     else if(action==='camp'){  done=p.camp_status==='حضر';             label=done?'✅ حضر':'🏕️ تسجيل وصول';   color=done?'#888':'#1a5fa8'; }
-    else if(action==='nusuk'){ done=p.nusuk_card_status==='مسلمة';     label=done?'✅ مُسلَّمة':'🪪 تسليم + توقيع'; color=done?'#888':'#7a4500'; }
+    else if(action==='nusuk'){ done=p.nusuk_card_status==='مسلّمة للحاج'; label=done?'✅ مُسلَّمة':'🪪 تسليم + توقيع'; color=done?'#888':'#7a4500'; }
     else if(action==='bracelet'){ done=!!p.bracelet_time;              label=done?'✅ مُسلَّمة':'🚆 تسليم + توقيع'; color=done?'#888':'#444'; }
     const needsSig = (action==='nusuk'||action==='bracelet') && !done;
     return _buildPilgrimCard(p, {
@@ -329,7 +328,7 @@ async function confirmSignature() {
 
     // حفظ في Supabase
     let updates = {};
-    if(type==='nusuk') { updates = { nusuk_card_status: 'مسلمة', nusuk_card_sig: sigUrl, nusuk_card_time: timeStr }; }
+    if(type==='nusuk') { updates = { nusuk_card_status: 'مسلّمة للحاج', nusuk_card_sig: sigUrl, nusuk_card_time: timeStr }; }
     else if(type==='bracelet') { updates = { bracelet_sig: sigUrl, bracelet_time: timeStr }; }
     else if(type==='bulk_nusuk') {
       const ids = window._sigBulkIds||[];
