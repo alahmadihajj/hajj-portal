@@ -62,7 +62,7 @@ function openSupBulkAck() {
               <th style="padding:7px 4px;font-weight:700;color:#7a4500;width:30px;border-bottom:1px solid #e0e0e0">#</th>
               <th style="padding:7px 8px;font-weight:700;color:#7a4500;text-align:right;border-bottom:1px solid #e0e0e0">اسم الحاج</th>
               <th style="padding:7px 8px;font-weight:700;color:#7a4500;width:92px;text-align:center;border-bottom:1px solid #e0e0e0;direction:ltr">الهوية</th>
-              <th style="padding:7px 4px;font-weight:700;color:#c00;width:40px;text-align:center;border-bottom:1px solid #e0e0e0" title="استبعاد">—</th>
+              <th style="padding:7px 4px;font-weight:700;color:#c00;width:50px;text-align:center;border-bottom:1px solid #e0e0e0;background:#fde8e8" title="استبعاد حاج من الدفعة">حذف</th>
             </tr>
           </thead>
           <tbody id="sup-bulk-tbody"></tbody>
@@ -108,10 +108,10 @@ function _renderSupBulkTable() {
       <td style="padding:7px 4px;text-align:center;color:#999;font-size:11px">${i+1}</td>
       <td style="padding:7px 8px;font-weight:600;color:${isExcl?'#999':'#333'};${isExcl?'text-decoration:line-through':''}">${_esc(p.name||'—')}</td>
       <td style="padding:7px 8px;text-align:center;color:#666;font-size:11px;direction:ltr;${isExcl?'text-decoration:line-through':''}">${_esc(p.id_num||'—')}</td>
-      <td style="padding:7px 4px;text-align:center">
+      <td style="padding:7px 4px;text-align:center;width:50px">
         ${isExcl
-          ? `<button onclick="_toggleSupBulkExcluded('${p.id}')" title="إعادة" style="background:#1a7a1a;color:#fff;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:13px;font-family:inherit;line-height:1">↩</button>`
-          : `<button onclick="_toggleSupBulkExcluded('${p.id}')" title="استبعاد" style="background:#fde8e8;color:#c00;border:1.5px solid #c00;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;font-family:inherit;line-height:1;font-weight:700">✕</button>`}
+          ? `<button onclick="_toggleSupBulkExcluded('${p.id}')" title="إعادة إضافة" style="background:#1a7a1a;color:#fff;border:none;border-radius:6px;width:36px;height:30px;cursor:pointer;font-size:14px;font-family:inherit;line-height:1">↩</button>`
+          : `<button onclick="_toggleSupBulkExcluded('${p.id}')" title="استبعاد من الدفعة" style="background:#c00;color:#fff;border:none;border-radius:6px;width:36px;height:30px;cursor:pointer;font-size:16px;font-family:inherit;line-height:1;font-weight:700;box-shadow:0 1px 3px rgba(204,0,0,0.3)">✕</button>`}
       </td>
     </tr>`;
   }).join('') || `<tr><td colspan="4" style="padding:20px;text-align:center;color:#888;font-size:12px">لا توجد نتائج مطابقة</td></tr>`;
@@ -164,6 +164,13 @@ window._sigType = '';
 async function loadSupervisorPanel(user) {
   document.getElementById('sup-name').textContent = user.name||user.username;
   document.getElementById('sup-bus').textContent = '🚌 حافلة رقم: ' + (user.group_num||'—');
+
+  // v22.8: تحميل dev_settings (لم يكن محمَّلاً للمشرف — loadData يُستدعى للأدمن فقط)
+  // هذا ضروري لظهور الشعار + الختم + ممثل الشركة في الإقرار الرسمي
+  try {
+    const devVal = await window.DB.Settings.get('dev_settings');
+    if(devVal) window._devSettings = devVal;
+  } catch(e) { console.warn('[sup] dev_settings load failed', e); }
 
   _applyDevLogo();
   _applyCompanyName(_getCompanyName());
@@ -975,9 +982,19 @@ async function openBulkAckReceipt(opts){
   <title>إقرار استلام بطاقات نسك — ${esc(String(ackId).substring(0,8))}</title>
   <style>
     @page{size:A4 portrait;margin:8mm 10mm}
-    @media print { body{margin:0} .no-print{display:none} }
+    @media print { body{margin:0;padding:0;max-width:none!important} .no-print{display:none} }
     *{box-sizing:border-box}
-    body{font-family:Arial,sans-serif;direction:rtl;padding:20px;font-size:12px;color:#222;max-width:760px;margin:0 auto}
+    html,body{margin:0;padding:0}
+    body{font-family:Arial,sans-serif;direction:rtl;padding:20px;font-size:12px;color:#222;max-width:800px;margin:0 auto;background:#f5f5f5;min-height:100vh}
+    /* v22.8: responsive للشاشات الصغيرة */
+    @media screen and (max-width:820px){
+      body{padding:10px;font-size:11px}
+      .header{grid-template-columns:1fr!important;gap:8px;text-align:center}
+      .header>div:first-child,.header>div:last-child{display:none}
+      table.pilgrims{font-size:10px!important}
+      table.pilgrims th,table.pilgrims td{padding:4px 4px!important}
+      .sig-section{grid-template-columns:1fr!important;gap:14px!important}
+    }
     .header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:3px solid #3d2000;padding-bottom:12px;margin-bottom:14px}
     .co-name{font-size:15px;font-weight:bold;color:#3d2000}
     .co-sub{font-size:11px;color:#555}
