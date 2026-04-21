@@ -43,12 +43,22 @@ function _hasSupervisorAck(pilgrim){
 function initNusukBusFilter() {
   const sel = document.getElementById('nusuk-bus-filter');
   if(!sel) return;
+  // v22.5.2: حفظ القيمة المختارة قبل إعادة البناء (renderNusukTable يستدعي هذه الدالة ثم يقرأ .value)
+  const currentValue = sel.value;
   // v22.5.1: استبعاد '-' والقيم الفارغة + ترتيب رقمي صحيح
   const buses = [...new Set(
     ALL_DATA.map(p => p['رقم الحافلة الخاصة بك'])
       .filter(b => b && String(b).trim() && String(b).trim() !== '-')
   )].sort((a, b) => Number(a) - Number(b));
-  sel.innerHTML = '<option value="">🚌 كل الحافلات</option>' + buses.map(b=>`<option value="${b}">حافلة ${b}</option>`).join('');
+  const newHTML = '<option value="">🚌 كل الحافلات</option>' +
+    buses.map(b => `<option value="${b}">حافلة ${b}</option>`).join('');
+  // v22.5.2: rebuild فقط عند التغيير + استعادة القيمة المختارة
+  if(sel.innerHTML !== newHTML){
+    sel.innerHTML = newHTML;
+    if(currentValue && buses.map(String).includes(String(currentValue))){
+      sel.value = currentValue;
+    }
+  }
 }
 
 function filterNusuk(status) {
