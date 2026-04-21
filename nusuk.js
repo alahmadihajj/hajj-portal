@@ -34,6 +34,11 @@ function _canReopenNusuk(){
   const r = window._currentUser && window._currentUser.role;
   return r === 'admin' || r === 'superadmin';
 }
+// v22.1: قفل التسليم — هل استلم المشرف البطاقة من الإدارة؟
+function _hasSupervisorAck(pilgrim){
+  if(!pilgrim) return false;
+  return !!(pilgrim['نسك_supervisor_sig'] || pilgrim.nusuk_supervisor_sig);
+}
 
 function initNusukBusFilter() {
   const sel = document.getElementById('nusuk-bus-filter');
@@ -238,7 +243,7 @@ async function applyBulkNusuk() {
   // v20.2: فلترة المقفولة (superadmin يتجاوز)
   const isSuper = _isSuperAdmin();
   const lockedSkipped = [];
-  const ids = allIds.filter(id => {
+  let ids = allIds.filter(id => {
     const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(id));
     const current = r?.['حالة بطاقة نسك'] || 'لم تطبع';
     const locked = _isNusukLocked(r) && current !== status;
@@ -249,6 +254,20 @@ async function applyBulkNusuk() {
   if(!ids.length){
     showToast(`🔒 جميع المحدَّدين (${lockedSkipped.length}) موقَّعون — استخدم 🔓 فتح القفل للتعديل`, 'warning');
     return;
+  }
+
+  // v22.1: قفل التسليم الصارم — 'مسلّمة للحاج' يتطلب توقيع المشرف (superadmin يتجاوز)
+  const noSupAckSkipped = [];
+  if(status === 'مسلّمة للحاج' && !isSuper){
+    ids = ids.filter(id => {
+      const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(id));
+      if(!_hasSupervisorAck(r)){ noSupAckSkipped.push(id); return false; }
+      return true;
+    });
+    if(!ids.length){
+      showToast(`🔒 جميع المحدَّدين (${noSupAckSkipped.length}) بلا استلام مشرف — يجب استلامها عبر المشرف أولاً`, 'warning');
+      return;
+    }
   }
 
   // v20.1: snapshot قبل التحديث لكل حاج (لـ audit)
@@ -303,8 +322,10 @@ async function applyBulkNusuk() {
       metadata: bulkMeta
     });
 
-    const skipMsg = lockedSkipped.length ? ` • تم تخطّي ${lockedSkipped.length} موقَّع` : '';
-    showToast(`✅ تم تحديث ${ids.length} حاج${skipMsg}`, lockedSkipped.length ? 'warning' : 'success');
+    const skipMsg   = lockedSkipped.length   ? ` • تخطٍّ موقَّع: ${lockedSkipped.length}` : '';
+    const noAckMsg  = noSupAckSkipped.length ? ` • بلا استلام مشرف: ${noSupAckSkipped.length}` : '';
+    const totalSkip = lockedSkipped.length + noSupAckSkipped.length;
+    showToast(`✅ تم تحديث ${ids.length} حاج${skipMsg}${noAckMsg}`, totalSkip ? 'warning' : 'success');
     clearNusukSelection();
     renderNusukTable(window._nusukFilter);
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }

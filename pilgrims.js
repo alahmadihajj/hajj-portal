@@ -954,6 +954,14 @@ async function confirmPilgrimAck(pilgrimId) {
   const sig = canvas.toDataURL('image/png', 0.7);
   const now = new Date().toLocaleString('ar-SA');
 
+  // v22.1: قفل التسليم الصارم — يجب استلام المشرف البطاقة قبل تسليمها للحاج
+  const pilgrimRef = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
+  const bypassNoSupAck = !_hasSupervisorAck(pilgrimRef) && _isSuperAdmin();
+  if(!_hasSupervisorAck(pilgrimRef) && !_isSuperAdmin()){
+    showToast('🔒 يجب استلام البطاقة من الإدارة (عبر المشرف) أولاً', 'error');
+    return;
+  }
+
   // v20.1: snapshot قبل التحديث (لـ audit)
   const r = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
   const before = {
@@ -973,12 +981,14 @@ async function confirmPilgrimAck(pilgrimId) {
 
     // v20.1: audit (sig مقنّع تلقائياً عبر _maskSensitiveInChanges في _recordAudit)
     // v20.2: bypass_lock عند تجاوز superadmin لقفل 'مسلّمة للحاج' (إعادة توقيع)
+    // v22.1: bypass_no_supervisor_ack عند تجاوز superadmin لقفل التسليم قبل المشرف
     const changes = _buildFieldChanges(before, updates);
     if(changes){
       const meta = { source: 'admin_nusuk_pilgrim_receive' };
       if(_isSuperAdmin() && before.nusuk_card_sig && before.nusuk_card_status === 'مسلّمة للحاج'){
         meta.bypass_lock = true;
       }
+      if(bypassNoSupAck) meta.bypass_no_supervisor_ack = true;
       _recordAudit({
         action_type:  'update',
         entity_type:  'pilgrim',

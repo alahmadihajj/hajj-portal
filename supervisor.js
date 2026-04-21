@@ -69,9 +69,13 @@ function openSupBulkAck() {
         </table>
       </div>
       <div id="sup-bulk-counter" style="background:#fff3e0;border:1px solid #c8971a;border-radius:8px;padding:8px 12px;font-size:12px;color:#7a4500;text-align:center;font-weight:700;margin-bottom:8px"></div>
-      <div style="font-size:11px;color:#666;text-align:center;line-height:1.6;margin-bottom:4px">
+      <div style="font-size:11px;color:#666;text-align:center;line-height:1.6;margin-bottom:8px">
         <em>أقر بأنني استلمت البطاقات المذكورة أعلاه لتوزيعها على الحجاج حسب الكشوفات المعتمدة.</em>
       </div>
+      <label style="display:flex;gap:8px;align-items:center;background:#fffbf0;border:1.5px solid #e0d5c5;border-radius:8px;padding:8px 10px;font-size:11px;color:#3d2000;direction:rtl;cursor:pointer;margin-bottom:4px">
+        <input type="checkbox" id="sup-bulk-ack-print" checked style="width:16px;height:16px;accent-color:#7a4500;cursor:pointer">
+        <span>🖨️ فتح صفحة الإقرار الرسمي للطباعة بعد التأكيد</span>
+      </label>
     </div>`;
   _renderSupBulkTable();
   clearSigCanvas();
@@ -534,6 +538,10 @@ async function confirmSignature() {
         metadata: bulkMeta
       });
 
+      // v22.1: قراءة تفضيل الطباعة قبل إغلاق الـ modal (العنصر يُحذف مع الإغلاق)
+      const shouldPrintAck = !!document.getElementById('sup-bulk-ack-print')?.checked;
+      const ackPilgrimsSnapshot = ids.map(bid => window._supPilgrims.find(x=>String(x.id)===String(bid))).filter(Boolean);
+
       closeSigModal();
       const exclMsg = excluded.size ? ` • استبعاد يدوي: ${excluded.size}` : '';
       const isoMsg  = isolationSkipped.length ? ` • عزل تلقائي: ${isolationSkipped.length}` : '';
@@ -542,6 +550,17 @@ async function confirmSignature() {
       window._sigBulkReady = [];
       window._sigBulkExcluded = null;
       updateSupStats(); renderSupTable(); renderSupActionBtns();
+
+      // v22.1: فتح الإقرار الرسمي للطباعة (إذا المستخدم لم يلغِ الخيار)
+      if(shouldPrintAck && typeof openBulkAckReceipt === 'function'){
+        setTimeout(() => openBulkAckReceipt({
+          ackId: bulkSessionId,
+          pilgrims: ackPilgrimsSnapshot,
+          supervisor: user,
+          sigUrl,
+          timeStr
+        }), 200);
+      }
       return;
     }
 
@@ -554,6 +573,14 @@ async function confirmSignature() {
       return;
     }
 
+    // v22.1: قفل التسليم — tasليم نسك للحاج يتطلب استلام المشرف أولاً (superadmin يتجاوز)
+    const isSuper = window._currentUser && window._currentUser.role === 'superadmin';
+    const bypassNoSupAck = type === 'nusuk' && !(p && (p.nusuk_supervisor_sig)) && isSuper;
+    if(type === 'nusuk' && !(p && (p.nusuk_supervisor_sig)) && !isSuper){
+      showToast('🔒 لم تستلم هذه البطاقة من الإدارة بعد — استخدم 📦 استلام دفعة', 'error');
+      return;
+    }
+
     // v17.2: snapshot لقيم الحقول المُحدَّثة (single nusuk / bracelet)
     const auditKeys = Object.keys(updates);
     const before = {};
@@ -563,15 +590,18 @@ async function confirmSignature() {
     if(p) Object.assign(p, updates);
 
     // v17.2: audit (مع قناع التوقيع)
+    // v22.1: bypass_no_supervisor_ack إذا تجاوز superadmin قفل التسليم
     const changes = _maskSigInChanges(_buildFieldChanges(before, updates));
     if(changes){
+      const meta = { source: type==='nusuk' ? 'supervisor_nusuk' : 'supervisor_bracelet' };
+      if(bypassNoSupAck) meta.bypass_no_supervisor_ack = true;
       _recordAudit({
         action_type:  'update',
         entity_type:  'pilgrim',
         entity_id:    String(id),
         entity_label: _buildPilgrimLabel(p),
         field_changes: changes,
-        metadata: { source: type==='nusuk' ? 'supervisor_nusuk' : 'supervisor_bracelet' }
+        metadata: meta
       });
     }
 
@@ -866,3 +896,154 @@ document.addEventListener('click', (e) => {
     }
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════════
+// v22.1: إقرار المشرف الرسمي — نافذة طباعة/PDF
+// ═══════════════════════════════════════════════════════════════════════
+// opts:
+//   - ackId (string) — مطلوب
+//   - pilgrims (Array) — اختياري؛ إن لم يوجد يُجلب من DB بحسب ack_id
+//   - supervisor (Object) — اختياري؛ افتراضي _currentUser
+//   - sigUrl, timeStr — اختياري؛ يُقرأ من أول حاج في الإقرار
+// ═══════════════════════════════════════════════════════════════════════
+async function openBulkAckReceipt(opts){
+  opts = opts || {};
+  let { ackId, pilgrims, supervisor, sigUrl, timeStr } = opts;
+  if(!ackId) { showToast('معرّف الإقرار غير صالح', 'error'); return; }
+
+  // جلب من DB إذا البيانات غير مُمرَّرة (عرض تاريخي)
+  if(!pilgrims || !pilgrims.length){
+    try {
+      const all = await window.DB.Pilgrims.getAll();
+      pilgrims = all.filter(p => String(p.nusuk_supervisor_ack_id||'') === String(ackId));
+    } catch(e){ showToast('فشل جلب البيانات: '+(e.message||''), 'error'); return; }
+    if(!pilgrims.length){ showToast('لا يوجد حجاج بهذا الإقرار', 'warning'); return; }
+    sigUrl  = sigUrl  || pilgrims[0].nusuk_supervisor_sig  || '';
+    timeStr = timeStr || pilgrims[0].nusuk_supervisor_time || '';
+  }
+
+  if(!supervisor) supervisor = window._currentUser || {};
+  // في العرض التاريخي، قد لا يكون _currentUser هو نفس مشرف الإقرار — نحاول الاستدلال من sys_users حسب bus_num
+  if((!supervisor.name || !supervisor.id_num) && pilgrims[0] && pilgrims[0].bus_num != null){
+    try {
+      const users = await window.DB.SysUsers.getAll();
+      const sup = users.find(u => u.role === 'supervisor' && String(u.group_num) === String(pilgrims[0].bus_num));
+      if(sup){ supervisor = Object.assign({}, sup, supervisor); }
+    } catch(_){}
+  }
+
+  const dev = window._devSettings || {};
+  const companyName = dev.companyName || '';
+  const license = dev.license || '';
+  const stamp = dev.stamp || '';
+  const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ar-SA-u-ca-islamic');
+  const timeDisplay = timeStr || now.toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit' });
+
+  const supName  = supervisor.name || supervisor.username || '—';
+  const supIdNum = supervisor.id_num || '—';
+  const supBus   = supervisor.group_num || (pilgrims[0] && pilgrims[0].bus_num) || '—';
+
+  const rows = pilgrims.map((p,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td style="text-align:right;font-weight:600">${esc(p.name||'—')}</td>
+      <td style="direction:ltr">${esc(p.id_num||'—')}</td>
+      <td>${esc(String(p.bus_num==null?'—':p.bus_num))}</td>
+    </tr>`).join('');
+
+  const w = window.open('', '_blank');
+  if(!w){ showToast('المتصفح حجب النافذة — فعّل النوافذ المنبثقة', 'warning'); return; }
+  w.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
+  <title>إقرار استلام بطاقات نسك — ${esc(String(ackId).substring(0,8))}</title>
+  <style>
+    @page{size:A4 portrait;margin:8mm 10mm}
+    @media print { body{margin:0} .no-print{display:none} }
+    *{box-sizing:border-box}
+    body{font-family:Arial,sans-serif;direction:rtl;padding:20px;font-size:12px;color:#222;max-width:760px;margin:0 auto}
+    .header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:3px solid #3d2000;padding-bottom:12px;margin-bottom:14px}
+    .co-name{font-size:15px;font-weight:bold;color:#3d2000}
+    .co-sub{font-size:11px;color:#555}
+    .doc-title{font-size:15px;font-weight:bold;color:#3d2000;margin-top:4px}
+    .info-box{background:#fffbf0;border:1px solid #e0d0b0;border-radius:8px;padding:10px 14px;margin-bottom:14px;line-height:1.9;font-size:12px}
+    table.pilgrims{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px}
+    table.pilgrims thead{background:#f5ead0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    table.pilgrims th{padding:6px 8px;text-align:center;border:1px solid #d5c098;font-weight:bold;color:#3d2000}
+    table.pilgrims td{padding:5px 8px;border:1px solid #e0d0b0;text-align:center}
+    table.pilgrims tbody tr:nth-child(even){background:#fffbf0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .pledge{background:#fff;border:1px solid #eee;border-radius:8px;padding:12px 14px;margin-bottom:14px;line-height:2;font-size:12px}
+    .pledge ol{margin:6px 20px 0 0;padding:0}
+    .pledge li{margin-bottom:4px}
+    .sig-section{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:16px;border-top:1px solid #eee;padding-top:14px}
+    .sig-box{text-align:center}
+    .sig-box label{font-size:12px;color:#666;display:block;margin-bottom:8px;font-weight:bold}
+    .sig-img{max-width:180px;max-height:80px;object-fit:contain;border:1px solid #ddd;border-radius:6px;background:#fafafa}
+    .stamp{max-width:90px;max-height:90px;object-fit:contain;display:block;margin:0 auto}
+    .sig-placeholder{width:180px;height:80px;border:1px dashed #ccc;border-radius:6px;margin:0 auto}
+    .footer{text-align:center;font-size:10px;color:#999;margin-top:14px;border-top:1px solid #f0f0f0;padding-top:8px}
+  </style></head><body>
+  <div class="header">
+    <div style="text-align:right">
+      <div class="co-name">${esc(companyName)}</div>
+      ${license?`<div class="co-sub">رقم الترخيص: ${esc(license)}</div>`:''}
+    </div>
+    <div style="text-align:center">
+      ${_buildPrintLogoHTML(60)}
+      <div class="doc-title">إقرار استلام بطاقات نسك</div>
+    </div>
+    <div></div>
+  </div>
+  <div class="info-box">
+    <strong>اسم المشرف:</strong> ${esc(supName)} &nbsp;|&nbsp;
+    <strong>🪪 رقم الهوية:</strong> <span style="direction:ltr">${esc(supIdNum)}</span><br>
+    <strong>🚌 الحافلة:</strong> ${esc(String(supBus))} &nbsp;|&nbsp;
+    <strong>عدد البطاقات:</strong> ${pilgrims.length}<br>
+    <strong>📅 التاريخ:</strong> ${esc(dateStr)} &nbsp;|&nbsp;
+    <strong>🕒 الوقت:</strong> ${esc(timeDisplay)}<br>
+    <strong>معرّف الإقرار:</strong> <span style="direction:ltr;color:#888;font-size:10px">${esc(ackId)}</span>
+  </div>
+  <table class="pilgrims">
+    <thead>
+      <tr>
+        <th style="width:30px">#</th>
+        <th style="text-align:right">اسم الحاج</th>
+        <th style="width:110px">رقم الهوية</th>
+        <th style="width:70px">الحافلة</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="pledge">
+    أقر أنا المشرف المذكور أعلاه بأنني استلمت من <strong>${esc(companyName)}</strong> عدد <strong>${pilgrims.length}</strong> بطاقة "نسك" للحجاج المذكورة أسماؤهم أعلاه وأتعهد بما يلي:
+    <ol>
+      <li>المحافظة على البطاقات وعدم تسليمها لأي شخص غير صاحبها.</li>
+      <li>التحقق من هوية كل حاج قبل التسليم وأخذ توقيعه على الإقرار الخاص به.</li>
+      <li>الالتزام بالتعليمات والإرشادات المتعلقة بتوزيع البطاقات.</li>
+      <li>إبلاغ الحملة فوراً في حال فقدان أي بطاقة أو وجود أي مشكلة.</li>
+      <li>إعادة البطاقات غير المُسلَّمة إلى الإدارة بعد انتهاء الرحلة.</li>
+      <li>أتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.</li>
+    </ol>
+  </div>
+  <div class="sig-section">
+    <div class="sig-box">
+      <label>توقيع المشرف</label>
+      ${sigUrl?`<img class="sig-img" src="${esc(sigUrl)}" alt="توقيع المشرف">`:'<div class="sig-placeholder"></div>'}
+      <div style="margin-top:6px;font-size:12px;font-weight:600">${esc(supName)}</div>
+    </div>
+    <div class="sig-box">
+      <label>ممثل الشركة والختم الرسمي</label>
+      ${stamp?`<img class="stamp" src="${esc(stamp)}" alt="ختم">`:'<div class="sig-placeholder"></div>'}
+      <div style="margin-top:6px;font-size:12px;font-weight:600">${esc(companyName)}</div>
+    </div>
+  </div>
+  <div class="footer">
+    تم إنشاء هذا الإقرار إلكترونياً &nbsp;•&nbsp; معرّف: <span style="direction:ltr">${esc(ackId)}</span>
+  </div>
+  <div class="no-print" style="text-align:center;margin-top:20px">
+    <button onclick="window.print()" style="padding:10px 30px;background:#3d2000;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-family:Arial,sans-serif">🖨️ طباعة / حفظ PDF</button>
+  </div>
+  </body></html>`);
+  w.document.close();
+}
