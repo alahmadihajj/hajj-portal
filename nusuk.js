@@ -251,6 +251,13 @@ function clearNusukSelection() {
 async function applyBulkNusuk() {
   const status = document.getElementById('nusuk-bulk-status').value;
   if(!status) { showToast('اختر الحالة الجديدة أولاً', 'warning'); return; }
+
+  // v22.6: دفاع عميق — الحالات التي تتطلّب توقيعاً لا تُضبط من bulk admin مباشرة
+  if(status === 'موجودة لدى المشرف' || status === 'مسلّمة للحاج'){
+    showToast('⚠️ هذه الحالة تُضبط تلقائياً عند توقيع المشرف/الحاج — استخدم "موجودة لدى الإدارة" ثم دع المشرف يوقّع الإقرار', 'warning');
+    return;
+  }
+
   const allIds = [...document.querySelectorAll('.nusuk-row-check:checked')].map(c=>c.dataset.id);
   if(!allIds.length) return;
 

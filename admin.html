@@ -2632,13 +2632,11 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
         <div id="nusuk-count" style="font-size:13px;color:#888"></div>
         <div id="nusuk-bulk-bar" style="display:none;align-items:center;gap:8px;background:#fff3e0;border:1.5px solid #c8971a;border-radius:10px;padding:8px 14px">
           <span id="nusuk-selected-count" style="font-size:13px;font-weight:600;color:#7a4500"></span>
-          <select id="nusuk-bulk-status" style="padding:7px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:12px;font-family:inherit">
+          <select id="nusuk-bulk-status" style="padding:7px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:12px;font-family:inherit" title="الحالات التي تتطلّب توقيعاً (لدى المشرف / مسلّمة للحاج) تُضبط تلقائياً عبر الإقرارات الرسمية">
             <option value="">— اختر الحالة الجديدة —</option>
             <option value="لم تطبع">⬜ لم تطبع</option>
             <option value="في الطباعة">🔄 في الطباعة</option>
             <option value="موجودة لدى الإدارة">📦 موجودة لدى الإدارة</option>
-            <option value="موجودة لدى المشرف">👤 موجودة لدى المشرف</option>
-            <option value="مسلّمة للحاج">✅ مسلّمة للحاج</option>
           </select>
           <button onclick="applyBulkNusuk()" style="padding:7px 16px;background:#7a4500;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✅ تطبيق</button>
           <button onclick="clearNusukSelection()" style="padding:7px 10px;background:#f5f5f5;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">✕</button>

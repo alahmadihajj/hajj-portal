@@ -64,7 +64,8 @@ function _buildBulkValueOptions(field, valSel){
   const staticOpts = {
     bus_status: ['ركب', 'لم يركب'],
     camp_status: ['حضر', 'لم يصل'],
-    nusuk_card_status: ['لم تطبع','في الطباعة','موجودة لدى الإدارة','موجودة لدى المشرف','مسلّمة للحاج']
+    // v22.6: الحالات التي تتطلّب توقيعاً مُستبعَدة — تُضبط فقط عبر إقرار المشرف/الحاج
+    nusuk_card_status: ['لم تطبع','في الطباعة','موجودة لدى الإدارة']
   };
   if(staticOpts[field]){
     valSel.innerHTML = '<option value="">— اختر القيمة —</option>' +
@@ -107,6 +108,13 @@ async function applyDataBulk(){
   const field = document.getElementById('data-bulk-field').value;
   const value = document.getElementById('data-bulk-value').value;
   if(!field || !value){ showToast('اختر الحقل والقيمة أولاً', 'warning'); return; }
+
+  // v22.6: دفاع عميق — الحالات التي تتطلّب توقيعاً لا تُضبط من bulk admin مباشرة
+  if(field === 'nusuk_card_status' && (value === 'موجودة لدى المشرف' || value === 'مسلّمة للحاج')){
+    showToast('⚠️ هذه الحالة تُضبط تلقائياً عند توقيع المشرف/الحاج — استخدم "موجودة لدى الإدارة" ثم دع المشرف يوقّع الإقرار', 'warning');
+    return;
+  }
+
   const ids = [...document.querySelectorAll('.data-row-check:checked')].map(c=>parseInt(c.dataset.id));
   if(!ids.length) return;
   const result = await _executeBulkPipeline(ids, field, value, { source:'data' });
