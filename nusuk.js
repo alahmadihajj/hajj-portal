@@ -140,7 +140,7 @@ function renderNusukTable(filter) {
       <td style="padding:10px 14px;text-align:center">
         ${p['نسك_sig'] ?
           `<button onclick="viewPilgrimAck('${p['_supabase_id']}')" style="background:#1a5fa8;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit">📄 عرض</button>
-           ${_canReopenNusuk() && (p.nusuk_card_status || '').includes('مسلّمة') ? ` <button onclick="openNusukReopenModal('${p.id}')" title="إعادة فتح البطاقة" style="background:#c07000;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">🔓</button>` : ''}`
+           ${_canReopenNusuk() && (p['حالة بطاقة نسك'] || '').includes('مسلّمة') ? ` <button onclick="openNusukReopenModal('${p['_supabase_id']}')" title="إعادة فتح البطاقة" style="background:#c07000;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">🔓</button>` : ''}`
           : '<span style="color:#ccc;font-size:11px">—</span>'}
       </td>
     </tr>`;
