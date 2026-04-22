@@ -15,7 +15,7 @@
 
 // ===== بطاقات نسك =====
 window._nusukFilter = '';
-const NUSUK_STATUSES = ['لم تطبع','في الطباعة','موجودة لدى الإدارة','موجودة لدى المشرف','مسلّمة للحاج'];
+const NUSUK_STATUSES = ['لم تطبع','في الطباعة','لدى الإدارة','لدى المشرف','مسلّمة للحاج'];
 const NUSUK_COLORS  = ['#888','#1a5fa8','#c8971a','#7a4500','#1a7a1a'];
 const NUSUK_BG      = ['#f5f5f5','#e8f0fd','#fff3e0','#fdf0e0','#e8f8e8'];
 
@@ -63,7 +63,7 @@ function initNusukBusFilter() {
 
 function filterNusuk(status) {
   window._nusukFilter = status;
-  ['','لم تطبع','في الطباعة','موجودة لدى الإدارة','موجودة لدى المشرف','مسلّمة للحاج'].forEach((s,i) => {
+  ['','لم تطبع','في الطباعة','لدى الإدارة','لدى المشرف','مسلّمة للحاج'].forEach((s,i) => {
     const ids = ['nusuk-f-all','nusuk-f-1','nusuk-f-2','nusuk-f-3','nusuk-f-4','nusuk-f-5'];
     const btn = document.getElementById(ids[i]);
     if(btn) btn.classList.toggle('hs-active', s===status);
@@ -253,8 +253,8 @@ async function applyBulkNusuk() {
   if(!status) { showToast('اختر الحالة الجديدة أولاً', 'warning'); return; }
 
   // v22.6: دفاع عميق — الحالات التي تتطلّب توقيعاً لا تُضبط من bulk admin مباشرة
-  if(status === 'موجودة لدى المشرف' || status === 'مسلّمة للحاج'){
-    showToast('⚠️ هذه الحالة تُضبط تلقائياً عند توقيع المشرف/الحاج — استخدم "موجودة لدى الإدارة" ثم دع المشرف يوقّع الإقرار', 'warning');
+  if(status === 'لدى المشرف' || status === 'مسلّمة للحاج'){
+    showToast('⚠️ هذه الحالة تُضبط تلقائياً عند توقيع المشرف/الحاج — استخدم "لدى الإدارة" ثم دع المشرف يوقّع الإقرار', 'warning');
     return;
   }
 
@@ -364,8 +364,8 @@ async function quickNusukUpdate(pilgrimId, status, selectEl) {
     return;
   }
 
-  if(status==='موجودة لدى المشرف'||status==='مسلّمة للحاج') {
-    if(status==='موجودة لدى المشرف') { openSupAck(pilgrimId, pilgrim); return; }
+  if(status==='لدى المشرف'||status==='مسلّمة للحاج') {
+    if(status==='لدى المشرف') { openSupAck(pilgrimId, pilgrim); return; }
     if(status==='مسلّمة للحاج') { openPilgrimAck(pilgrimId, pilgrim); return; }
   }
   try {

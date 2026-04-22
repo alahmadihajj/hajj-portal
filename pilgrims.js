@@ -65,7 +65,7 @@ function _buildBulkValueOptions(field, valSel){
     bus_status: ['ركب', 'لم يركب'],
     camp_status: ['حضر', 'لم يصل'],
     // v22.6: الحالات التي تتطلّب توقيعاً مُستبعَدة — تُضبط فقط عبر إقرار المشرف/الحاج
-    nusuk_card_status: ['لم تطبع','في الطباعة','موجودة لدى الإدارة']
+    nusuk_card_status: ['لم تطبع','في الطباعة','لدى الإدارة']
   };
   if(staticOpts[field]){
     valSel.innerHTML = '<option value="">— اختر القيمة —</option>' +
@@ -110,8 +110,8 @@ async function applyDataBulk(){
   if(!field || !value){ showToast('اختر الحقل والقيمة أولاً', 'warning'); return; }
 
   // v22.6: دفاع عميق — الحالات التي تتطلّب توقيعاً لا تُضبط من bulk admin مباشرة
-  if(field === 'nusuk_card_status' && (value === 'موجودة لدى المشرف' || value === 'مسلّمة للحاج')){
-    showToast('⚠️ هذه الحالة تُضبط تلقائياً عند توقيع المشرف/الحاج — استخدم "موجودة لدى الإدارة" ثم دع المشرف يوقّع الإقرار', 'warning');
+  if(field === 'nusuk_card_status' && (value === 'لدى المشرف' || value === 'مسلّمة للحاج')){
+    showToast('⚠️ هذه الحالة تُضبط تلقائياً عند توقيع المشرف/الحاج — استخدم "لدى الإدارة" ثم دع المشرف يوقّع الإقرار', 'warning');
     return;
   }
 
@@ -509,8 +509,8 @@ async function openPilgrimAssign(pilgrimId) {
       <select id="pa-nusuk-status" ${nusukDisabled?'disabled':''} style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit${nusukDisabled?';background:#f0f0f0;cursor:not-allowed;color:#888':''}">
         <option value="لم تطبع" ${(pilgrim['حالة بطاقة نسك']||'لم تطبع')==='لم تطبع'?'selected':''}>⬜ لم تطبع</option>
         <option value="في الطباعة" ${pilgrim['حالة بطاقة نسك']==='في الطباعة'?'selected':''}>🔄 في الطباعة</option>
-        <option value="موجودة لدى الإدارة" ${pilgrim['حالة بطاقة نسك']==='موجودة لدى الإدارة'?'selected':''}>📦 موجودة لدى الإدارة</option>
-        <option value="موجودة لدى المشرف" ${pilgrim['حالة بطاقة نسك']==='موجودة لدى المشرف'?'selected':''}>👤 موجودة لدى المشرف</option>
+        <option value="لدى الإدارة" ${pilgrim['حالة بطاقة نسك']==='لدى الإدارة'?'selected':''}>📦 لدى الإدارة</option>
+        <option value="لدى المشرف" ${pilgrim['حالة بطاقة نسك']==='لدى المشرف'?'selected':''}>👤 لدى المشرف</option>
         <option value="مسلّمة للحاج" ${pilgrim['حالة بطاقة نسك']==='مسلّمة للحاج'?'selected':''}>✅ مسلّمة للحاج</option>
       </select>
       <div style="display:grid;grid-template-columns:${canReopen?'1fr auto':'1fr'};gap:8px;margin-top:10px">
@@ -662,8 +662,8 @@ async function saveNusukStatus(pilgrimId) {
     return;
   }
 
-  // إذا تغيرت الحالة إلى "موجودة لدى المشرف" → فتح إقرار المشرف
-  if(status === 'موجودة لدى المشرف') {
+  // إذا تغيرت الحالة إلى "لدى المشرف" → فتح إقرار المشرف
+  if(status === 'لدى المشرف') {
     closeModals();
     openSupAck(pilgrimId, pilgrim);
     return;
@@ -707,9 +707,9 @@ async function saveNusukStatus(pilgrimId) {
 const NUSUK_REOPEN_REASONS = [
   { key:'damage',  label:'🔧 تلف البطاقة',              target:'في الطباعة',          hint:'البطاقة تالفة — تحتاج طبع جديد' },
   { key:'lost',    label:'❌ فقدان البطاقة',            target:'في الطباعة',          hint:'البطاقة مفقودة — تحتاج طبع بديل' },
-  { key:'wrong',   label:'⚠️ خطأ في التسليم لحاج خاطئ', target:'موجودة لدى المشرف',   hint:'البطاقة سليمة — إعادة تسليم لحاج صحيح' },
-  { key:'correct', label:'✏️ تصحيح بيانات الحاج',       target:'موجودة لدى المشرف',   hint:'البطاقة سليمة — تحديث إجراء إداري' },
-  { key:'other',   label:'💬 سبب آخر',                  target:'موجودة لدى المشرف',   hint:'تفاصيل إلزامية (≥10 حرف)' }
+  { key:'wrong',   label:'⚠️ خطأ في التسليم لحاج خاطئ', target:'لدى المشرف',   hint:'البطاقة سليمة — إعادة تسليم لحاج صحيح' },
+  { key:'correct', label:'✏️ تصحيح بيانات الحاج',       target:'لدى المشرف',   hint:'البطاقة سليمة — تحديث إجراء إداري' },
+  { key:'other',   label:'💬 سبب آخر',                  target:'لدى المشرف',   hint:'تفاصيل إلزامية (≥10 حرف)' }
 ];
 
 function openNusukReopenModal(pilgrimId){
@@ -877,12 +877,12 @@ async function confirmSupAck(pilgrimId) {
     nusuk_card_sig:    r ? (r['نسك_sig']        ?? null) : null,
     nusuk_card_time:   r ? (r['نسك_time']       ?? null) : null
   };
-  const updates = { nusuk_card_status: 'موجودة لدى المشرف', nusuk_card_sig: sig, nusuk_card_time: now };
+  const updates = { nusuk_card_status: 'لدى المشرف', nusuk_card_sig: sig, nusuk_card_time: now };
 
   try {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
     if(r) {
-      r['حالة بطاقة نسك'] = 'موجودة لدى المشرف';
+      r['حالة بطاقة نسك'] = 'لدى المشرف';
       r['نسك_sig']        = sig;
       r['نسك_time']       = now;
     }

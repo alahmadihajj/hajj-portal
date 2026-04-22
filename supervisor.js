@@ -26,7 +26,7 @@ window._sigBulkExcluded = null; // Set<id>
 window._sigBulkReady    = [];   // cached ready pilgrims for re-render
 
 function openSupBulkAck() {
-  const ready = window._supPilgrims.filter(p=>p.nusuk_card_status==='موجودة لدى الإدارة');
+  const ready = window._supPilgrims.filter(p=>p.nusuk_card_status==='لدى الإدارة');
   if(!ready.length) { showToast('لا توجد بطاقات جاهزة للاستلام', 'warning'); return; }
 
   const dev = window._devSettings||{};
@@ -190,7 +190,7 @@ async function loadSupervisorPanel(user) {
   // إعداد أزرار العمليات
   renderSupActionBtns();
   // v20.3: إظهار/إخفاء أعمدة الجدول — أي نشاط نسك يُظهر العمود
-  const hasNusuk = window._supPilgrims.some(p=>['موجودة لدى الإدارة','موجودة لدى المشرف','مسلّمة للحاج'].includes(p.nusuk_card_status));
+  const hasNusuk = window._supPilgrims.some(p=>['لدى الإدارة','لدى المشرف','مسلّمة للحاج'].includes(p.nusuk_card_status));
   if(document.getElementById('sup-th-nusuk')) document.getElementById('sup-th-nusuk').style.display = hasNusuk?'':'none';
   if(document.getElementById('sup-th-bracelet')) document.getElementById('sup-th-bracelet').style.display = window._supSettings.braceletAvailable?'':'none';
 
@@ -203,9 +203,9 @@ function renderSupActionBtns() {
   const container = document.getElementById('sup-action-btns');
   if(!container) return;
   // v20.3: فصل منطقي — استلام من الإدارة (📦) مقابل تسليم للحاج (🪪)
-  const readyPilgrims   = window._supPilgrims.filter(p=>p.nusuk_card_status==='موجودة لدى الإدارة');
+  const readyPilgrims   = window._supPilgrims.filter(p=>p.nusuk_card_status==='لدى الإدارة');
   const hasNusukReady   = readyPilgrims.length > 0;
-  const hasNusukWithSup = window._supPilgrims.some(p=>p.nusuk_card_status==='موجودة لدى المشرف');
+  const hasNusukWithSup = window._supPilgrims.some(p=>p.nusuk_card_status==='لدى المشرف');
   const readyCount      = readyPilgrims.length;
   const hasBracelet     = window._supSettings.braceletAvailable;
   const cols = 2 + (hasNusukWithSup?1:0) + (hasNusukReady?1:0) + (hasBracelet?1:0);
@@ -230,8 +230,8 @@ function updateSupStats() {
 
 function renderSupTable() {
   const q = (document.getElementById('sup-search')?.value||'').toLowerCase();
-  // v20.3: أي نشاط نسك يُظهر العمود (يشمل 'موجودة لدى الإدارة' أيضاً)
-  const hasNusuk = window._supPilgrims.some(p=>['موجودة لدى الإدارة','موجودة لدى المشرف','مسلّمة للحاج'].includes(p.nusuk_card_status));
+  // v20.3: أي نشاط نسك يُظهر العمود (يشمل 'لدى الإدارة' أيضاً)
+  const hasNusuk = window._supPilgrims.some(p=>['لدى الإدارة','لدى المشرف','مسلّمة للحاج'].includes(p.nusuk_card_status));
   const hasBracelet = window._supSettings.braceletAvailable;
 
   // v18.0b: إظهار/إخفاء الفلاتر الشرطية
@@ -269,7 +269,7 @@ function renderSupTable() {
     const boarded = p.bus_status==='ركب';
     const arrived = p.camp_status==='حضر';
     const nusukDelivered = p.nusuk_card_status==='مسلّمة للحاج';
-    const nusukReady = p.nusuk_card_status==='موجودة لدى المشرف';
+    const nusukReady = p.nusuk_card_status==='لدى المشرف';
     const braceletDone = !!p.bracelet_time;
     return `<tr style="border-bottom:1px solid #f0e8d0">
       <td style="padding:8px 4px;text-align:center"><input type="checkbox" class="sup-row-check" data-id="${p.id}" onchange="_updateSupBulkBar()" style="width:18px;height:18px;cursor:pointer;accent-color:#c8971a"></td>
@@ -299,8 +299,8 @@ function _renderSupCards(list, hasNusuk, hasBracelet){
     const boarded        = p.bus_status === 'ركب';
     const arrived        = p.camp_status === 'حضر';
     const nusukDelivered = p.nusuk_card_status === 'مسلّمة للحاج';
-    const nusukReady     = p.nusuk_card_status === 'موجودة لدى المشرف';
-    const nusukAtAdmin   = p.nusuk_card_status === 'موجودة لدى الإدارة';
+    const nusukReady     = p.nusuk_card_status === 'لدى المشرف';
+    const nusukAtAdmin   = p.nusuk_card_status === 'لدى الإدارة';
     const braceletDone   = !!p.bracelet_time;
 
     const chip = (bg, color, text) =>
@@ -378,7 +378,7 @@ function supModalSearch() {
   let list = _filterPilgrimsByQuery(q, { source: window._supPilgrims, limit: 500 });
 
   // فلترة حسب النوع
-  if(action==='nusuk') list = list.filter(p=>p.nusuk_card_status==='موجودة لدى المشرف'||p.nusuk_card_status==='مسلّمة للحاج');
+  if(action==='nusuk') list = list.filter(p=>p.nusuk_card_status==='لدى المشرف'||p.nusuk_card_status==='مسلّمة للحاج');
 
   const el = document.getElementById('sup-modal-results');
   if(!list.length){ el.innerHTML = '<div class="plc-empty">لا يوجد نتائج</div>'; return; }
@@ -550,7 +550,7 @@ async function confirmSignature() {
       });
       // v22.0: استلام المشرف يكتب في nusuk_supervisor_* (منفصل عن nusuk_card_* الذي يحتفظ بتوقيع الحاج)
       const bulkUpdates = {
-        nusuk_card_status:       'موجودة لدى المشرف',
+        nusuk_card_status:       'لدى المشرف',
         nusuk_supervisor_sig:    sigUrl,
         nusuk_supervisor_time:   timeStr,
         nusuk_supervisor_ack_id: bulkSessionId
@@ -559,7 +559,7 @@ async function confirmSignature() {
       ids.forEach(bid => {
         const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
         if(bp){
-          bp.nusuk_card_status       = 'موجودة لدى المشرف';
+          bp.nusuk_card_status       = 'لدى المشرف';
           bp.nusuk_supervisor_sig    = sigUrl;
           bp.nusuk_supervisor_time   = timeStr;
           bp.nusuk_supervisor_ack_id = bulkSessionId;
@@ -573,7 +573,7 @@ async function confirmSignature() {
         source: 'supervisor_bulk_receive',
         bulk_session: bulkSessionId,
         bulk_target_field: 'nusuk_card_status',
-        bulk_target_value: 'موجودة لدى المشرف',
+        bulk_target_value: 'لدى المشرف',
         bulk_total_count: ids.length,
         bus_num: user && user.group_num != null ? String(user.group_num) : null,
         total_included: ids.length
@@ -606,7 +606,7 @@ async function confirmSignature() {
         entity_id:    null,
         entity_label: 'استلام جماعي: ' + ids.length + ' بطاقة نسك',
         field_changes: {
-          nusuk_card_status:       { before: null, after: 'موجودة لدى المشرف', note: 'bulk' },
+          nusuk_card_status:       { before: null, after: 'لدى المشرف', note: 'bulk' },
           nusuk_supervisor_sig:    { before: null, after: sigUrl,               note: 'bulk' },
           nusuk_supervisor_ack_id: { before: null, after: bulkSessionId,        note: 'bulk' }
         },
