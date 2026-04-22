@@ -40,6 +40,18 @@ function _hasSupervisorAck(pilgrim){
   return !!(pilgrim['نسك_supervisor_sig'] || pilgrim.nusuk_supervisor_sig);
 }
 
+function openSupervisorAckFor(pilgrimSupabaseId) {
+  const p = ALL_DATA.find(x => String(x['_supabase_id']) === String(pilgrimSupabaseId));
+  if (!p || !_hasSupervisorAck(p)) {
+    return showToast('لا يوجد إقرار مشرف موقّع', 'warning');
+  }
+  const ackId = p['نسك_supervisor_ack_id'];
+  if (!ackId) {
+    return showToast('معرّف الإقرار غير متوفر', 'warning');
+  }
+  openBulkAckReceipt({ ackId });
+}
+
 function initNusukBusFilter() {
   const sel = document.getElementById('nusuk-bus-filter');
   if(!sel) return;
@@ -140,7 +152,8 @@ function renderNusukTable(filter) {
       <td style="padding:10px 14px;text-align:center">
         ${p['نسك_sig'] ?
           `<button onclick="viewPilgrimAck('${p['_supabase_id']}')" style="background:#1a5fa8;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit">📄 عرض</button>
-           ${_canReopenNusuk() && (p['حالة بطاقة نسك'] || '').includes('مسلّمة') ? ` <button onclick="openNusukReopenModal('${p['_supabase_id']}')" title="إعادة فتح البطاقة" style="background:#c07000;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">🔓</button>` : ''}`
+           ${_canReopenNusuk() && (p['حالة بطاقة نسك'] || '').includes('مسلّمة') ? ` <button onclick="openNusukReopenModal('${p['_supabase_id']}')" title="إعادة فتح البطاقة" style="background:#c07000;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">🔓</button>` : ''}
+           ${_hasSupervisorAck(p) ? ` <button onclick="openSupervisorAckFor('${p['_supabase_id']}')" title="إقرار استلام المشرف" style="background:var(--brown-mid,#6b4a28);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">📋</button>` : ''}`
           : '<span style="color:#ccc;font-size:11px">—</span>'}
       </td>
     </tr>`;
