@@ -553,7 +553,10 @@ async function confirmSignature() {
         nusuk_card_status:       'لدى المشرف',
         nusuk_supervisor_sig:    sigUrl,
         nusuk_supervisor_time:   timeStr,
-        nusuk_supervisor_ack_id: bulkSessionId
+        nusuk_supervisor_ack_id: bulkSessionId,
+        nusuk_supervisor_name:    user.name || user.username || '',
+        nusuk_supervisor_id_num:  user.id_num || '',
+        nusuk_supervisor_user_id: String(user.id || '')
       };
       await Promise.all(ids.map(bid => window.DB.Pilgrims.update(parseInt(bid), bulkUpdates)));
       ids.forEach(bid => {
@@ -563,6 +566,9 @@ async function confirmSignature() {
           bp.nusuk_supervisor_sig    = sigUrl;
           bp.nusuk_supervisor_time   = timeStr;
           bp.nusuk_supervisor_ack_id = bulkSessionId;
+          bp.nusuk_supervisor_name    = user.name || user.username || '';
+          bp.nusuk_supervisor_id_num  = user.id_num || '';
+          bp.nusuk_supervisor_user_id = String(user.id || '');
         }
       });
 
@@ -999,8 +1005,19 @@ async function openBulkAckReceipt(opts){
     timeStr = timeStr || pilgrims[0].nusuk_supervisor_time || '';
   }
 
+  // v23.0-pre-p: نقرأ معلومات المشرف من pilgrim نفسه (محفوظة وقت التوقيع)
+  if(!supervisor && pilgrims[0]){
+    const p0 = pilgrims[0];
+    if(p0.nusuk_supervisor_name || p0.nusuk_supervisor_id_num){
+      supervisor = {
+        name:   p0.nusuk_supervisor_name,
+        id_num: p0.nusuk_supervisor_id_num,
+        id:     p0.nusuk_supervisor_user_id
+      };
+    }
+  }
+  // fallback للبيانات القديمة (قبل v23.0-pre-p)
   if(!supervisor) supervisor = window._currentUser || {};
-  // في العرض التاريخي، قد لا يكون _currentUser هو نفس مشرف الإقرار — نحاول الاستدلال من sys_users حسب bus_num
   if((!supervisor.name || !supervisor.id_num) && pilgrims[0] && pilgrims[0].bus_num != null){
     try {
       const users = await window.DB.SysUsers.getAll();
