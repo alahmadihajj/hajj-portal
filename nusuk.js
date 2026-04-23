@@ -214,10 +214,10 @@ function viewPilgrimAck(pilgrimId) {
       ${_buildPrintLogoHTML(65)}
       <div style="font-size:15px;font-weight:bold;color:#3d2000;margin-top:4px">تعهد استلام بطاقة نسك</div>
     </div>
-    <div style="text-align:left;font-size:10px;color:#555;line-height:1.8;justify-self:start">
-      <div>📅 <strong>التاريخ:</strong> ${printDate}</div>
-      <div>🕐 <strong>الوقت:</strong> ${printTime}</div>
-      <div>📄 <strong>الصفحات:</strong> 1 من 1</div>
+    <div style="text-align:left;font-size:10px;color:#555;line-height:1.8;justify-self:start;direction:ltr">
+      <div style="text-align:left">📅 <strong>التاريخ:</strong> ${printDate}</div>
+      <div style="text-align:left">🕐 <strong>الوقت:</strong> ${printTime}</div>
+      <div style="text-align:left">📄 <strong>الصفحات:</strong> 1 من 1</div>
     </div>
   </div>
   <div class="info-box">
