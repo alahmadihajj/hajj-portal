@@ -1039,6 +1039,9 @@ async function openBulkAckReceipt(opts){
   const dateStr = now.toLocaleDateString('ar-SA-u-ca-islamic');
   const timeDisplay = timeStr || now.toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit' });
 
+  const printDate = new Date().toLocaleDateString('ar-SA-u-ca-gregory', { year:'numeric', month:'2-digit', day:'2-digit' });
+  const printTime = new Date().toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit', hour12:true });
+
   const supName  = supervisor.name || supervisor.username || '—';
   const supIdNum = supervisor.id_num || '—';
   const supBus   = supervisor.group_num || (pilgrims[0] && pilgrims[0].bus_num) || '—';
@@ -1102,7 +1105,11 @@ async function openBulkAckReceipt(opts){
         : ''}
       <div class="doc-title">إقرار استلام بطاقات نسك</div>
     </div>
-    <div></div>
+    <div style="text-align:right;font-size:10px;color:#555;line-height:1.8">
+      <div>📅 <strong>التاريخ:</strong> ${printDate}</div>
+      <div>🕐 <strong>الوقت:</strong> ${printTime}</div>
+      <div>📄 <strong>الصفحات:</strong> 1 من 1</div>
+    </div>
   </div>
   <div class="info-box">
     <strong>اسم المشرف:</strong> ${esc(supName)} &nbsp;|&nbsp;

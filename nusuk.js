@@ -181,6 +181,10 @@ function viewPilgrimAck(pilgrimId) {
   const license = dev.license||'';
   const logo = _getLogo();
   const stamp = dev.stamp||'';
+
+  const printDate = new Date().toLocaleDateString('ar-SA-u-ca-gregory', { year:'numeric', month:'2-digit', day:'2-digit' });
+  const printTime = new Date().toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit', hour12:true });
+
   const w = window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8">
   <title>إقرار استلام بطاقة نسك</title>
@@ -210,7 +214,11 @@ function viewPilgrimAck(pilgrimId) {
       ${_buildPrintLogoHTML(65)}
       <div style="font-size:15px;font-weight:bold;color:#3d2000;margin-top:4px">تعهد استلام بطاقة نسك</div>
     </div>
-    <div></div>
+    <div style="text-align:right;font-size:10px;color:#555;line-height:1.8">
+      <div>📅 <strong>التاريخ:</strong> ${printDate}</div>
+      <div>🕐 <strong>الوقت:</strong> ${printTime}</div>
+      <div>📄 <strong>الصفحات:</strong> 1 من 1</div>
+    </div>
   </div>
   <div class="info-box">
     <strong>اسم الحاج / ـة:</strong> ${p['اسم الحاج']||'—'}<br>
