@@ -485,3 +485,33 @@ function exportNusukReport() {
   </body></html>`);
   w.document.close();
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// v23.0-pre-n: Auto-refresh لحل مشاكل التوقيت
+// يراقب قسم بطاقات نسك ويعيد الرسم تلقائياً إذا ظهر
+// ═══════════════════════════════════════════════════════════════════════
+(function setupNusukAutoRefresh(){
+  let lastRenderTime = 0;
+  
+  function autoRender(){
+    const tbody = document.getElementById('nusuk-tbody');
+    if(!tbody) return;
+    // تأكد أن القسم ظاهر في الشاشة
+    const rect = tbody.getBoundingClientRect();
+    const visible = rect.width > 0 && rect.height > 0;
+    if(!visible) return;
+    // أعد الرسم كل 2 ثانية كحد أقصى
+    const now = Date.now();
+    if(now - lastRenderTime < 2000) return;
+    lastRenderTime = now;
+    // تأكد أن ALL_DATA جاهز
+    if(typeof ALL_DATA === 'undefined' || !ALL_DATA.length) return;
+    // أعد الرسم
+    if(typeof renderNusukTable === 'function'){
+      renderNusukTable(window._nusukFilter);
+    }
+  }
+  
+  // راقب كل 500ms
+  setInterval(autoRender, 500);
+})();
