@@ -152,7 +152,7 @@ function renderNusukTable(filter) {
       <td style="padding:10px 14px;text-align:center">
         ${(() => {
           const hasPilgrimAck = !!p['نسك_sig'];
-          const canReopen = _canReopenNusك() && (p['حالة بطاقة نسك'] || '').includes('مسلّمة');
+          const canReopen = _canReopenNusk() && (p['حالة بطاقة نسك'] || '').includes('مسلّمة');
           const hasSupAck = _hasSupervisorAck(p);
 
           const btnView = hasPilgrimAck
