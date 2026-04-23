@@ -265,7 +265,9 @@ const AUDIT_SOURCE_LABELS = {
   admin_nusuk_bulk:                 'تحديث جماعي نسك 📦',
   admin_nusuk_supervisor_receive:   'استلام مشرف للبطاقة 👤',
   admin_nusuk_pilgrim_receive:      'تسليم بطاقة للحاج 🪪',
-  admin_nusuk_reopen:               'فتح قفل بطاقة نسك 🔓'
+  admin_nusuk_reopen:                    'فتح قفل بطاقة نسك 🔓',
+  admin_nusuk_reopen_from_pilgrim:       'فتح قفل بطاقة نسك (من الحاج) 🔓',
+  admin_nusuk_reopen_from_supervisor:    'فتح قفل بطاقة نسك (من المشرف) 🔓'
 };
 
 // ─────── صلاحيات ───────

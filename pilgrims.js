@@ -705,11 +705,19 @@ async function saveNusukStatus(pilgrimId) {
 // v20.2 Phase 1: إعادة فتح بطاقة نسك (Reopen Flow)
 // ═══════════════════════════════════════════════════════════════════════
 const NUSUK_REOPEN_REASONS = [
-  { key:'damage',  label:'🔧 تلف البطاقة',              target:'في الطباعة',          hint:'البطاقة تالفة — تحتاج طبع جديد' },
-  { key:'lost',    label:'❌ فقدان البطاقة',            target:'في الطباعة',          hint:'البطاقة مفقودة — تحتاج طبع بديل' },
+  { key:'damage',  label:'🔧 تلف البطاقة',              target:'لدى المشرف',   hint:'البطاقة تالفة — المشرف يُرجعها للإدارة لطلب بديل' },
+  { key:'lost',    label:'❌ فقدان البطاقة',            target:'لدى المشرف',   hint:'البطاقة مفقودة — المشرف يُرجعها للإدارة لطلب بديل' },
   { key:'wrong',   label:'⚠️ خطأ في التسليم لحاج خاطئ', target:'لدى المشرف',   hint:'البطاقة سليمة — إعادة تسليم لحاج صحيح' },
   { key:'correct', label:'✏️ تصحيح بيانات الحاج',       target:'لدى المشرف',   hint:'البطاقة سليمة — تحديث إجراء إداري' },
   { key:'other',   label:'💬 سبب آخر',                  target:'لدى المشرف',   hint:'تفاصيل إلزامية (≥10 حرف)' }
+];
+
+const NUSUK_REOPEN_REASONS_FROM_SUPERVISOR = [
+  { key:'refuse',       label:'🚫 رفض المشرف استلام البطاقة',     target:'لدى الإدارة', hint:'المشرف يرفض استلام البطاقة' },
+  { key:'replacement',  label:'🔄 مشرف بديل',                    target:'لدى الإدارة', hint:'تغيير إداري في المشرف' },
+  { key:'dist_error',   label:'⚠️ خطأ في التوزيع',              target:'لدى الإدارة', hint:'خطأ في توزيع البطاقة للمشرف' },
+  { key:'not_received', label:'📦 لم تصل البطاقة بشكل فعلي',     target:'لدى الإدارة', hint:'البطاقة لم تصل المشرف ميدانياً' },
+  { key:'other_sup',    label:'💬 سبب آخر',                     target:'لدى الإدارة', hint:'تفاصيل إلزامية (≥10 حرف)' }
 ];
 
 function openNusukReopenModal(pilgrimId){
@@ -717,7 +725,11 @@ function openNusukReopenModal(pilgrimId){
   const currentStatus = pilgrim['حالة بطاقة نسك']||'—';
   const sigTime = pilgrim['نسك_time']||'—';
 
-  const reasonsHtml = NUSUK_REOPEN_REASONS.map((r,i) => `
+  const reasons = currentStatus === 'لدى المشرف'
+    ? NUSUK_REOPEN_REASONS_FROM_SUPERVISOR
+    : NUSUK_REOPEN_REASONS;
+
+  const reasonsHtml = reasons.map((r,i) => `
     <label data-reason-row="${i}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid ${i===0?'#c8971a':'#e0e0e0'};background:${i===0?'#fff3e0':'#fff'};border-radius:8px;cursor:pointer;margin-bottom:6px;transition:all 0.15s" onclick="_selectReopenReason(${i})">
       <input type="radio" name="reopen-reason" value="${r.key}" ${i===0?'checked':''} style="width:18px;height:18px;accent-color:#c00;cursor:pointer">
       <div style="flex:1">
@@ -767,7 +779,7 @@ function _checkReopenDetails(){
   const hint = document.getElementById('reopen-required');
   const btn = document.getElementById('reopen-confirm-btn');
   if(!hint || !btn) return;
-  if(reason === 'other'){
+  if(reason === 'other' || reason === 'other_sup'){
     hint.style.display = 'inline';
     const ok = details.length >= 10;
     hint.style.color = ok ? '#1a7a1a' : '#c00';
@@ -785,9 +797,13 @@ function _checkReopenDetails(){
 async function confirmNusukReopen(pilgrimId){
   const reasonKey = document.querySelector('input[name="reopen-reason"]:checked')?.value;
   const details = (document.getElementById('reopen-details')?.value || '').trim();
-  const reasonDef = NUSUK_REOPEN_REASONS.find(r=>r.key===reasonKey);
+  const pilgrim_ = ALL_DATA.find(r=>String(r['_supabase_id'])===String(pilgrimId))||{};
+  const currentStatus_ = pilgrim_['حالة بطاقة نسك']||'';
+  const isFromSupervisor = currentStatus_ === 'لدى المشرف';
+  const reasonsList = isFromSupervisor ? NUSUK_REOPEN_REASONS_FROM_SUPERVISOR : NUSUK_REOPEN_REASONS;
+  const reasonDef = reasonsList.find(r=>r.key===reasonKey);
   if(!reasonDef){ showToast('اختر سبباً', 'warning'); return; }
-  if(reasonKey === 'other' && details.length < 10){
+  if((reasonKey === 'other' || reasonKey === 'other_sup') && details.length < 10){
     showToast('تفاصيل "سبب آخر" إلزامية (≥10 حرف)', 'warning');
     return;
   }
@@ -797,31 +813,53 @@ async function confirmNusukReopen(pilgrimId){
   const oldSig    = pilgrim['نسك_sig']||null;
   const oldTime   = pilgrim['نسك_time']||null;
 
-  const updates = {
-    nusuk_card_status: reasonDef.target,
-    nusuk_card_sig:    null,
-    nusuk_card_time:   null
+  // v23.0-pre-i: منطق الحفظ يعتمد على الحالة الحالية
+  const updates = { nusuk_card_status: reasonDef.target };
+  const fieldChanges = {
+    nusuk_card_status: { before: oldStatus, after: reasonDef.target }
   };
+  const oldSupSig = pilgrim['نسك_supervisor_sig']||null;
+  const oldSupTime = pilgrim['نسك_supervisor_time']||null;
+  const oldSupAck  = pilgrim['نسك_supervisor_ack_id']||null;
+
+  if (isFromSupervisor) {
+    updates.nusuk_supervisor_sig = null;
+    updates.nusuk_supervisor_time = null;
+    updates.nusuk_supervisor_ack_id = null;
+    fieldChanges.nusuk_supervisor_sig    = { before: oldSupSig,  after: null };
+    fieldChanges.nusuk_supervisor_time   = { before: oldSupTime, after: null };
+    fieldChanges.nusuk_supervisor_ack_id = { before: oldSupAck,  after: null };
+  } else {
+    updates.nusuk_card_sig = null;
+    updates.nusuk_card_time = null;
+    fieldChanges.nusuk_card_sig  = { before: oldSig,  after: null };
+    fieldChanges.nusuk_card_time = { before: oldTime, after: null };
+  }
 
   try {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
     pilgrim['حالة بطاقة نسك'] = reasonDef.target;
-    pilgrim['نسك_sig']         = '';
-    pilgrim['نسك_time']        = '';
+    if (isFromSupervisor) {
+      pilgrim['نسك_supervisor_sig'] = '';
+      pilgrim['نسك_supervisor_time'] = '';
+      pilgrim['نسك_supervisor_ack_id'] = '';
+    } else {
+      pilgrim['نسك_sig']  = '';
+      pilgrim['نسك_time'] = '';
+    }
 
-    // v20.2: audit reopen — مع السبب والتفاصيل + old_status
+    const auditSource = isFromSupervisor
+      ? 'admin_nusuk_reopen_from_supervisor'
+      : 'admin_nusuk_reopen_from_pilgrim';
+
     _recordAudit({
       action_type:  'update',
       entity_type:  'pilgrim',
       entity_id:    String(pilgrimId),
       entity_label: _buildPilgrimLabel(pilgrim),
-      field_changes: {
-        nusuk_card_status: { before: oldStatus, after: reasonDef.target },
-        nusuk_card_sig:    { before: oldSig,    after: null },
-        nusuk_card_time:   { before: oldTime,   after: null }
-      },
+      field_changes: fieldChanges,
       metadata: {
-        source: 'admin_nusuk_reopen',
+        source:         auditSource,
         reason_key:     reasonKey,
         reason_label:   reasonDef.label,
         reason_details: details || null,

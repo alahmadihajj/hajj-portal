@@ -152,13 +152,13 @@ function renderNusukTable(filter) {
       <td style="padding:10px 14px;text-align:center">
         ${(() => {
           const hasPilgrimAck = !!p['نسك_sig'];
-          const canReopen = _canReopenNusuk() && (p['حالة بطاقة نسك'] || '').includes('مسلّمة');
+          const canReopen = _canReopenNusuk() && ((p['حالة بطاقة نسك'] || '').includes('مسلّمة') || p['حالة بطاقة نسك'] === 'لدى المشرف');
           const hasSupAck = _hasSupervisorAck(p);
 
           const btnView = hasPilgrimAck
             ? `<button onclick="viewPilgrimAck('${p['_supabase_id']}')" style="background:#1a5fa8;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit">📄 عرض</button>`
             : '';
-          const btnReopen = (hasPilgrimAck && canReopen)
+          const btnReopen = canReopen
             ? ` <button onclick="openNusukReopenModal('${p['_supabase_id']}')" title="إعادة فتح البطاقة" style="background:#c07000;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">🔓</button>`
             : '';
           const btnSupAck = hasSupAck
