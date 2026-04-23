@@ -3875,7 +3875,12 @@ function switchTab(tab) {
   // إخفاء/إظهار الترقيم مع تبويب البيانات فقط
   const pag = document.getElementById('pagination');
   if(pag) pag.style.display = tab==='data' ? '' : 'none';
-  if(tab==='data') document.getElementById('tab-data').style.display='';
+  if(tab==='data') {
+    document.getElementById('tab-data').style.display='';
+    if(typeof renderNusukTable === 'function') {
+      renderNusukTable(window._nusukFilter);
+    }
+  }
   if(tab==='dashboard') renderDashboard();
   if(tab==='settings') { loadVisibilitySettings(); loadPilgrimPortalSettings(); showDevBtnIfSuperAdmin(); }
   if(tab==='housing') renderHousingSection();
