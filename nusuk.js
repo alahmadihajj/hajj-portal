@@ -150,11 +150,24 @@ function renderNusukTable(filter) {
         </select>
       </td>
       <td style="padding:10px 14px;text-align:center">
-        ${p['نسك_sig'] ?
-          `<button onclick="viewPilgrimAck('${p['_supabase_id']}')" style="background:#1a5fa8;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit">📄 عرض</button>
-           ${_canReopenNusuk() && (p['حالة بطاقة نسك'] || '').includes('مسلّمة') ? ` <button onclick="openNusukReopenModal('${p['_supabase_id']}')" title="إعادة فتح البطاقة" style="background:#c07000;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">🔓</button>` : ''}
-           ${_hasSupervisorAck(p) ? ` <button onclick="openSupervisorAckFor('${p['_supabase_id']}')" title="إقرار استلام المشرف" style="background:var(--brown-mid,#6b4a28);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">📋</button>` : ''}`
-          : '<span style="color:#ccc;font-size:11px">—</span>'}
+        ${(() => {
+          const hasPilgrimAck = !!p['نسك_sig'];
+          const canReopen = _canReopenNusك() && (p['حالة بطاقة نسك'] || '').includes('مسلّمة');
+          const hasSupAck = _hasSupervisorAck(p);
+
+          const btnView = hasPilgrimAck
+            ? `<button onclick="viewPilgrimAck('${p['_supabase_id']}')" style="background:#1a5fa8;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit">📄 عرض</button>`
+            : '';
+          const btnReopen = (hasPilgrimAck && canReopen)
+            ? ` <button onclick="openNusukReopenModal('${p['_supabase_id']}')" title="إعادة فتح البطاقة" style="background:#c07000;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">🔓</button>`
+            : '';
+          const btnSupAck = hasSupAck
+            ? ` <button onclick="openSupervisorAckFor('${p['_supabase_id']}')" title="إقرار استلام المشرف" style="background:var(--brown-mid,#6b4a28);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">📋</button>`
+            : '';
+
+          const anyButton = btnView || btnReopen || btnSupAck;
+          return anyButton || '<span style="color:#ccc;font-size:11px">—</span>';
+        })()}
       </td>
     </tr>`;
   }).join('');
