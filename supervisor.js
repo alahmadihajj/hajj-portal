@@ -1105,7 +1105,7 @@ async function openBulkAckReceipt(opts){
         : ''}
       <div class="doc-title">إقرار استلام بطاقات نسك</div>
     </div>
-    <div style="text-align:right;font-size:10px;color:#555;line-height:1.8">
+    <div style="text-align:left;font-size:10px;color:#555;line-height:1.8;justify-self:start">
       <div>📅 <strong>التاريخ:</strong> ${printDate}</div>
       <div>🕐 <strong>الوقت:</strong> ${printTime}</div>
       <div>📄 <strong>الصفحات:</strong> 1 من 1</div>
