@@ -153,7 +153,7 @@ function renderNusukTable(filter) {
         ${(() => {
           const hasPilgrimAck = !!p['نسك_sig'];
           const canReopen = _canReopenNusuk() && ((p['حالة بطاقة نسك'] || '').includes('مسلّمة') || p['حالة بطاقة نسك'] === 'لدى المشرف');
-          const hasSupAck = _hasSupervisorAck(p);
+          const hasSupAck = _hasSupervisorAck(p) || p['حالة بطاقة نسك'] === 'لدى المشرف' || (p['حالة بطاقة نسك'] || '').includes('مسلّمة');
 
           const btnView = hasPilgrimAck
             ? `<button onclick="viewPilgrimAck('${p['_supabase_id']}')" style="background:#1a5fa8;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit">📄 عرض</button>`
