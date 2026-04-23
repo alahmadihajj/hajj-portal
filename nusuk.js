@@ -182,6 +182,9 @@ function viewPilgrimAck(pilgrimId) {
   const logo = _getLogo();
   const stamp = dev.stamp||'';
 
+  const repName = dev.rep_name || '';
+  const repSig  = dev.rep_sig  || '';
+
   const printDate = new Date().toLocaleDateString('ar-SA-u-ca-gregory', { year:'numeric', month:'2-digit', day:'2-digit' });
   const printTime = new Date().toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit', hour12:true });
 
@@ -243,11 +246,29 @@ function viewPilgrimAck(pilgrimId) {
       <img class="sig-img" src="${p['نسك_sig']||''}" alt="توقيع الحاج">
       <div style="margin-top:6px;font-size:12px">${p['اسم الحاج']||''}</div>
     </div>
+    ${(repName || repSig || stamp) ? `
+    <div class="sig-box">
+      <label>ممثل الشركة</label>
+      ${repName?`<div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:8px">${repName}</div>`:''}
+      <div style="display:flex;gap:14px;justify-content:center;align-items:flex-start">
+        ${repSig?`<div style="text-align:center">
+          <img src="${repSig}" alt="توقيع الممثل" style="max-width:120px;max-height:60px;object-fit:contain;border:1px solid #eee;border-radius:4px;background:#fafafa">
+          <div style="font-size:10px;color:#888;margin-top:3px">التوقيع</div>
+        </div>`:''}
+        ${stamp?`<div style="text-align:center">
+          <img src="${stamp}" alt="ختم" style="max-width:70px;max-height:70px;object-fit:contain">
+          <div style="font-size:10px;color:#888;margin-top:3px">الختم</div>
+        </div>`:''}
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#666">${companyName}</div>
+    </div>
+    ` : `
     <div class="sig-box">
       <label>ممثل الشركة والختم الرسمي</label>
-      ${stamp?'<img class="stamp" src="'+stamp+'" alt="ختم الشركة" style="width:80px;height:80px;object-fit:contain;display:block;margin:0 auto">'  :'<div style="height:80px;border:1px dashed #ccc;border-radius:6px"></div>'}
-      <div style="margin-top:6px;font-size:12px">${companyName}</div>
+      <div style="height:80px;border:1px dashed #ccc;border-radius:6px"></div>
+      <div style="margin-top:6px;font-size:12px;font-weight:600">${companyName}</div>
     </div>
+    `}
   </div>
   <div class="footer">تم إنشاء هذا الإقرار إلكترونياً — ${p['نسك_time']||''}</div>
   <div class="no-print" style="text-align:center;margin-top:20px">
