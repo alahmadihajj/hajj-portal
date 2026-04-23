@@ -165,7 +165,7 @@ function renderNusukTable(filter) {
             ? ` <button onclick="openSupervisorAckFor('${p['_supabase_id']}')" title="إقرار استلام المشرف" style="background:var(--brown-mid,#6b4a28);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">📋</button>`
             : '';
 
-          const anyButton = btnView || btnReopen || btnSupAck;
+          const anyButton = btnView + btnReopen + btnSupAck;
           return anyButton || '<span style="color:#ccc;font-size:11px">—</span>';
         })()}
       </td>
