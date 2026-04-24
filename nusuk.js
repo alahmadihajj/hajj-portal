@@ -343,6 +343,96 @@ const NUSUK_ICONS = {
   'مسلّمة للحاج': '✅'
 };
 
+// v23.0-pre-nn: مؤشّر "آخر تحديث"
+window._nusukLastUpdate = Date.now();
+let _nusukUpdateInterval = null;
+
+function _formatRelativeTime(timestamp){
+  const diff = Math.floor((Date.now() - timestamp) / 1000);
+  if(diff < 5)    return 'الآن';
+  if(diff < 60)   return `قبل ${diff} ثانية`;
+  if(diff < 120)  return 'قبل دقيقة';
+  if(diff < 3600) return `قبل ${Math.floor(diff/60)} دقيقة`;
+  if(diff < 7200) return 'قبل ساعة';
+  if(diff < 86400)return `قبل ${Math.floor(diff/3600)} ساعة`;
+  return `قبل ${Math.floor(diff/86400)} يوم`;
+}
+
+function _updateNusukLastUpdateText(){
+  const el = document.getElementById('nusuk-last-update-text');
+  if(!el) return;
+  el.textContent = _formatRelativeTime(window._nusukLastUpdate);
+}
+
+function _startNusukLastUpdateTimer(){
+  if(_nusukUpdateInterval) clearInterval(_nusukUpdateInterval);
+  _updateNusukLastUpdateText();
+  _nusukUpdateInterval = setInterval(_updateNusukLastUpdateText, 10000); // كل 10 ثوانٍ
+}
+
+function markNusukUpdated(){
+  window._nusukLastUpdate = Date.now();
+  _updateNusukLastUpdateText();
+  // flash اللون الأخضر للتأكيد البصري
+  const el = document.getElementById('nusuk-last-update');
+  if(el){
+    el.style.transition = 'color 0.3s';
+    el.style.color = '#1a7a1a';
+    setTimeout(() => { el.style.color = ''; }, 800);
+  }
+}
+
+// استدعاء التايمر عند تحميل الصفحة
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', _startNusukLastUpdateTimer);
+} else {
+  _startNusukLastUpdateTimer();
+}
+
+// تصدير للنافذة
+window.markNusukUpdated = markNusukUpdated;
+
+// v23.0-pre-ll: Skeleton loader أثناء تحميل البيانات
+function renderNusukSkeleton(){
+  const tbody = document.getElementById('nusuk-tbody');
+  if(!tbody) return;
+
+  const rows = Array.from({length:5}, () => `
+    <tr class="nusuk-skeleton-row">
+      <td><div class="nusuk-skeleton" style="width:16px;height:16px"></div></td>
+      <td><div class="nusuk-skeleton nusuk-skeleton-bar" style="width:20px"></div></td>
+      <td><div class="nusuk-skeleton nusuk-skeleton-bar" style="width:160px"></div></td>
+      <td><div class="nusuk-skeleton nusuk-skeleton-bar" style="width:100px"></div></td>
+      <td><div class="nusuk-skeleton nusuk-skeleton-bar" style="width:100px"></div></td>
+      <td><div class="nusuk-skeleton nusuk-skeleton-bar" style="width:60px"></div></td>
+      <td><div class="nusuk-skeleton nusuk-skeleton-bar" style="width:100px;height:22px;border-radius:11px"></div></td>
+      <td><div class="nusuk-skeleton nusuk-skeleton-bar" style="width:80px"></div></td>
+      <td><div class="nusuk-skeleton nusuk-skeleton-bar" style="width:140px;height:30px"></div></td>
+      <td><div class="nusuk-skeleton nusuk-skeleton-bar" style="width:90px;height:32px"></div></td>
+    </tr>
+  `).join('');
+  tbody.innerHTML = rows;
+
+  // Mobile cards skeleton
+  const mc = document.getElementById('nusuk-mobile-cards');
+  if(mc){
+    mc.innerHTML = Array.from({length:3}, () => `
+      <div style="background:#fff;border:1px solid #e0d5c5;border-radius:12px;padding:14px;box-shadow:0 2px 6px rgba(0,0,0,.06)">
+        <div class="nusuk-skeleton" style="width:70%;height:16px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <div class="nusuk-skeleton" style="width:90px;height:14px"></div>
+          <div class="nusuk-skeleton" style="width:110px;height:14px"></div>
+          <div class="nusuk-skeleton" style="width:60px;height:14px"></div>
+        </div>
+        <div class="nusuk-skeleton" style="width:120px;height:24px;border-radius:12px"></div>
+      </div>
+    `).join('');
+  }
+}
+
+// تصديرها للنافذة
+window.renderNusukSkeleton = renderNusukSkeleton;
+
 function renderNusukTable(filter) {
   initNusukBusFilter();
   const search = (document.getElementById('nusuk-search')?.value||'').toLowerCase();
@@ -407,8 +497,55 @@ function renderNusukTable(filter) {
 
   if(!list.length) {
     tbody.innerHTML='';
-    if(empty) empty.style.display='block';
-    _renderNusukMobileCards([]); // تفريغ بطاقات الجوال أيضاً
+    // رسالة ديناميكية حسب الفلتر
+    const emptyMessages = {
+      '':              { icon:'👥', title:'لا يوجد حجاج',       hint:'لم يتم إضافة أي حاج للنظام بعد' },
+      'لم تطبع':        { icon:'✨', title:'ممتاز! كل البطاقات تمت طباعتها', hint:'لا يوجد حجاج بدون طباعة' },
+      'في الطباعة':     { icon:'📭', title:'لا يوجد بطاقات قيد الطباعة',    hint:'يمكنك تحويل حجاج من "لم تطبع"' },
+      'لدى الإدارة':    { icon:'📦', title:'لا يوجد بطاقات لدى الإدارة',    hint:'البطاقات المطبوعة تنتظر الاستلام' },
+      'لدى المشرف':     { icon:'👤', title:'لا يوجد بطاقات لدى المشرف',     hint:'يستلم المشرف البطاقات من الإدارة' },
+      'مسلّمة للحاج':   { icon:'🎯', title:'لم يتم تسليم أي بطاقة بعد',     hint:'المشرفون يسلّمون البطاقات للحجاج' }
+    };
+    const currentFilter = window._nusukFilter || '';
+    const msg = emptyMessages[currentFilter] || emptyMessages[''];
+
+    // تحقّق من فلاتر أخرى (بحث أو حافلة)
+    const hasSearchOrBusFilter = (document.getElementById('nusuk-search')?.value||'').trim() || (document.getElementById('nusuk-bus-filter')?.value||'');
+    const emptyHTML = hasSearchOrBusFilter
+      ? `<tr><td colspan="10" style="padding:40px 20px;text-align:center">
+          <div style="font-size:48px;margin-bottom:10px">🔍</div>
+          <div style="font-size:16px;font-weight:700;color:#3d2000;margin-bottom:6px">لا توجد نتائج مطابقة</div>
+          <div style="font-size:13px;color:#888;margin-bottom:16px">جرّب تعديل الفلاتر أو البحث</div>
+          <button onclick="document.getElementById('nusuk-search').value='';document.getElementById('nusuk-bus-filter').value='';renderNusukTable(window._nusukFilter)" style="background:#c8971a;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:inherit">🔄 مسح الفلاتر</button>
+        </td></tr>`
+      : `<tr><td colspan="10" style="padding:40px 20px;text-align:center">
+          <div style="font-size:48px;margin-bottom:10px">${msg.icon}</div>
+          <div style="font-size:16px;font-weight:700;color:#3d2000;margin-bottom:6px">${msg.title}</div>
+          <div style="font-size:13px;color:#888">${msg.hint}</div>
+        </td></tr>`;
+    tbody.innerHTML = emptyHTML;
+
+    // تطبيق نفس المنطق على bg_mobile_cards
+    if(typeof _renderNusukMobileCards === 'function'){
+      const mc = document.getElementById('nusuk-mobile-cards');
+      if(mc){
+        const mobileHTML = hasSearchOrBusFilter
+          ? `<div style="padding:40px 20px;text-align:center;background:#fff;border-radius:12px;border:1px dashed #e0d5c5">
+              <div style="font-size:48px;margin-bottom:10px">🔍</div>
+              <div style="font-size:16px;font-weight:700;color:#3d2000;margin-bottom:6px">لا توجد نتائج</div>
+              <div style="font-size:13px;color:#888;margin-bottom:14px">جرّب تعديل الفلاتر</div>
+              <button onclick="document.getElementById('nusuk-search').value='';document.getElementById('nusuk-bus-filter').value='';renderNusukTable(window._nusukFilter)" style="background:#c8971a;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;cursor:pointer">🔄 مسح الفلاتر</button>
+            </div>`
+          : `<div style="padding:40px 20px;text-align:center;background:#fff;border-radius:12px;border:1px dashed #e0d5c5">
+              <div style="font-size:48px;margin-bottom:10px">${msg.icon}</div>
+              <div style="font-size:16px;font-weight:700;color:#3d2000;margin-bottom:6px">${msg.title}</div>
+              <div style="font-size:13px;color:#888">${msg.hint}</div>
+            </div>`;
+        mc.innerHTML = mobileHTML;
+      }
+    }
+
+    if(empty) empty.style.display='none'; // أخفِ empty القديم (استبدلناه بـ tbody HTML)
     return;
   }
   if(empty) empty.style.display='none';
@@ -454,14 +591,17 @@ function renderNusukTable(filter) {
           const canReopen = _canReopenNusuk() && ((p['حالة بطاقة نسك'] || '').includes('مسلّمة') || (p['حالة بطاقة نسك'] || '').includes('لدى المشرف'));
           const hasSupAck = (p['حالة بطاقة نسك'] || '').includes('لدى المشرف') || (p['حالة بطاقة نسك'] || '').includes('مسلّمة');
 
+          // v23.0-pre-kk: أزرار موحّدة الحجم مع style ثابت
+          const NUSUK_BTN_STYLE = 'display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;color:#fff;border:none;border-radius:8px;padding:0;font-size:14px;cursor:pointer;font-family:inherit;margin:0 3px;vertical-align:middle';
+
           const btnView = hasPilgrimAck
-            ? `<button onclick="viewPilgrimAck('${p['_supabase_id']}')" style="background:#1a5fa8;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit">📄 عرض</button>`
+            ? `<button onclick="viewPilgrimAck('${p['_supabase_id']}')" title="عرض إقرار الحاج" style="${NUSUK_BTN_STYLE};background:#1a5fa8">📄</button>`
             : '';
           const btnReopen = canReopen
-            ? ` <button onclick="openNusukReopenModal('${p['_supabase_id']}')" title="إعادة فتح البطاقة" style="background:#c07000;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">🔓</button>`
+            ? `<button onclick="openNusukReopenModal('${p['_supabase_id']}')" title="إعادة فتح البطاقة" style="${NUSUK_BTN_STYLE};background:#c07000">🔓</button>`
             : '';
           const btnSupAck = hasSupAck
-            ? ` <button onclick="openSupervisorAckFor('${p['_supabase_id']}')" title="إقرار استلام المشرف" style="background:var(--brown-mid,#6b4a28);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">📋</button>`
+            ? `<button onclick="openSupervisorAckFor('${p['_supabase_id']}')" title="إقرار استلام المشرف" style="${NUSUK_BTN_STYLE};background:#6b4a28">📋</button>`
             : '';
 
           const anyButton = btnSupAck + btnView + btnReopen;
@@ -507,7 +647,7 @@ function _renderNusukMobileCards(list){
     const hasSupAck = (p['حالة بطاقة نسك'] || '').includes('لدى المشرف') || (p['حالة بطاقة نسك'] || '').includes('مسلّمة');
 
     const btnView = hasPilgrimAck
-      ? `<button onclick="viewPilgrimAck('${pid}')" style="background:#1a5fa8;color:#fff" title="عرض الإقرار">📄</button>`
+      ? `<button onclick="viewPilgrimAck('${pid}')" style="background:#1a5fa8;color:#fff" title="إقرار الحاج">📄</button>`
       : '';
     const btnReopen = canReopen
       ? `<button onclick="openNusukReopenModal('${pid}')" style="background:#c07000;color:#fff" title="إعادة فتح">🔓</button>`
@@ -705,6 +845,20 @@ function clearNusukSelection() {
 async function applyBulkNusuk() {
   const status = document.getElementById('nusuk-bulk-status').value;
   if(!status) { showToast('اختر الحالة الجديدة أولاً', 'warning'); return; }
+
+  // v23.0-pre-mm: تأكيد قبل التحديث الجماعي
+  const checkedCount = document.querySelectorAll('.nusuk-row-check:checked').length;
+  if(checkedCount === 0){
+    showToast('⚠️ لم يتم تحديد أي حاج', 'warning');
+    return;
+  }
+
+  const msg = `سيتم تحديث ${checkedCount} حاج إلى حالة "${status}"\n\nهل أنت متأكد؟`;
+  const confirmed = (typeof showConfirm === 'function')
+    ? await showConfirm(msg, 'تأكيد التحديث الجماعي', 'نعم، تحديث', '#c8971a', '⚠️')
+    : confirm(msg);
+
+  if(!confirmed) return;
 
   // v22.6: دفاع عميق — الحالات التي تتطلّب توقيعاً لا تُضبط من bulk admin مباشرة
   if(status === 'لدى المشرف' || status === 'مسلّمة للحاج'){
@@ -929,20 +1083,13 @@ async function exportNusukReport() {
   const reportTitle = REPORT_TITLES[currentFilter] || REPORT_TITLES[''];
 
   // سؤال المستخدم عن إضافة التوقيع/الختم
-  const addSignature = await new Promise((resolve) => {
-    if(typeof showConfirm === 'function'){
-      showConfirm({
-        title: '🖋️ إضافة التوقيع والختم',
-        message: 'هل ترغب في إضافة اسم ممثل الشركة والتوقيع والختم أسفل التقرير؟',
-        confirmText: 'نعم، أضف',
-        cancelText: 'لا، بدون توقيع',
-        onConfirm: () => resolve(true),
-        onCancel: () => resolve(false)
-      });
-    } else {
-      resolve(confirm('هل ترغب في إضافة اسم ممثل الشركة والتوقيع والختم أسفل التقرير؟'));
-    }
-  });
+  const addSignature = await showConfirm(
+    'هل ترغب في إضافة اسم ممثل الشركة والتوقيع والختم أسفل التقرير؟',
+    '🖋️ إضافة التوقيع والختم',
+    'نعم، أضف',
+    '#c8971a',
+    '🖋️'
+  );
 
   // بناء التقرير
   const w = window.open('','_blank');
@@ -965,20 +1112,20 @@ async function exportNusukReport() {
 
   // قسم التوقيع (اختياري)
   const signatureSection = addSignature ? `
-    <div style="margin-top:18mm;padding-top:6mm;border-top:2px solid #b8860b;page-break-inside:avoid">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5mm">
-        <div style="font-size:13px;font-weight:bold;color:#3d2000">${companyName}</div>
-        ${license?`<div style="font-size:11px;color:#555">رقم الترخيص: ${license}</div>`:''}
-      </div>
-      ${repName ? `<div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:5mm;text-align:center">ممثل الشركة: ${repName}</div>` : ''}
-      <div style="display:flex;justify-content:space-around;align-items:flex-end;gap:20mm;margin-top:3mm">
-        <div style="text-align:center;flex:1">
-          ${repSig?`<img src="${repSig}" alt="توقيع" style="max-width:150px;max-height:60px;object-fit:contain;border:1px solid #eee;border-radius:4px;padding:4px;background:#fafafa">`:'<div style="height:60px;border:1px dashed #ccc;border-radius:4px"></div>'}
-          <div style="font-size:11px;color:#666;margin-top:2mm">التوقيع</div>
-        </div>
-        <div style="text-align:center;flex:1">
-          ${stamp?`<img src="${stamp}" alt="ختم" style="max-width:80px;max-height:80px;object-fit:contain">`:'<div style="height:80px;border:1px dashed #ccc;border-radius:4px"></div>'}
-          <div style="font-size:11px;color:#666;margin-top:2mm">الختم الرسمي</div>
+    <div style="margin-top:18mm;padding-top:6mm;border-top:2px solid #b8860b;page-break-inside:avoid;display:flex;justify-content:flex-end;direction:rtl">
+      <div style="text-align:center;min-width:220px">
+        <div style="font-size:13px;font-weight:bold;color:#3d2000;margin-bottom:2mm">${companyName}</div>
+        ${license?`<div style="font-size:11px;color:#555;margin-bottom:3mm">رقم الترخيص: ${license}</div>`:''}
+        ${repName?`<div style="font-size:12px;font-weight:700;color:#3d2000;margin-bottom:4mm">ممثل الشركة: ${repName}</div>`:''}
+        <div style="display:flex;justify-content:center;align-items:flex-end;gap:10mm;margin-top:3mm">
+          <div style="text-align:center">
+            ${repSig?`<img src="${repSig}" alt="توقيع" style="max-width:140px;max-height:60px;object-fit:contain;border:1px solid #eee;border-radius:4px;padding:3px;background:#fafafa">`:'<div style="height:60px;width:140px;border:1px dashed #ccc;border-radius:4px"></div>'}
+            <div style="font-size:10px;color:#666;margin-top:2mm">التوقيع</div>
+          </div>
+          <div style="text-align:center">
+            ${stamp?`<img src="${stamp}" alt="ختم" style="max-width:75px;max-height:75px;object-fit:contain">`:'<div style="height:75px;width:75px;border:1px dashed #ccc;border-radius:4px"></div>'}
+            <div style="font-size:10px;color:#666;margin-top:2mm">الختم الرسمي</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1028,32 +1175,3 @@ async function exportNusukReport() {
   w.document.close();
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-// v23.0-pre-n: Auto-refresh لحل مشاكل التوقيت
-// يراقب قسم بطاقات نسك ويعيد الرسم تلقائياً إذا ظهر
-// ═══════════════════════════════════════════════════════════════════════
-(function setupNusukAutoRefresh(){
-  let lastRenderTime = 0;
-  
-  function autoRender(){
-    const tbody = document.getElementById('nusuk-tbody');
-    if(!tbody) return;
-    // تأكد أن القسم ظاهر في الشاشة
-    const rect = tbody.getBoundingClientRect();
-    const visible = rect.width > 0 && rect.height > 0;
-    if(!visible) return;
-    // أعد الرسم كل 2 ثانية كحد أقصى
-    const now = Date.now();
-    if(now - lastRenderTime < 2000) return;
-    lastRenderTime = now;
-    // تأكد أن ALL_DATA جاهز
-    if(typeof ALL_DATA === 'undefined' || !ALL_DATA.length) return;
-    // أعد الرسم
-    if(typeof renderNusukTable === 'function'){
-      renderNusukTable(window._nusukFilter);
-    }
-  }
-  
-  // راقب كل 500ms
-  setInterval(autoRender, 500);
-})();

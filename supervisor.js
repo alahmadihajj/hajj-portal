@@ -56,29 +56,69 @@ function openSupBulkAck() {
       </div>
       ${searchHtml}
       <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;margin-bottom:8px;max-height:220px;overflow-y:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:11px">
-          <thead style="background:#f5f5f5;position:sticky;top:0;z-index:1">
-            <tr>
-              <th style="padding:7px 4px;font-weight:700;color:#7a4500;width:30px;border-bottom:1px solid #e0e0e0">#</th>
-              <th style="padding:7px 8px;font-weight:700;color:#7a4500;text-align:right;border-bottom:1px solid #e0e0e0">اسم الحاج</th>
-              <th style="padding:7px 8px;font-weight:700;color:#7a4500;width:92px;text-align:center;border-bottom:1px solid #e0e0e0;direction:ltr">الهوية</th>
-              <th style="padding:7px 4px;font-weight:700;color:#c00;width:50px;text-align:center;border-bottom:1px solid #e0e0e0;background:#fde8e8" title="استبعاد حاج من الدفعة">حذف</th>
-            </tr>
-          </thead>
-          <tbody id="sup-bulk-tbody"></tbody>
-        </table>
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%">
+          <table style="width:100%;min-width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap">
+            <thead style="background:#3d2000;position:sticky;top:0;z-index:1">
+              <tr>
+                <th style="padding:7px 4px;font-weight:700;color:#fff;width:30px;border-bottom:1px solid #555">#</th>
+                <th style="padding:7px 8px;font-weight:700;color:#fff;text-align:right;border-bottom:1px solid #555">اسم الحاج</th>
+                <th style="padding:7px 8px;font-weight:700;color:#fff;width:92px;text-align:center;border-bottom:1px solid #555;direction:ltr">الهوية</th>
+                <th style="padding:7px 4px;font-weight:700;color:#fff;width:50px;text-align:center;border-bottom:1px solid #555;background:#c00" title="استبعاد حاج من الدفعة">حذف</th>
+              </tr>
+            </thead>
+            <tbody id="sup-bulk-tbody"></tbody>
+          </table>
+        </div>
       </div>
       <div id="sup-bulk-counter" style="background:#fff3e0;border:1px solid #c8971a;border-radius:8px;padding:8px 12px;font-size:12px;color:#7a4500;text-align:center;font-weight:700;margin-bottom:8px"></div>
       <div style="background:#fff8e8;border:1.5px solid #c8971a;border-radius:10px;padding:12px 14px;margin-bottom:10px;direction:rtl">
-        <div style="font-weight:700;color:#3d2000;margin-bottom:8px;font-size:13px">📜 التعهّدات (يرجى القراءة قبل التوقيع):</div>
-        <ol style="margin:0;padding-right:20px;font-size:12px;line-height:1.9;color:#3d2000">
-          <li>المحافظة على البطاقات وعدم تسليمها لأي شخص غير صاحبها.</li>
-          <li>التحقق من هوية كل حاج قبل التسليم وأخذ توقيعه على الإقرار الخاص به.</li>
-          <li>الالتزام بالتعليمات والإرشادات المتعلقة بتوزيع البطاقات.</li>
-          <li>إبلاغ الحملة فوراً في حال فقدان أي بطاقة أو وجود أي مشكلة.</li>
-          <li>إعادة البطاقات غير المسلّمة إلى الإدارة بعد انتهاء الرحلة.</li>
-          <li>أتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.</li>
-        </ol>
+        <div style="font-weight:700;color:#3d2000;margin-bottom:10px;font-size:13px;display:flex;align-items:center;gap:6px">
+          📜 التعهّدات (يرجى القراءة قبل التوقيع):
+        </div>
+
+        <div style="margin:8px 0 12px;padding:6px 10px;background:#fff;border:1px dashed #c8971a;border-radius:6px;display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="sup-ack-check-all" onchange="_toggleAllSupAckPledges(this)" style="width:18px;height:18px;cursor:pointer;accent-color:#7a4500">
+          <label for="sup-ack-check-all" style="font-size:12px;color:#7a4500;font-weight:700;cursor:pointer">✅ تحديد الكل</label>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-ack-pledge" id="sup-pledge-1" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-pledge-1" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>1.</strong> المحافظة على البطاقات وعدم تسليمها لأي شخص غير صاحبها.
+            </label>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-ack-pledge" id="sup-pledge-2" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-pledge-2" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>2.</strong> التحقق من هوية كل حاج قبل التسليم وأخذ توقيعه على الإقرار الخاص به.
+            </label>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-ack-pledge" id="sup-pledge-3" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-pledge-3" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>3.</strong> الالتزام بالتعليمات والإرشادات المتعلقة بتوزيع البطاقات.
+            </label>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-ack-pledge" id="sup-pledge-4" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-pledge-4" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>4.</strong> إبلاغ الحملة فوراً في حال فقدان أي بطاقة أو وجود أي مشكلة.
+            </label>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-ack-pledge" id="sup-pledge-5" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-pledge-5" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>5.</strong> إعادة البطاقات غير المسلّمة إلى الإدارة بعد انتهاء الرحلة.
+            </label>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-ack-pledge" id="sup-pledge-6" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-pledge-6" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>6.</strong> أتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.
+            </label>
+          </div>
+        </div>
       </div>
       <label style="display:flex;gap:8px;align-items:center;background:#fffbf0;border:1.5px solid #e0d5c5;border-radius:8px;padding:8px 10px;font-size:11px;color:#3d2000;direction:rtl;cursor:pointer;margin-bottom:4px">
         <input type="checkbox" id="sup-bulk-ack-print" checked style="width:16px;height:16px;accent-color:#7a4500;cursor:pointer">
@@ -87,8 +127,21 @@ function openSupBulkAck() {
     </div>`;
   _renderSupBulkTable();
   clearSigCanvas();
-  document.getElementById('sig-modal').style.display = 'flex';
+  const modal = document.getElementById('sig-modal');
+  if(modal){
+    modal.classList.add('is-open');
+    modal.style.display = 'flex';
+  }
 }
+
+// v23.0-pre-oo: تحديد/إلغاء كل بنود إقرار المشرف
+function _toggleAllSupAckPledges(checkAllEl){
+  const allChecked = checkAllEl.checked;
+  document.querySelectorAll('.sup-ack-pledge').forEach(cb => {
+    cb.checked = allChecked;
+  });
+}
+window._toggleAllSupAckPledges = _toggleAllSupAckPledges;
 
 function _renderSupBulkTable() {
   const ready    = window._sigBulkReady || [];
@@ -162,6 +215,34 @@ window._sigPilgrimId = null;
 window._sigType = '';
 
 async function loadSupervisorPanel(user) {
+  // v23.0-pre-ww: تنظيف دفاعي - ضمان عدم وجود نافذة معلّقة
+  try {
+    // إعادة تعيين حالة التوقيع
+    window._sigPilgrimId = null;
+    window._sigType = '';
+    window._sigBulkReady = [];
+    window._sigBulkExcluded = null;
+
+    // إغلاق أي نافذة توقيع مفتوحة
+    document.querySelectorAll('.modal-overlay, #sig-modal').forEach(m => {
+      if(m){
+        m.classList.remove('is-open');
+        m.style.display = 'none';
+      }
+    });
+
+    // مسح أي canvas توقيع سابق
+    const sigCanvas = document.getElementById('sig-canvas');
+    if(sigCanvas){
+      const ctx = sigCanvas.getContext('2d');
+      if(ctx) ctx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    }
+
+    console.log('[loadSupervisorPanel] Defensive cleanup done');
+  } catch(e){
+    console.warn('[loadSupervisorPanel] cleanup failed:', e);
+  }
+
   document.getElementById('sup-name').textContent = user.name||user.username;
   document.getElementById('sup-bus').textContent = '🚌 حافلة رقم: ' + (user.group_num||'—');
 
@@ -464,11 +545,21 @@ function openSigModal(pilgrimId, type) {
   document.getElementById('sig-modal-title').textContent = titles[type]||'';
   document.getElementById('sig-pilgrim-name').textContent = (p?.name||'—') + ' — ' + (p?.id_num||'—');
   clearSigCanvas();
-  document.getElementById('sig-modal').style.display = 'flex';
+  const modal = document.getElementById('sig-modal');
+  if(modal){
+    modal.classList.add('is-open');
+    modal.style.display = 'flex';
+  }
   closeSupModal();
 }
 
-function closeSigModal() { document.getElementById('sig-modal').style.display = 'none'; }
+function closeSigModal() {
+  const modal = document.getElementById('sig-modal');
+  if(modal){
+    modal.classList.remove('is-open');
+    modal.style.display = 'none';
+  }
+}
 
 function clearSigCanvas() {
   const canvas = document.getElementById('sig-canvas');
@@ -477,6 +568,16 @@ function clearSigCanvas() {
 }
 
 async function confirmSignature() {
+  // v23.0-pre-oo: التحقق من الموافقة على جميع التعهدات
+  if(window._sigType === 'bulk_nusuk') {
+    const allPledges = document.querySelectorAll('.sup-ack-pledge');
+    const checked = document.querySelectorAll('.sup-ack-pledge:checked');
+    if(allPledges.length > 0 && checked.length !== allPledges.length){
+      showToast('⚠️ يرجى الموافقة على جميع التعهدات قبل التوقيع', 'warning');
+      return;
+    }
+  }
+
   const canvas = document.getElementById('sig-canvas');
   const ctx = canvas.getContext('2d');
   const blank = document.createElement('canvas');

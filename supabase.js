@@ -483,6 +483,6 @@ const Storage = {
 };
 
 // تعريف DB عالمياً
-window.DB = { Pilgrims, Announcements, Camps, Groups, Buses, SysUsers, Requests, Staff, Settings, Surveys, Audit, Storage };
+window.DB = { client: _db, Pilgrims, Announcements, Camps, Groups, Buses, SysUsers, Requests, Staff, Settings, Surveys, Audit, Storage };
 window.dispatchEvent(new Event('db-ready'));
 console.log('✅ Supabase متصل بنجاح');

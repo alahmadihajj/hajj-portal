@@ -434,12 +434,6 @@ async function openPilgrimAssign(pilgrimId) {
   const currentMinaCamp = minaCamps.find(c => (c.camp_num||c.name) === pilgrim['mina_camp']);
   const currentArafatCamp = arafatCamps.find(c => (c.camp_num||c.name) === pilgrim['arafat_camp']);
 
-  // v20.2: حالة قفل بطاقة نسك + صلاحيات
-  const nusukLocked = _isNusukLocked(pilgrim);
-  const canReopen = nusukLocked && _canReopenNusuk();
-  const canEditLocked = nusukLocked && _isSuperAdmin();
-  const nusukDisabled = nusukLocked && !canEditLocked;
-  const nusukSigTime = pilgrim['نسك_time'] || '';
 
   openModal(`
     <h3 class="modal-title">✏️ تسكين الحاج: ${pilgrim['اسم الحاج']||''}</h3>
@@ -503,20 +497,59 @@ async function openPilgrimAssign(pilgrimId) {
     <hr style="border:none;border-top:1px solid #eee;margin:16px 0">
     <div style="background:#fffbf0;border-radius:10px;padding:14px">
       <div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:10px">🪪 حالة بطاقة نسك</div>
-      ${nusukLocked ? `<div style="background:#fff3e0;border:1px solid #c8971a;border-radius:8px;padding:10px 12px;font-size:12px;color:#7a4500;margin-bottom:10px;direction:rtl;line-height:1.7">
-        🔒 <strong>البطاقة موقَّعة</strong>${nusukSigTime?' في '+nusukSigTime:''} — ${canReopen?'استخدم زر <strong>🔓 فتح القفل</strong> للتعديل':'راجع الإدارة لفتح القفل'}
-      </div>` : ''}
-      <select id="pa-nusuk-status" ${nusukDisabled?'disabled':''} style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit${nusukDisabled?';background:#f0f0f0;cursor:not-allowed;color:#888':''}">
-        <option value="لم تطبع" ${(pilgrim['حالة بطاقة نسك']||'لم تطبع')==='لم تطبع'?'selected':''}>⬜ لم تطبع</option>
-        <option value="في الطباعة" ${pilgrim['حالة بطاقة نسك']==='في الطباعة'?'selected':''}>🔄 في الطباعة</option>
-        <option value="لدى الإدارة" ${pilgrim['حالة بطاقة نسك']==='لدى الإدارة'?'selected':''}>📦 لدى الإدارة</option>
-        <option value="لدى المشرف" ${pilgrim['حالة بطاقة نسك']==='لدى المشرف'?'selected':''}>👤 لدى المشرف</option>
-        <option value="مسلّمة للحاج" ${pilgrim['حالة بطاقة نسك']==='مسلّمة للحاج'?'selected':''}>✅ مسلّمة للحاج</option>
-      </select>
-      <div style="display:grid;grid-template-columns:${canReopen?'1fr auto':'1fr'};gap:8px;margin-top:10px">
-        <button onclick="saveNusukStatus(${pilgrimId})" ${nusukDisabled?'disabled':''} style="padding:10px;background:${nusukDisabled?'#ccc':'#7a4500'};color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:${nusukDisabled?'not-allowed':'pointer'};font-family:inherit">💾 حفظ حالة البطاقة</button>
-        ${canReopen?`<button onclick="openNusukReopenModal(${pilgrimId})" style="padding:10px 14px;background:#c00;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap" title="إعادة فتح البطاقة للتعديل">🔓 فتح القفل</button>`:''}
-      </div>
+      ${(() => {
+        const currentStatus = pilgrim['حالة بطاقة نسك']||'لم تطبع';
+        const time = pilgrim['نسك_time']||'—';
+        const hasPilgrimAck = !!pilgrim['نسك_sig'];
+        const hasSupAck = (currentStatus === 'لدى المشرف') || (currentStatus === 'مسلّمة للحاج');
+
+        // ألوان الحالة
+        const statusColors = {
+          'لم تطبع':      {color:'#888',  bg:'#f5f5f5'},
+          'في الطباعة':   {color:'#1a5fa8',bg:'#e8f0fd'},
+          'لدى الإدارة':  {color:'#c8971a',bg:'#fff3e0'},
+          'لدى المشرف':   {color:'#7a4500',bg:'#fdf0e0'},
+          'مسلّمة للحاج': {color:'#1a7a1a',bg:'#e8f8e8'}
+        };
+        const sc = statusColors[currentStatus] || statusColors['لم تطبع'];
+
+        const icons = {
+          'لم تطبع':'⬜','في الطباعة':'🔄','لدى الإدارة':'📦',
+          'لدى المشرف':'👤','مسلّمة للحاج':'✅'
+        };
+
+        // أزرار عرض الإقرارات
+        const btnSupAck = hasSupAck
+          ? `<button onclick="openSupAck('${pilgrim['_supabase_id']}', ${JSON.stringify(pilgrim).replace(/"/g, '&quot;')})" style="padding:10px 14px;background:#6b4a28;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600" title="عرض إقرار المشرف">📋 عرض إقرار المشرف</button>`
+          : '';
+        const btnView = hasPilgrimAck
+          ? `<button onclick="openPilgrimAck('${pilgrim['_supabase_id']}', ${JSON.stringify(pilgrim).replace(/"/g, '&quot;')})" style="padding:10px 14px;background:#1a5fa8;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600" title="عرض إقرار الحاج">📄 عرض إقرار الحاج</button>`
+          : '';
+
+        const actionsRow = (btnSupAck || btnView)
+          ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${btnSupAck}${btnView}</div>`
+          : '';
+
+        return `
+          <div style="background:${sc.bg};border:1px solid ${sc.color}33;border-radius:10px;padding:12px;margin-top:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <div>
+                <div style="font-size:11px;color:#666;margin-bottom:4px">الحالة الحالية:</div>
+                <span style="background:${sc.color};color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700">${icons[currentStatus]||''} ${currentStatus}</span>
+              </div>
+              <div style="text-align:left">
+                <div style="font-size:11px;color:#666;margin-bottom:4px">وقت التسليم:</div>
+                <div style="font-size:12px;color:${sc.color};font-weight:600">📅 ${time}</div>
+              </div>
+            </div>
+            ${actionsRow}
+            <div style="margin-top:10px;padding-top:10px;border-top:1px dashed ${sc.color}44;font-size:11px;color:#888;display:flex;align-items:center;gap:6px">
+              <span>ℹ️</span>
+              <span>للتعديل على حالة البطاقة، يُرجى الانتقال لقسم "بطاقات نسك"</span>
+            </div>
+          </div>
+        `;
+      })()}
     </div>`);
 
   // حفظ البيانات للتحديث عند تغيير المخيم
@@ -985,6 +1018,10 @@ function openPilgrimAck(pilgrimId, pilgrim) {
     </div>
 
     <div style="background:#fff;border:1.5px solid #e0d5c5;border-radius:10px;padding:10px 14px;margin-bottom:10px;direction:rtl">
+      <div style="margin:0 0 8px;padding:6px 10px;background:#fffbf0;border:1px dashed #c8971a;border-radius:6px;display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="pilgrim-ack-check-all" onchange="_toggleAllPilgrimAckPledges(this)" style="width:18px;height:18px;cursor:pointer;accent-color:#1a7a1a">
+        <label for="pilgrim-ack-check-all" style="font-size:12px;color:#7a4500;font-weight:700;cursor:pointer">✅ تحديد الكل (جميع البنود)</label>
+      </div>
       <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:12px;line-height:1.9;cursor:pointer">
         <input type="checkbox" id="ack1" style="margin-top:4px;width:16px;height:16px;accent-color:#1a7a1a;cursor:pointer">
         <span><strong style="color:#7a4500">1.</strong> المحافظة على بطاقة نسك وعدم فقدانها أو إتلافها.</span>
@@ -1042,6 +1079,18 @@ function openPilgrimAck(pilgrimId, pilgrim) {
   `);
   setTimeout(() => initAckCanvas('pilgrim-ack-canvas'), 100);
 }
+
+// v23.0-pre-oo: تحديد/إلغاء كل بنود إقرار الحاج
+function _toggleAllPilgrimAckPledges(checkAllEl){
+  const allChecked = checkAllEl.checked;
+  // ابحث عن كل checkboxes داخل نافذة الإقرار (ليس زر "تحديد الكل" نفسه)
+  const pledgeIds = ['ack1', 'ack2', 'ack3', 'ack4'];
+  pledgeIds.forEach(id => {
+    const cb = document.getElementById(id);
+    if(cb) cb.checked = allChecked;
+  });
+}
+window._toggleAllPilgrimAckPledges = _toggleAllPilgrimAckPledges;
 
 async function confirmPilgrimAck(pilgrimId) {
   const checks = ['ack1','ack2','ack3','ack4'];
