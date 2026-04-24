@@ -685,7 +685,7 @@ async function saveBraceletSetting(val) {
   updateBraceletToggle(val);
   try {
     await window.DB.Settings.set('bracelet_available', val.toString());
-    showToast(val ? '✅ أسوارة القطار مفعّلة' : '❌ أسوارة القطار موقوفة', 'success');
+    showToast(val ? '✅ أسوارة القطار مفعّلة' : '❌ أسوارة القطار معطّلة', 'success');
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
 

@@ -27,7 +27,7 @@
 let currentHousingSection = 'camps';
 
 function showHousingSection(sec) {
-  ['camps','groups','buses','assembly','nusuk','sysusers','requests'].forEach(s => {
+  ['camps','groups','buses','assembly','nusuk','bracelet','sysusers','requests'].forEach(s => {
     const el = document.getElementById('hs-' + s);
     const btn = document.getElementById('hs-' + s + '-btn');
     if(el) el.style.display = s === sec ? '' : 'none';
@@ -54,6 +54,10 @@ function renderHousingSection() {
     case 'sysusers': renderSysUsers(); break;
     case 'requests': renderRequests(); break;
     case 'nusuk': renderNusukTable(window._nusukFilter||''); break;
+    case 'bracelet':
+      if(typeof renderBraceletTable === 'function') renderBraceletTable(window._braceletFilter||'');
+      if(typeof initBraceletBusFilter === 'function') initBraceletBusFilter();
+      break;
   }
 }
 

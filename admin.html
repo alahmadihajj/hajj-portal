@@ -1519,6 +1519,300 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   div:has(> #hs-camps-btn) {
     display:flex !important;
     flex-wrap:nowrap !important;
+
+  /* v23.1-pre-a: CSS أسوارة القطار */
+.bracelet-card{
+  position:relative;
+  background:var(--surface,#fff);
+  border:1px solid var(--border,#e0d5c5);
+  border-radius:12px;
+  padding:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.bracelet-card:active{transform:scale(.99);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.bracelet-card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:10px;
+  padding-left:34px;
+}
+.bracelet-card-name{
+  font-size:16px;font-weight:800;color:#3d2000;
+  line-height:1.3;margin-bottom:3px
+}
+.bracelet-card-id{
+  font-size:12px;color:#888;direction:ltr;
+  font-family:monospace;
+}
+.bracelet-card-check{
+  position:absolute;top:14px;left:14px;
+  width:20px;height:20px;cursor:pointer;
+}
+.bracelet-card-status-row{
+  display:flex;gap:8px;align-items:center;
+  margin:10px 0 8px;flex-wrap:wrap;
+}
+.bracelet-card-status-badge{
+  padding:5px 12px;border-radius:20px;
+  font-size:11px;font-weight:700;white-space:nowrap;
+}
+.bracelet-card-info{
+  display:flex;gap:10px;font-size:12px;color:#555;
+  flex-wrap:wrap;margin-bottom:10px;
+}
+.bracelet-card-info span{
+  background:#f5ead0;padding:3px 10px;border-radius:14px;
+}
+.bracelet-card-actions{
+  display:flex;gap:8px;align-items:center;
+  padding-top:10px;border-top:1px dashed #e0d5c5;
+  flex-wrap:wrap;
+}
+.bracelet-card-actions select{
+  flex:1;min-width:120px;padding:8px 10px;
+  border:1.5px solid #e0d5c5;border-radius:8px;
+  font-size:12px;font-family:inherit;background:#fff;
+  cursor:pointer;
+}
+.bracelet-card-actions button{
+  padding:8px 12px;border:none;border-radius:8px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  font-family:inherit;min-width:44px;min-height:44px;
+}
+
+@media (max-width:768px){
+  #data-table-wrap{display:none!important}
+  #mobile-cards{
+    display:flex!important;
+    flex-direction:column;
+    gap:10px;
+    padding:12px;
+    margin:0 0 20px;
+  }
+  .pilgrim-card{
+    position:relative;
+    background:var(--surface,#fff);
+    border:1px solid var(--border,#e0d5c5);
+    border-radius:12px;
+    padding:14px 14px 12px;
+    box-shadow:0 2px 6px rgba(0,0,0,.06);
+    cursor:pointer;
+    -webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .pilgrim-card:active{transform:scale(.99);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .pilgrim-card[data-rel="1"]{
+    background:#f0f0f0;
+    border-right:3px solid #c00;
+    border-left:3px solid #c00;
+  }
+  .pilgrim-card .pc-check{
+    position:absolute;top:12px;left:12px;
+    width:20px;height:20px;cursor:pointer;
+    accent-color:var(--gold,#b8860b);
+  }
+  .pc-header{margin-bottom:10px;padding-left:34px}
+  .pc-name{font-size:16px;font-weight:800;color:#3d2000;line-height:1.3;margin-bottom:3px}
+  .pc-booking{font-size:12px;color:var(--gold,#b8860b);font-weight:700}
+  .pilgrim-card[data-rel="1"] .pc-booking{color:#c00}
+  .pc-row{
+    display:flex;flex-wrap:wrap;gap:6px 16px;
+    font-size:12.5px;color:#555;margin-bottom:8px;
+  }
+  .pc-row strong{color:#3d2000;font-weight:700}
+  .pc-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;align-items:center}
+  .pc-badges .badge{font-size:11px;padding:3px 10px}
+  .pc-badges .pc-nat{font-size:12px;color:#555}
+  .pc-loc{
+    display:flex;flex-wrap:wrap;gap:6px;
+    font-size:12px;color:#666;margin-top:4px;
+    padding-top:8px;border-top:1px dashed #e0d5c5;
+  }
+  .pc-loc strong{color:#3d2000;font-weight:700}
+  .pc-chip{
+    flex:1 1 auto;min-width:0;
+    display:inline-flex;align-items:center;justify-content:center;gap:4px;
+    background:#f8f4ec;border:1px solid #efe3cf;
+    border-radius:6px;padding:5px 8px;
+    font-size:11.5px;color:#555;
+    white-space:nowrap;
+  }
+  .pc-chip-label{font-size:10px;color:#888;font-weight:600}
+  .pc-chip strong{color:var(--gold,#3d2000);font-weight:700}
+  .pc-chip-empty{background:#fafafa;border-color:#eee;color:#bbb}
+  .pc-chip-empty strong{color:#bbb;font-weight:600}
+  .pc-chip-empty .pc-chip-label{color:#ccc}
+  .pc-gender{
+    display:inline-flex;align-items:center;gap:3px;
+    padding:2px 8px;border-radius:10px;
+    font-size:11px;font-weight:700;white-space:nowrap;
+  }
+  .pc-gender-m{background:#e3f2fd;color:#1565c0;border:1px solid #bbdefb}
+  .pc-gender-f{background:#fce4ec;color:#c2185b;border:1px solid #f8bbd0}
+  .pc-city{font-size:12px;color:#555;font-weight:600}
+  .pc-phone{display:inline-flex;align-items:center;gap:4px}
+  .pc-tel{
+    color:#1a5fa8;font-weight:700;
+    text-decoration:underline;text-decoration-color:#a8c4e8;text-underline-offset:2px;
+  }
+  .pc-tel:active{color:#0d3f7a}
+  .pc-wa{
+    display:inline-flex;align-items:center;justify-content:center;
+    background:#e8f5e9;color:#2e7d32;
+    padding:4px 8px;border-radius:6px;
+    font-size:13px;text-decoration:none;
+    border:1px solid #c8e6c9;
+    min-height:28px;min-width:30px;
+  }
+  .pc-wa:active{background:#c8e6c9}
+  .pc-actions{
+    display:flex;justify-content:flex-end;margin-top:10px;
+  }
+  .pc-actions button{
+    padding:9px 20px;background:var(--gold,#c8971a);color:#fff;
+    border:none;border-radius:8px;cursor:pointer;
+    font-size:13px;font-weight:700;font-family:inherit;
+    min-height:40px;
+  }
+  .pc-empty{
+    text-align:center;padding:40px 20px;color:#888;
+    background:#fff;border-radius:12px;border:1px dashed #e0d5c5;
+  }
+  .pc-booking-link{
+    cursor:pointer;
+    text-decoration:underline;
+    text-decoration-color:var(--gold,#c8971a);
+    text-underline-offset:3px;
+  }
+  .pilgrim-card[data-rel="1"] .pc-booking-link{text-decoration-color:#c00}
+
+  /* === Filters — vertical stack (overrides) === */
+  .filters{
+    flex-direction:row!important;
+    flex-wrap:wrap!important;
+    overflow:visible!important;
+    padding:12px!important;
+    gap:8px!important;
+    align-items:stretch;
+  }
+  .filters label{
+    display:block!important;
+    flex:0 0 100%;
+    font-size:13px;
+    font-weight:700;
+    color:#3d2000;
+    margin:4px 0 -4px;
+  }
+  .filters input,
+  .filters select{
+    flex:0 0 100%!important;
+    width:100%;
+    min-width:0!important;
+    min-height:46px;
+    padding:12px!important;
+    font-size:15px!important;
+    border-radius:10px!important;
+  }
+  .filters .reset,
+  .filters #col-ctrl-wrap{
+    flex:1 1 auto!important;
+    min-width:100px;
+  }
+  .filters .reset{
+    min-height:46px!important;
+    padding:12px 14px!important;
+    font-size:14px!important;
+    border-radius:10px!important;
+  }
+  .filters .col-ctrl-btn{
+    width:100%;
+    min-height:46px;
+    padding:12px 14px;
+    font-size:14px;
+    border-radius:10px;
+  }
+  .filters #col-panel{
+    left:12px!important;right:12px!important;
+    width:auto!important;max-width:none;
+  }
+  .filters-wrap{margin:0 12px 10px}
+  .filters-toggle{padding:13px 14px;font-size:13.5px}
+  .filters-panel.open{max-height:1100px}
+
+  /* === Nusuk mobile cards === */
+  #nusuk-table-wrap{display:none!important}
+  #bracelet-mobile-cards{
+    display:flex!important;flex-direction:column;
+    gap:10px;padding:12px;margin:0 0 20px;
+  }
+  .bracelet-card .pc-row{
+    justify-content:space-between !important;
+    align-items:center;
+  }
+  .bracelet-card-meta-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:8px 0;
+  }
+  .bracelet-card-date-badge{
+    background:#f5ead0;
+    color:#7a4500;
+    padding:4px 10px;
+    border-radius:14px;
+    font-size:11px;
+    font-weight:600;
+    border:1px solid #e0d5c5;
+  }
+  .bracelet-card-actions{
+    display:flex;gap:8px;align-items:center;
+    padding-top:10px;border-top:1px dashed #e0d5c5;
+    flex-wrap:nowrap;
+  }
+  .bracelet-card-actions > select,
+  .bracelet-card-actions > button:first-child[onclick*="showToast"]{
+    flex:1;min-width:0;
+  }
+  .bracelet-card-actions > button[onclick*="viewPilgrimAck"],
+  .bracelet-card-actions > button[onclick*="openSupervisorAckFor"]{
+    flex:0 0 auto;
+  }
+
+  /* v23.0-pre-cc: chips فلاتر نسك على سطر واحد في الجوال */
+  div:has(> #nusuk-f-all){
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    overflow-x:auto !important;
+    gap:6px !important;
+    padding:4px 10px !important;
+    -webkit-overflow-scrolling:touch !important;
+    scrollbar-width:thin !important;
+  }
+  div:has(> #nusuk-f-all)::-webkit-scrollbar{
+    height:4px;
+  }
+  div:has(> #nusuk-f-all)::-webkit-scrollbar-thumb{
+    background:rgba(200,151,26,0.3);
+    border-radius:2px;
+  }
+  [id^="nusuk-f-"]{
+    flex:0 0 auto !important;
+    white-space:nowrap !important;
+    min-height:38px;
+    padding:8px 14px !important;
+    font-size:12px !important;
+  }
+
+  /* v23.0-pre-dd: تبويبات قسم الإدارة على سطر واحد في الجوال */
+  div:has(> #hs-camps-btn) {
+    display:flex !important;
+  /* نهاية CSS أسوارة القطار */
+
     overflow-x:auto !important;
     gap:8px !important;
     padding:8px 12px !important;
@@ -1706,6 +2000,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
   <script defer src="announcements.js"></script>
   <script defer src="users.js"></script>
   <script defer src="nusuk.js"></script>
+  <script defer src="bracelet.js"></script>
   <script defer src="pilgrim-portal.js"></script>
   <script defer src="dashboard.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15/Sortable.min.js"></script>
@@ -3086,6 +3381,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       <button onclick="showHousingSection('buses')" id="hs-buses-btn" class="hs-btn">🚌 الحافلات</button>
       <button onclick="showHousingSection('assembly')" id="hs-assembly-btn" class="hs-btn">📍 نقاط التجمع</button>
       <button onclick="showHousingSection('nusuk')" id="hs-nusuk-btn" class="hs-btn">🪪 بطاقات نسك</button>
+      <button onclick="showHousingSection('bracelet')" id="hs-bracelet-btn" class="hs-btn" style="display:none">🚆 أسوارة القطار</button>
       <button onclick="showHousingSection('sysusers')" id="hs-sysusers-btn" class="hs-btn">🎯 مشرفو الحجاج</button>
       <button onclick="showHousingSection('requests')" id="hs-requests-btn" class="hs-btn">📝 الطلبات</button>
     </div>
@@ -3249,6 +3545,123 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       </div>
       <div id="nusuk-mobile-cards" style="display:none"></div>
     </div>
+
+  <!-- v23.1-pre-b: قسم أسوارة القطار -->
+    <div id="hs-bracelet" style="display:none;padding:20px;max-width:1100px;margin:0 auto">
+
+      <!-- رأس القسم -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;color:#3d2000;margin:0">🚆 أسوارة القطار</h2>
+          <p style="font-size:13px;color:#888;margin-top:4px">تتبع حالة أسوارة القطار لجميع الحجاج</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="bracelet-header-btn" data-icon="🔧" onclick="exportBraceletReport()" style="padding:9px 18px;background:#3d2000;color:#fff;border:none;border-radius:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600">
+            <span class="btn-label">تجهيز التقرير</span>
+          </button>
+          <button class="bracelet-header-btn" data-icon="🔄" onclick="refreshBraceletData(this)" style="padding:8px 16px;background:#1a5fa8;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+            <span class="btn-label">تحديث البيانات</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- إحصائيات -->
+      <div id="bracelet-stats"></div>
+
+      <!-- بحث وفلاتر -->
+      <div style="background:#fff;border-radius:14px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input id="bracelet-search" type="text" placeholder="🔍 بحث بالاسم أو رقم الهوية..." oninput="renderBraceletTable(window._braceletFilter)" style="flex:1;min-width:200px;padding:10px 14px;border:1.5px solid #e0d5c5;border-radius:10px;font-size:13px;font-family:inherit;direction:rtl">
+        <select id="bracelet-bus-filter" onchange="renderBraceletTable(window._braceletFilter)" style="padding:10px 14px;border:1.5px solid #e0d5c5;border-radius:10px;font-size:13px;font-family:inherit">
+          <option value="">🚌 كل الحافلات</option>
+        </select>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button onclick="filterBracelet('')" id="bracelet-f-all" class="hs-btn hs-active" style="font-size:12px;padding:6px 12px">الكل</button>
+          <button onclick="filterBracelet('لم تُطلب')" id="bracelet-f-1" class="hs-btn" style="font-size:12px;padding:6px 12px">📪 لم تُطلب</button>
+          <button onclick="filterBracelet('قيد التجهيز')" id="bracelet-f-2" class="hs-btn" style="font-size:12px;padding:6px 12px">🔧 تجهيز</button>
+          <button onclick="filterBracelet('لدى الإدارة')" id="bracelet-f-3" class="hs-btn" style="font-size:12px;padding:6px 12px">🏢 الإدارة</button>
+          <button onclick="filterBracelet('لدى المشرف')" id="bracelet-f-4" class="hs-btn" style="font-size:12px;padding:6px 12px">👨‍💼 المشرف</button>
+          <button onclick="filterBracelet('مسلّمة للحاج')" id="bracelet-f-5" class="hs-btn" style="font-size:12px;padding:6px 12px">✅ مسلّمة</button>
+        </div>
+      </div>
+
+      <!-- شريط معلومات وإجراء جماعي -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;padding:0 4px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div id="bracelet-count" style="font-size:13px;color:#888"></div>
+          <span id="bracelet-last-update" style="font-size:11px;color:#888;display:inline-flex;align-items:center;gap:4px">
+            <span style="display:inline-block;width:6px;height:6px;background:#4caf50;border-radius:50%;box-shadow:0 0 0 2px rgba(76,175,80,0.2);animation:braceletPulseDot 2s infinite"></span>
+            <span id="bracelet-last-update-text">الآن</span>
+          </span>
+        </div>
+        <div id="bracelet-bulk-bar" style="display:none;align-items:center;gap:8px;background:#fff3e0;border:1.5px solid #c8971a;border-radius:10px;padding:8px 14px">
+          <span id="bracelet-selected-count" style="font-size:13px;font-weight:600;color:#7a4500"></span>
+          <select id="bracelet-bulk-status" style="padding:7px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:12px;font-family:inherit" title="الحالات التي تتطلّب توقيعاً (لدى المشرف / مسلّمة للحاج) تُضبط تلقائياً عبر الإقرارات الرسمية">
+            <option value="">— اختر الحالة الجديدة —</option>
+            <option value="لم تُطلب">📪 لم تُطلب</option>
+            <option value="قيد التجهيز">🔧 قيد التجهيز</option>
+            <option value="لدى الإدارة">📦 لدى الإدارة</option>
+          </select>
+          <button onclick="applyBulkBracelet()" style="padding:7px 16px;background:#7a4500;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✅ تطبيق</button>
+          <button onclick="clearBraceletSelection()" style="padding:7px 10px;background:#f5f5f5;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">✕</button>
+        </div>
+      </div>
+
+      <!-- الجدول -->
+      <div id="bracelet-table-wrap" style="background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.08);overflow:hidden">
+        <div style="overflow:auto;max-height:60vh">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:800px">
+            <thead>
+              <tr style="background:linear-gradient(135deg,#3d2000,#7a4500);color:#fff">
+                <th style="padding:12px 10px;text-align:center;width:36px">
+                  <input type="checkbox" id="bracelet-check-all" onclick="toggleAllBracelet(this)" style="cursor:pointer;width:15px;height:15px">
+                </th>
+                <th style="padding:12px 14px;text-align:center;width:40px">#</th>
+                <th class="resizable-th" style="padding:12px 14px;text-align:right;position:relative">
+                  اسم الحاج
+                  <div class="resize-handle" onmousedown="startResize(event, this.parentElement)" style="position:absolute;left:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent"></div>
+                </th>
+                <th class="resizable-th" style="padding:12px 14px;text-align:center;position:relative">
+                  رقم الهوية
+                  <div class="resize-handle" onmousedown="startResize(event, this.parentElement)" style="position:absolute;left:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent"></div>
+                </th>
+                <th class="resizable-th" style="padding:12px 14px;text-align:center;position:relative">
+                  رقم الجوال
+                  <div class="resize-handle" onmousedown="startResize(event, this.parentElement)" style="position:absolute;left:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent"></div>
+                </th>
+                <th class="resizable-th" style="padding:12px 14px;text-align:center;position:relative">
+                  الحافلة
+                  <div class="resize-handle" onmousedown="startResize(event, this.parentElement)" style="position:absolute;left:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent"></div>
+                </th>
+                <th class="resizable-th" style="padding:12px 14px;text-align:center;position:relative">
+                  حالة الأسوارة
+                  <div class="resize-handle" onmousedown="startResize(event, this.parentElement)" style="position:absolute;left:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent"></div>
+                </th>
+                <th class="resizable-th" style="padding:12px 14px;text-align:center;position:relative">
+                  وقت التسليم
+                  <div class="resize-handle" onmousedown="startResize(event, this.parentElement)" style="position:absolute;left:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent"></div>
+                </th>
+                <th class="resizable-th" style="padding:12px 14px;text-align:center;position:relative">
+                  تغيير الحالة
+                  <div class="resize-handle" onmousedown="startResize(event, this.parentElement)" style="position:absolute;left:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent"></div>
+                </th>
+                <th class="resizable-th" style="padding:12px 14px;text-align:center;position:relative">
+                  الإقرار
+                  <div class="resize-handle" onmousedown="startResize(event, this.parentElement)" style="position:absolute;left:0;top:0;bottom:0;width:5px;cursor:col-resize;background:transparent"></div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="bracelet-tbody"></tbody>
+          </table>
+        </div>
+        <div id="bracelet-empty" style="display:none;padding:40px;text-align:center;color:#888">
+          <div style="font-size:40px;margin-bottom:10px">🚆</div>
+          <div>لا يوجد نتائج</div>
+        </div>
+      </div>
+      <div id="bracelet-mobile-cards" style="display:none"></div>
+    </div>
+  <!-- نهاية أسوارة القطار -->
+
   </div>
 
   <!-- ===== تبويب الموظفين ===== -->
@@ -3531,6 +3944,10 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       0%, 100% { box-shadow: 0 0 0 2px rgba(76,175,80,0.2); }
       50%      { box-shadow: 0 0 0 6px rgba(76,175,80,0); }
     }
+    @keyframes braceletPulseDot {
+      0%, 100% { box-shadow: 0 0 0 2px rgba(76,175,80,0.2); }
+      50%      { box-shadow: 0 0 0 6px rgba(76,175,80,0); }
+    }
   </style>
 
   <div id="tab-data" style="display:none;background:var(--surface-3);min-height:calc(100vh - 60px)">
@@ -3789,6 +4206,19 @@ async function loadData() {
   // تطبيق الشعار واسم الشركة دائماً (مع fallbacks ذكية)
   _applyDevLogo();
   _applyCompanyName(window._devSettings?.companyName);
+
+  // v23.1-pre-d: إظهار زر أسوارة القطار
+  try{
+    const braceletBtn = document.getElementById('hs-bracelet-btn');
+    if(braceletBtn && window.DB?.Settings?.get){
+      const val = await window.DB.Settings.get('bracelet_available');
+      const enabled = val === 'true' || val === true;
+      braceletBtn.style.display = enabled ? '' : 'none';
+    }
+  }catch(e){
+    console.error('[bracelet] error:', e);
+  }
+
   try {
     const pilgrims = await window.DB.Pilgrims.getAll();
     ALL_DATA.length = 0;
@@ -3822,6 +4252,13 @@ async function loadData() {
         'نسك_supervisor_sig': p.nusuk_supervisor_sig||'',
         'نسك_supervisor_time': p.nusuk_supervisor_time||'',
         'نسك_supervisor_ack_id': p.nusuk_supervisor_ack_id||'',
+        // v23.1-pre-h: حقول أسوارة القطار
+        'حالة أسوارة القطار': p.bracelet_card_status||'لم تُطلب',
+        'أسوارة_sig': p.bracelet_sig||'',
+        'أسوارة_time': p.bracelet_time||'',
+        'أسوارة_supervisor_sig': p.bracelet_supervisor_sig||'',
+        'أسوارة_supervisor_time': p.bracelet_supervisor_time||'',
+        'أسوارة_supervisor_ack_id': p.bracelet_supervisor_ack_id||'',
         'حالة الإركاب': p.bus_status,
         'موقع الجلوس في منى': p.mina_seat,
         'موقع الجلوس في عرفات': p.arafat_seat,

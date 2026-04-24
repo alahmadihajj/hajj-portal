@@ -233,7 +233,7 @@ function _getAllowedNextStatuses(currentStatus){
 window._braceletPrevCounts = window._braceletPrevCounts || {};
 
 // ═══════════════════════════════════════════════════════════════════════
-// v20.2 Phase 1: قواعد حماية البطاقات الموقَّعة
+// v20.2 Phase 1: قواعد حماية الأساور الموقَّعة
 // ═══════════════════════════════════════════════════════════════════════
 // يدعم ALL_DATA shape (Arabic keys) + supervisor shape (English keys)
 function _isBraceletLocked(pilgrim){
@@ -247,7 +247,7 @@ function _canReopenBracelet(){
   const r = window._currentUser && window._currentUser.role;
   return r === 'admin' || r === 'superadmin';
 }
-// v22.1: قفل التسليم — هل استلم المشرف البطاقة من الإدارة؟
+// v22.1: قفل التسليم — هل استلم المشرف الأسوارة من الإدارة؟
 function _hasSupervisorAck(pilgrim){
   if(!pilgrim) return false;
   return !!(pilgrim['أسوارة_supervisor_sig'] || pilgrim.bracelet_supervisor_sig);
@@ -336,10 +336,10 @@ function _animateNumber(el, targetValue, duration){
 // أيقونات الحالات
 const BRACELET_ICONS = {
   'الإجمالي':     '👥',
-  'لم تُطلب':      '📪',
-  'قيد التجهيز':   '🔧',
-  'لدى الإدارة':  '🏢',
-  'لدى المشرف':   '👤',
+  'لم تُطلب': '📪',
+  'قيد التجهيز': '🔧',
+  'لدى الإدارة': '🏢',
+  'لدى المشرف': '👨‍💼',
   'مسلّمة للحاج': '✅'
 };
 
@@ -500,11 +500,11 @@ function renderBraceletTable(filter) {
     // رسالة ديناميكية حسب الفلتر
     const emptyMessages = {
       '':              { icon:'👥', title:'لا يوجد حجاج',       hint:'لم يتم إضافة أي حاج للنظام بعد' },
-      'لم تُطلب':        { icon:'✨', title:'ممتاز! كل البطاقات تمت طباعتها', hint:'لا يوجد حجاج بدون تجهيز' },
-      'قيد التجهيز':     { icon:'📭', title:'لا يوجد بطاقات قيد التجهيز',    hint:'يمكنك تحويل حجاج من "لم تُطلب"' },
-      'لدى الإدارة':    { icon:'📦', title:'لا يوجد بطاقات لدى الإدارة',    hint:'البطاقات المطبوعة تنتظر الاستلام' },
-      'لدى المشرف':     { icon:'👤', title:'لا يوجد بطاقات لدى المشرف',     hint:'يستلم المشرف البطاقات من الإدارة' },
-      'مسلّمة للحاج':   { icon:'🎯', title:'لم يتم تسليم أي بطاقة بعد',     hint:'المشرفون يسلّمون البطاقات للحجاج' }
+      'لم تُطلب':        { icon:'✨', title:'ممتاز! كل الأساور تمت طباعتها', hint:'لا يوجد حجاج بدون تجهيز' },
+      'قيد التجهيز':     { icon:'📭', title:'لا يوجد أساور قيد التجهيز',    hint:'يمكنك تحويل حجاج من "لم تُطلب"' },
+      'لدى الإدارة':    { icon:'📦', title:'لا يوجد أساور لدى الإدارة',    hint:'الأساور المطبوعة تنتظر الاستلام' },
+      'لدى المشرف':     { icon:'👤', title:'لا يوجد أساور لدى المشرف',     hint:'يستلم المشرف الأساور من الإدارة' },
+      'مسلّمة للحاج':   { icon:'🎯', title:'لم يتم تسليم أي أسوارة بعد',     hint:'المشرفون يسلّمون الأساور للحجاج' }
     };
     const currentFilter = window._braceletFilter || '';
     const msg = emptyMessages[currentFilter] || emptyMessages[''];
@@ -572,7 +572,7 @@ function renderBraceletTable(filter) {
         ${(() => {
           const isLocked = status === 'مسلّمة للحاج';
           if(isLocked){
-            return `<button onclick="showToast('🔒 البطاقة مسلّمة للحاج ومقفلة — استخدم 🔓 للرجوع', 'warning')" style="padding:6px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:11px;font-family:inherit;background:#f5ead0;color:#888;cursor:not-allowed;width:100%;text-align:right">🔒 ${status}</button>`;
+            return `<button onclick="showToast('🔒 الأسوارة مسلّمة للحاج ومقفلة — استخدم 🔓 للرجوع', 'warning')" style="padding:6px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:11px;font-family:inherit;background:#f5ead0;color:#888;cursor:not-allowed;width:100%;text-align:right">🔒 ${status}</button>`;
           }
           const allowed = _getAllowedNextStatuses(status);
           return `<select onchange="quickBraceletUpdate('${p['_supabase_id']}',this.value,this)" style="padding:6px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:11px;font-family:inherit;background:#fff;cursor:pointer">
@@ -598,7 +598,7 @@ function renderBraceletTable(filter) {
             ? `<button onclick="viewPilgrimAck('${p['_supabase_id']}')" title="عرض إقرار الحاج" style="${BRACELET_BTN_STYLE};background:#1a5fa8">📄</button>`
             : '';
           const btnReopen = canReopen
-            ? `<button onclick="openBraceletReopenModal('${p['_supabase_id']}')" title="إعادة فتح البطاقة" style="${BRACELET_BTN_STYLE};background:#c07000">🔓</button>`
+            ? `<button onclick="openBraceletReopenModal('${p['_supabase_id']}')" title="إعادة فتح الأسوارة" style="${BRACELET_BTN_STYLE};background:#c07000">🔓</button>`
             : '';
           const btnSupAck = hasSupAck
             ? `<button onclick="openSupervisorAckFor('${p['_supabase_id']}')" title="إقرار استلام المشرف" style="${BRACELET_BTN_STYLE};background:#6b4a28">📋</button>`
@@ -611,7 +611,7 @@ function renderBraceletTable(filter) {
     </tr>`;
   }).join('');
 
-  // تشغيل رسم البطاقات للجوال
+  // تشغيل رسم الأساور للجوال
   _renderBraceletMobileCards(list);
 }
 
@@ -679,7 +679,7 @@ function _renderBraceletMobileCards(list){
       </div>
       <div class="bracelet-card-meta-row">
         <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:12px;color:#666">حالة البطاقة:</span>
+          <span style="font-size:12px;color:#666">حالة الأسوارة:</span>
           <span class="bracelet-card-status-badge" style="background:${bg};color:${color}">${status}</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
@@ -691,7 +691,7 @@ function _renderBraceletMobileCards(list){
         ${(() => {
           const isLocked = status === 'مسلّمة للحاج';
           if(isLocked){
-            return `<button onclick="showToast('🔒 البطاقة مسلّمة للحاج ومقفلة — استخدم 🔓 للرجوع', 'warning')" style="padding:6px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:11px;font-family:inherit;background:#f5ead0;color:#888;cursor:not-allowed;width:100%;text-align:right">🔒 ${status}</button>`;
+            return `<button onclick="showToast('🔒 الأسوارة مسلّمة للحاج ومقفلة — استخدم 🔓 للرجوع', 'warning')" style="padding:6px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:11px;font-family:inherit;background:#f5ead0;color:#888;cursor:not-allowed;width:100%;text-align:right">🔒 ${status}</button>`;
           }
           const allowed = _getAllowedNextStatuses(status);
           return `<select onchange="quickBraceletUpdate('${pid}',this.value,this)">
@@ -767,12 +767,12 @@ function viewPilgrimAck(pilgrimId) {
     <strong>تاريخ التسليم:</strong> ${p['أسوارة_time']||'—'}
   </div>
   <div class="pledge">
-    <p>أقر أنا المذكور أعلاه بأنني استلمت بطاقة "نسك" الخاصة بي من <strong>${companyName}</strong>، وأتعهد بما يلي:</p>
+    <p>أقر أنا المذكور أعلاه بأنني استلمت أسوارة "نسك" الخاصة بي من <strong>${companyName}</strong>، وأتعهد بما يلي:</p>
     <ol>
       <li>المحافظة على أسوارة القطار وعدم فقدانها أو إتلافها.</li>
-      <li>إبراز البطاقة عند الطلب في جميع مراحل التنقل وأداء المناسك.</li>
-      <li>الالتزام بالتعليمات والإرشادات المرتبطة باستخدام البطاقة.</li>
-      <li>إبلاغ الحملة فوراً في حال فقدان البطاقة أو وجود أي مشكلة.</li>
+      <li>إبراز الأسوارة عند الطلب في جميع مراحل التنقل وأداء المناسك.</li>
+      <li>الالتزام بالتعليمات والإرشادات المرتبطة باستخدام الأسوارة.</li>
+      <li>إبلاغ الحملة فوراً في حال فقدان الأسوارة أو وجود أي مشكلة.</li>
     </ol>
     <p>وأتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.</p>
   </div>
@@ -966,7 +966,7 @@ async function quickBraceletUpdate(pilgrimId, status, selectEl) {
 
   if(currentStatus === 'مسلّمة للحاج'){
     if(selectEl) selectEl.value = currentStatus;
-    showToast('🔒 البطاقة مسلّمة للحاج ومقفلة — استخدم 🔓 للرجوع', 'warning');
+    showToast('🔒 الأسوارة مسلّمة للحاج ومقفلة — استخدم 🔓 للرجوع', 'warning');
     return;
   }
 
@@ -984,7 +984,7 @@ async function quickBraceletUpdate(pilgrimId, status, selectEl) {
   const bypassLock = _isBraceletLocked(pilgrim) && status !== currentStatus && _isSuperAdmin();
   if(_isBraceletLocked(pilgrim) && status !== currentStatus && !_isSuperAdmin()){
     if(selectEl) selectEl.value = currentStatus;
-    showToast('🔒 البطاقة موقَّعة — استخدم 🔓 فتح القفل من Quick Edit', 'warning');
+    showToast('🔒 الأسوارة موقَّعة — استخدم 🔓 فتح القفل من Quick Edit', 'warning');
     return;
   }
 
@@ -1052,11 +1052,11 @@ async function exportBraceletReport() {
   // خريطة عناوين التقارير حسب الفلتر
   const REPORT_TITLES = {
     '':              'بيان بأسماء الحجاج لأسوارة القطار',
-    'لم تُطلب':        'بيان بأسماء الحجاج الذين لم تُطلب أسوارة القطار لهم',
-    'قيد التجهيز':     'بيان بأسماء الحجاج الذين بطاقاتهم قيد التجهيز',
-    'لدى الإدارة':    'بيان بأسماء الحجاج الذين أسوارة القطار لديهم بالإدارة',
-    'لدى المشرف':     'بيان بأسماء الحجاج الذين بطاقاتهم لدى المشرف',
-    'مسلّمة للحاج':   'بيان بأسماء الحجاج الذين تم تسليم أسوارة القطار لهم'
+    'لم تُطلب': '📪',
+    'قيد التجهيز': '🔧',
+    'لدى الإدارة': '🏢',
+    'لدى المشرف': '👨‍💼',
+    'مسلّمة للحاج': '✅'
   };
 
   // تطبيق نفس منطق الفلترة من renderBraceletTable
@@ -1165,7 +1165,7 @@ async function exportBraceletReport() {
           </div>
         </div>
       </td></tr>
-      <tr><th>#</th><th>اسم الحاج</th><th>رقم الهوية</th><th>رقم الجوال</th><th>الحافلة</th><th>حالة البطاقة</th><th>وقت التسليم</th></tr>
+      <tr><th>#</th><th>اسم الحاج</th><th>رقم الهوية</th><th>رقم الجوال</th><th>الحافلة</th><th>حالة الأسوارة</th><th>وقت التسليم</th></tr>
     </thead>
     <tbody>${rows}</tbody>
   </table>
