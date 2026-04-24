@@ -1048,10 +1048,13 @@ async function openBulkAckReceipt(opts){
 
   const rows = pilgrims.map((p,i) => `
     <tr>
-      <td>${i+1}</td>
-      <td style="text-align:right;font-weight:600">${esc(p.name||'—')}</td>
-      <td style="direction:ltr">${esc(p.id_num||'—')}</td>
-      <td>${esc(String(p.bus_num==null?'—':p.bus_num))}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${i+1}</td>
+      <td style="padding:4px;text-align:right;font-size:10px">${esc(p.name||'—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p.id_num||'—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p.booking_num||'—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.gender||'—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.city||'—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.bus_num||'—')}</td>
     </tr>`).join('');
 
   const w = window.open('', '_blank');
@@ -1123,10 +1126,13 @@ async function openBulkAckReceipt(opts){
   <table class="pilgrims">
     <thead>
       <tr>
-        <th style="width:30px">#</th>
-        <th style="text-align:right">اسم الحاج</th>
-        <th style="width:110px">رقم الهوية</th>
-        <th style="width:70px">الحافلة</th>
+        <th style="width:28px;padding:5px;background:#f5ead0;font-size:10px">#</th>
+        <th style="padding:5px;background:#f5ead0;font-size:10px;text-align:right">اسم الحاج</th>
+        <th style="width:90px;padding:5px;background:#f5ead0;font-size:10px">رقم الهوية</th>
+        <th style="width:75px;padding:5px;background:#f5ead0;font-size:10px">رقم الحجز</th>
+        <th style="width:45px;padding:5px;background:#f5ead0;font-size:10px">الجنس</th>
+        <th style="width:70px;padding:5px;background:#f5ead0;font-size:10px">المدينة</th>
+        <th style="width:50px;padding:5px;background:#f5ead0;font-size:10px">الحافلة</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>

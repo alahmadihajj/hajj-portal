@@ -35,6 +35,14 @@ function showHousingSection(sec) {
   });
   currentHousingSection = sec;
   renderHousingSection();
+
+  // v23.0-pre-dd: تمرير تلقائي للتبويب النشط على الجوال
+  setTimeout(() => {
+    const activeTab = document.querySelector('div:has(> #hs-camps-btn) > .hs-active');
+    if(activeTab && window.innerWidth <= 768){
+      activeTab.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+    }
+  }, 50);
 }
 
 function renderHousingSection() {

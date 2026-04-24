@@ -13,11 +13,224 @@
 //   - supabase.js:      window.DB.Pilgrims.*
 // ═══════════════════════════════════════════════════════════════════════
 
+// v23.0-pre-x: حقن CSS للإحصائيات التفاعلية
+(function injectNusukStatsStyles(){
+  if(document.getElementById('nusuk-stats-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'nusuk-stats-styles';
+  style.textContent = `
+  .nusuk-stat-card {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .nusuk-stat-card:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.14), 0 4px 10px rgba(0,0,0,0.08) !important;
+    z-index: 2;
+  }
+  .nusuk-stat-card:active {
+    transform: translateY(-2px) scale(1.01);
+    transition: all 0.1s ease;
+  }
+  .nusuk-stat-card.is-active {
+    background: linear-gradient(135deg, #fff 0%, #fffbf0 100%) !important;
+    box-shadow: 0 6px 18px rgba(200,151,26,0.25), inset 0 0 0 1px rgba(200,151,26,0.15) !important;
+    animation: nusukActivePulse 2s ease-in-out infinite;
+  }
+  @keyframes nusukActivePulse {
+    0%, 100% { box-shadow: 0 6px 18px rgba(200,151,26,0.25), inset 0 0 0 1px rgba(200,151,26,0.15); }
+    50%      { box-shadow: 0 8px 22px rgba(200,151,26,0.4),  inset 0 0 0 2px rgba(200,151,26,0.3);  }
+  }
+  .nusuk-stat-icon {
+    font-size: 22px;
+    margin-bottom: 4px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: inline-block;
+  }
+  .nusuk-stat-card:hover .nusuk-stat-icon {
+    transform: scale(1.25) rotate(-5deg);
+  }
+  .nusuk-stat-number {
+    display: inline-block;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+    transition: color 0.3s ease;
+  }
+  .nusuk-stat-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0,0,0,0.06);
+    color: #555;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    transition: all 0.25s ease;
+  }
+  .nusuk-stat-card:hover .nusuk-stat-badge {
+    background: rgba(200,151,26,0.15);
+    color: #7a4500;
+    transform: scale(1.1);
+  }
+  .nusuk-stat-card.is-active .nusuk-stat-badge {
+    background: #c8971a;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(200,151,26,0.4);
+  }
+  .nusuk-stat-progress-bar {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    height: 3px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+  .nusuk-stat-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -50%;
+    width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+    animation: nusukShimmer 2.5s infinite;
+  }
+  @keyframes nusukShimmer {
+    0%   { left: -50%; }
+    100% { left: 100%; }
+  }
+  .nusuk-stat-card:hover .nusuk-stat-progress-bar {
+    height: 5px;
+  }
+  .nusuk-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 2px;
+    line-height: 1.3;
+  }
+    /* Grid Container للـ stats */
+    #nusuk-stats {
+      display: grid !important;
+      grid-template-columns: repeat(6, 1fr) !important;
+      gap: 10px !important;
+      margin-bottom: 16px;
+    }
+
+    /* Tablet: 3 بطاقات */
+    @media (max-width: 900px) {
+      #nusuk-stats {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+      .nusuk-stat-card {
+        min-height: 110px !important;
+        padding: 12px 8px !important;
+      }
+      .nusuk-stat-number {
+        font-size: 24px !important;
+      }
+      .nusuk-stat-icon {
+        font-size: 20px !important;
+      }
+    }
+
+    /* Mobile: 2 بطاقات */
+    @media (max-width: 600px) {
+      #nusuk-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+      .nusuk-stat-card {
+        min-height: 100px !important;
+        padding: 10px 6px !important;
+        border-radius: 10px !important;
+      }
+      .nusuk-stat-number {
+        font-size: 22px !important;
+      }
+      .nusuk-stat-icon {
+        font-size: 18px !important;
+      }
+      .nusuk-stat-label {
+        font-size: 10px !important;
+      }
+      .nusuk-stat-badge {
+        font-size: 8px !important;
+        padding: 1px 5px !important;
+      }
+    }
+
+    /* Mobile صغير جداً */
+    @media (max-width: 380px) {
+      #nusuk-stats {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+      }
+      .nusuk-stat-card {
+        min-height: 90px !important;
+        padding: 8px 4px !important;
+      }
+      .nusuk-stat-number {
+        font-size: 20px !important;
+      }
+    }
+
+    /* Flash عند تغيّر الرقم */
+    @keyframes nusukNumberFlashUp {
+      0%   { color: inherit; transform: scale(1); }
+      30%  { color: #1a7a1a; transform: scale(1.25); text-shadow: 0 0 12px rgba(26,122,26,0.4); }
+      100% { color: inherit; transform: scale(1); }
+    }
+    @keyframes nusukNumberFlashDown {
+      0%   { color: inherit; transform: scale(1); }
+      30%  { color: #c00; transform: scale(0.85); text-shadow: 0 0 12px rgba(192,0,0,0.4); }
+      100% { color: inherit; transform: scale(1); }
+    }
+    .nusuk-stat-number.flash-up   { animation: nusukNumberFlashUp 0.8s ease-out; }
+    .nusuk-stat-number.flash-down { animation: nusukNumberFlashDown 0.8s ease-out; }
+`;
+  document.head.appendChild(style);
+})();
+
 // ===== بطاقات نسك =====
 window._nusukFilter = '';
 const NUSUK_STATUSES = ['لم تطبع','في الطباعة','لدى الإدارة','لدى المشرف','مسلّمة للحاج'];
 const NUSUK_COLORS  = ['#888','#1a5fa8','#c8971a','#7a4500','#1a7a1a'];
 const NUSUK_BG      = ['#f5f5f5','#e8f0fd','#fff3e0','#fdf0e0','#e8f8e8'];
+
+// v23.0-pre-z: قواعد التسلسل الصارم
+function _getAllowedNextStatuses(currentStatus){
+  // superadmin يرى كل الخيارات
+  if(_isSuperAdmin()) return NUSUK_STATUSES.slice();
+
+  // خيارات التسلسل الأمامي فقط
+  const allowed = [currentStatus]; // الحالة الحالية دائماً مرئية (محدّدة)
+
+  switch(currentStatus){
+    case 'لم تطبع':
+      allowed.push('في الطباعة', 'لدى الإدارة');
+      break;
+    case 'في الطباعة':
+      allowed.push('لدى الإدارة');
+      break;
+    case 'لدى الإدارة':
+      break;
+    case 'لدى المشرف':
+      allowed.push('مسلّمة للحاج');
+      break;
+    case 'مسلّمة للحاج':
+      break;
+  }
+  return allowed;
+}
+
+window._nusukPrevCounts = window._nusukPrevCounts || {};
 
 // ═══════════════════════════════════════════════════════════════════════
 // v20.2 Phase 1: قواعد حماية البطاقات الموقَّعة
@@ -75,13 +288,60 @@ function initNusukBusFilter() {
 
 function filterNusuk(status) {
   window._nusukFilter = status;
+  let activeChip = null;
   ['','لم تطبع','في الطباعة','لدى الإدارة','لدى المشرف','مسلّمة للحاج'].forEach((s,i) => {
     const ids = ['nusuk-f-all','nusuk-f-1','nusuk-f-2','nusuk-f-3','nusuk-f-4','nusuk-f-5'];
     const btn = document.getElementById(ids[i]);
-    if(btn) btn.classList.toggle('hs-active', s===status);
+    if(btn){
+      const isActive = s===status;
+      btn.classList.toggle('hs-active', isActive);
+      if(isActive) activeChip = btn;
+    }
   });
+
+  // v23.0-pre-ee: تمرير chip المحدَّد ليظهر للمستخدم
+  if(activeChip){
+    setTimeout(() => {
+      activeChip.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }, 50);
+  }
   renderNusukTable(status);
 }
+
+// v23.0-pre-x: Counter animation للأرقام
+function _animateNumber(el, targetValue, duration){
+  if(!el) return;
+  duration = duration || 800;
+  const startValue = 0;
+  const startTime = performance.now();
+
+  function easeOutQuart(t){ return 1 - Math.pow(1 - t, 4); }
+
+  function step(now){
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = easeOutQuart(progress);
+    const current = Math.round(startValue + (targetValue - startValue) * eased);
+    el.textContent = current;
+    if(progress < 1) requestAnimationFrame(step);
+    else el.textContent = targetValue;
+  }
+  requestAnimationFrame(step);
+}
+
+// أيقونات الحالات
+const NUSUK_ICONS = {
+  'الإجمالي':     '👥',
+  'لم تطبع':      '📭',
+  'في الطباعة':   '🖨️',
+  'لدى الإدارة':  '🏢',
+  'لدى المشرف':   '👤',
+  'مسلّمة للحاج': '✅'
+};
 
 function renderNusukTable(filter) {
   initNusukBusFilter();
@@ -92,20 +352,42 @@ function renderNusukTable(filter) {
   const statsEl = document.getElementById('nusuk-stats');
   if(statsEl) {
     const total = ALL_DATA.length;
-    statsEl.innerHTML = `<div onclick="filterNusuk('')" style="background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;border:2px solid ${!filter?'#c8971a':'#eee'}">
-        <div style="font-size:22px;font-weight:700;color:#3d2000">${total}</div>
-        <div style="font-size:11px;color:#888;margin-top:2px">الإجمالي</div>
-      </div>` +
-      NUSUK_STATUSES.map((s,i) => {
-        const count = ALL_DATA.filter(p=>(p['حالة بطاقة نسك']||'لم تطبع')===s).length;
-        const pct = total ? Math.round(count/total*100) : 0;
-        const active = filter===s;
-        return `<div onclick="filterNusuk('${s}')" style="background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;border:2px solid ${active?NUSUK_COLORS[i]:'#eee'}">
-          <div style="font-size:22px;font-weight:700;color:${NUSUK_COLORS[i]}">${count}</div>
-          <div style="font-size:10px;color:#888;margin-top:2px;word-break:break-all">${s}</div>
-          <div style="font-size:10px;color:#bbb;margin-top:1px">${pct}%</div>
-        </div>`;
-      }).join('');
+    const statuses = [{key:'__total__', label:'الإجمالي', color:'#3d2000', count:total}];
+    NUSUK_STATUSES.forEach((s,i) => {
+      const count = ALL_DATA.filter(p=>(p['حالة بطاقة نسك']||'لم تطبع')===s).length;
+      statuses.push({key:s, label:s, color:NUSUK_COLORS[i], count:count});
+    });
+
+    statsEl.innerHTML = statuses.map(st => {
+      const pct = total ? Math.round(st.count/total*100) : 0;
+      const active = (st.key === '__total__' && !filter) || (st.key === filter);
+      const borderColor = active ? (st.key === '__total__' ? '#c8971a' : st.color) : '#eee';
+      const onClick = st.key === '__total__' ? "filterNusuk('')" : `filterNusuk('${st.key}')`;
+      return `<div class="nusuk-stat-card ${active ? 'is-active' : ''}" onclick="${onClick}" style="background:#fff;border-radius:14px;padding:14px 10px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:2px solid ${borderColor}">
+        <span class="nusuk-stat-badge">${pct}%</span>
+        <div class="nusuk-stat-icon">${NUSUK_ICONS[st.label]||'📄'}</div>
+        <div class="nusuk-stat-number" data-key="${st.key}" style="font-size:28px;font-weight:800;color:${st.color}">${st.count}</div>
+        <div class="nusuk-stat-label" style="color:${st.color}">${st.label}</div>
+        <div class="nusuk-stat-progress-bar" style="width:${pct}%;background:${st.color}"></div>
+      </div>`;
+    }).join('');
+
+    // Flash animation فقط للأرقام التي تغيّرت
+    requestAnimationFrame(() => {
+      statsEl.querySelectorAll('.nusuk-stat-number').forEach(el => {
+        const key = el.dataset.key;
+        const newVal = parseInt(el.textContent) || 0;
+        const oldVal = window._nusukPrevCounts[key];
+        if(oldVal !== undefined && oldVal !== newVal){
+          const flashClass = newVal > oldVal ? 'flash-up' : 'flash-down';
+          el.classList.remove('flash-up', 'flash-down');
+          void el.offsetWidth; // إجبار reflow
+          el.classList.add(flashClass);
+          setTimeout(() => el.classList.remove(flashClass), 900);
+        }
+        window._nusukPrevCounts[key] = newVal;
+      });
+    });
   }
 
   // تصفية
@@ -123,7 +405,12 @@ function renderNusukTable(filter) {
   const empty = document.getElementById('nusuk-empty');
   if(!tbody) return;
 
-  if(!list.length) { tbody.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if(!list.length) {
+    tbody.innerHTML='';
+    if(empty) empty.style.display='block';
+    _renderNusukMobileCards([]); // تفريغ بطاقات الجوال أيضاً
+    return;
+  }
   if(empty) empty.style.display='none';
 
   tbody.innerHTML = list.map((p,i) => {
@@ -145,9 +432,21 @@ function renderNusukTable(filter) {
       </td>
       <td style="padding:10px 14px;text-align:center;font-size:11px;color:#aaa">${p['نسك_time']||'—'}</td>
       <td style="padding:10px 14px;text-align:center">
-        <select onchange="quickNusukUpdate('${p['_supabase_id']}',this.value,this)" style="padding:6px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:11px;font-family:inherit;background:#fff;cursor:pointer">
-          ${NUSUK_STATUSES.map(s=>`<option value="${s}" ${s===status?'selected':''}>${s}</option>`).join('')}
-        </select>
+        ${(() => {
+          const isLocked = status === 'مسلّمة للحاج';
+          if(isLocked){
+            return `<button onclick="showToast('🔒 البطاقة مسلّمة للحاج ومقفلة — استخدم 🔓 للرجوع', 'warning')" style="padding:6px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:11px;font-family:inherit;background:#f5ead0;color:#888;cursor:not-allowed;width:100%;text-align:right">🔒 ${status}</button>`;
+          }
+          const allowed = _getAllowedNextStatuses(status);
+          return `<select onchange="quickNusukUpdate('${p['_supabase_id']}',this.value,this)" style="padding:6px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:11px;font-family:inherit;background:#fff;cursor:pointer">
+            ${NUSUK_STATUSES.map(s => {
+              const isAllowed = allowed.includes(s);
+              if(!isAllowed && s !== status) return '';
+              const selected = s===status ? 'selected' : '';
+              return `<option value="${s}" ${selected}>${s}</option>`;
+            }).join('')}
+          </select>`;
+        })()}
       </td>
       <td style="padding:10px 14px;text-align:center">
         ${(() => {
@@ -165,11 +464,108 @@ function renderNusukTable(filter) {
             ? ` <button onclick="openSupervisorAckFor('${p['_supabase_id']}')" title="إقرار استلام المشرف" style="background:var(--brown-mid,#6b4a28);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:5px">📋</button>`
             : '';
 
-          const anyButton = btnView + btnReopen + btnSupAck;
+          const anyButton = btnSupAck + btnView + btnReopen;
           return anyButton || '<span style="color:#ccc;font-size:11px">—</span>';
         })()}
       </td>
     </tr>`;
+  }).join('');
+
+  // تشغيل رسم البطاقات للجوال
+  _renderNusukMobileCards(list);
+}
+
+// v23.0-pre-y: رسم بطاقات نسك للجوال
+function _renderNusukMobileCards(list){
+  const mc = document.getElementById('nusuk-mobile-cards');
+  if(!mc) return;
+  const esc = (s)=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // استخدم دوال تنسيق الأرقام من admin.html إن وُجدت
+  const telFn = (typeof _telNumber === 'function') ? _telNumber : (n => String(n||'').replace(/[^\d+]/g,''));
+  const waFn  = (typeof _waNumber  === 'function') ? _waNumber  : (n => String(n||'').replace(/\D/g,''));
+
+  if(!list.length){ mc.innerHTML=''; return; }
+
+  mc.innerHTML = list.map((p,i) => {
+    const pid = p['_supabase_id'];
+    const name = esc(p['اسم الحاج']||'—');
+    const idnum = esc(p['رقم الهوية']||'—');
+    const phoneRaw = p['رقم الجوال']||'';
+    const phone = esc(phoneRaw||'—');
+    const telHref = telFn(phoneRaw);
+    const waHref = waFn(phoneRaw);
+    const bus = esc(p['رقم الحافلة الخاصة بك']||'—');
+    const status = p['حالة بطاقة نسك']||'لم تطبع';
+    const si = NUSUK_STATUSES.indexOf(status);
+    const color = NUSUK_COLORS[si]||'#888';
+    const bg = NUSUK_BG[si]||'#f5f5f5';
+    const time = p['نسك_time']||'—';
+
+    const hasPilgrimAck = !!p['نسك_sig'];
+    const canReopen = _canReopenNusuk() && ((p['حالة بطاقة نسك'] || '').includes('مسلّمة') || (p['حالة بطاقة نسك'] || '').includes('لدى المشرف'));
+    const hasSupAck = (p['حالة بطاقة نسك'] || '').includes('لدى المشرف') || (p['حالة بطاقة نسك'] || '').includes('مسلّمة');
+
+    const btnView = hasPilgrimAck
+      ? `<button onclick="viewPilgrimAck('${pid}')" style="background:#1a5fa8;color:#fff" title="عرض الإقرار">📄</button>`
+      : '';
+    const btnReopen = canReopen
+      ? `<button onclick="openNusukReopenModal('${pid}')" style="background:#c07000;color:#fff" title="إعادة فتح">🔓</button>`
+      : '';
+    const btnSupAck = hasSupAck
+      ? `<button onclick="openSupervisorAckFor('${pid}')" style="background:#6b4a28;color:#fff" title="إقرار المشرف">📋</button>`
+      : '';
+    const anyButton = btnSupAck + btnView + btnReopen;
+
+    // زر الواتساب + رابط الاتصال (مشابه لـ pilgrim-card)
+    const phoneCell = phoneRaw ? `
+      <span class="pc-phone">
+        📞 <a href="tel:${telHref}" class="pc-tel" onclick="event.stopPropagation()">${phone}</a>
+        ${waHref ? `<a href="https://wa.me/${waHref}" target="_blank" rel="noopener" class="pc-wa" onclick="event.stopPropagation()" aria-label="واتساب">💬</a>` : ''}
+      </span>
+    ` : '<span>📞 —</span>';
+
+    return `<div class="nusuk-card">
+      <input type="checkbox" class="nusuk-row-check nusuk-card-check" data-id="${pid}" onchange="updateNusukBulkBar()">
+      <div class="nusuk-card-header">
+        <div>
+          <div class="nusuk-card-name">${i+1}. ${name}</div>
+        </div>
+      </div>
+      <div class="pc-row" style="margin-bottom:10px">
+        <span>🪪 <strong>${idnum}</strong></span>
+        ${phoneCell}
+        <span>🚌 <strong>حافلة ${bus}</strong></span>
+      </div>
+      <div class="nusuk-card-meta-row">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;color:#666">حالة البطاقة:</span>
+          <span class="nusuk-card-status-badge" style="background:${bg};color:${color}">${status}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;color:#888">تاريخ التسليم:</span>
+          <span class="nusuk-card-date-badge">📅 ${time}</span>
+        </div>
+      </div>
+      <div class="nusuk-card-actions">
+        ${(() => {
+          const isLocked = status === 'مسلّمة للحاج';
+          if(isLocked){
+            return `<button onclick="showToast('🔒 البطاقة مسلّمة للحاج ومقفلة — استخدم 🔓 للرجوع', 'warning')" style="padding:6px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:11px;font-family:inherit;background:#f5ead0;color:#888;cursor:not-allowed;width:100%;text-align:right">🔒 ${status}</button>`;
+          }
+          const allowed = _getAllowedNextStatuses(status);
+          return `<select onchange="quickNusukUpdate('${pid}',this.value,this)">
+            ${NUSUK_STATUSES.map(s => {
+              const isAllowed = allowed.includes(s);
+              if(!isAllowed && s !== status) return '';
+              const selected = s===status ? 'selected' : '';
+              return `<option value="${s}" ${selected}>${s}</option>`;
+            }).join('')}
+          </select>`;
+        })()}
+        ${anyButton || '<span style="color:#ccc;font-size:11px;padding:8px">—</span>'}
+      </div>
+    </div>`;
   }).join('');
 }
 
@@ -414,6 +810,22 @@ async function quickNusukUpdate(pilgrimId, status, selectEl) {
   const pilgrim = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId))||{};
   const currentStatus = pilgrim['حالة بطاقة نسك']||'لم تطبع';
 
+  if(currentStatus === 'مسلّمة للحاج'){
+    if(selectEl) selectEl.value = currentStatus;
+    showToast('🔒 البطاقة مسلّمة للحاج ومقفلة — استخدم 🔓 للرجوع', 'warning');
+    return;
+  }
+
+  // v23.0-pre-z: حماية التسلسل الصارم
+  if(!_isSuperAdmin()){
+    const allowed = _getAllowedNextStatuses(currentStatus);
+    if(!allowed.includes(status)){
+      if(selectEl) selectEl.value = currentStatus;
+      showToast('⛔ لا يمكن القفز لهذه الحالة — استخدم المسار التسلسلي أو 🔓 للرجوع', 'warning');
+      return;
+    }
+  }
+
   // v20.2: فحص القفل — superadmin يتجاوز مع bypass_lock في audit
   const bypassLock = _isNusukLocked(pilgrim) && status !== currentStatus && _isSuperAdmin();
   if(_isNusukLocked(pilgrim) && status !== currentStatus && !_isSuperAdmin()){
@@ -423,6 +835,29 @@ async function quickNusukUpdate(pilgrimId, status, selectEl) {
   }
 
   if(status==='لدى المشرف'||status==='مسلّمة للحاج') {
+    // v23.0-pre-aa: حفظ الحالة الأصلية ليرجع إليها select إذا ألغى المستخدم
+    if(selectEl){
+      selectEl._originalStatus = currentStatus;
+      // مراقبة: إذا خرج المستخدم بدون تحديث DB، أرجع القيمة
+      const rollbackOnCancel = () => {
+        setTimeout(() => {
+          // تحقّق من الحالة الفعلية في ALL_DATA
+          const fresh = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
+          const actualStatus = (fresh && fresh['حالة بطاقة نسك']) || currentStatus;
+          if(selectEl && selectEl.value !== actualStatus){
+            selectEl.value = actualStatus;
+          }
+        }, 300);
+      };
+
+      // استخدام closeModals hook
+      window._onModalClose = rollbackOnCancel;
+      // auto-cleanup بعد 5 دقائق
+      setTimeout(() => {
+        if(window._onModalClose === rollbackOnCancel) window._onModalClose = null;
+      }, 300000);
+    }
+
     if(status==='لدى المشرف') { openSupAck(pilgrimId, pilgrim); return; }
     if(status==='مسلّمة للحاج') { openPilgrimAck(pilgrimId, pilgrim); return; }
   }
@@ -451,16 +886,71 @@ async function quickNusukUpdate(pilgrimId, status, selectEl) {
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }
 
-function exportNusukReport() {
-  const w = window.open('','_blank');
+async function exportNusukReport() {
+  // v23.0-pre-ff: فلترة + عنوان ديناميكي + توقيع اختياري
   const dev = window._devSettings||{};
-  const logo = _getLogo();
   const companyName = dev.companyName||'';
   const license = dev.license||'';
+  const repName = dev.rep_name||'';
+  const repSig  = dev.rep_sig||'';
+  const stamp   = dev.stamp||'';
+
+  // خريطة عناوين التقارير حسب الفلتر
+  const REPORT_TITLES = {
+    '':              'بيان بأسماء الحجاج لبطاقات نسك',
+    'لم تطبع':        'بيان بأسماء الحجاج الذين لم تُطبع بطاقات نسك لهم',
+    'في الطباعة':     'بيان بأسماء الحجاج الذين بطاقاتهم قيد الطباعة',
+    'لدى الإدارة':    'بيان بأسماء الحجاج الذين بطاقات نسك لديهم بالإدارة',
+    'لدى المشرف':     'بيان بأسماء الحجاج الذين بطاقاتهم لدى المشرف',
+    'مسلّمة للحاج':   'بيان بأسماء الحجاج الذين تم تسليم بطاقات نسك لهم'
+  };
+
+  // تطبيق نفس منطق الفلترة من renderNusukTable
+  const currentFilter = window._nusukFilter || '';
+  const search = (document.getElementById('nusuk-search')?.value||'').toLowerCase();
+  const busFilter = document.getElementById('nusuk-bus-filter')?.value||'';
+
+  const filteredList = ALL_DATA.filter(p => {
+    const matchFilter = !currentFilter || (p['حالة بطاقة نسك']||'لم تطبع') === currentFilter;
+    const matchSearch = !search || (p['اسم الحاج']||'').toLowerCase().includes(search) || (p['رقم الهوية']||'').includes(search);
+    const matchBus = !busFilter || String(p['رقم الحافلة الخاصة بك']||'') === String(busFilter);
+    return matchFilter && matchSearch && matchBus;
+  });
+
+  if(!filteredList.length){
+    if(typeof showToast === 'function'){
+      showToast('⚠️ لا توجد بيانات للطباعة بالفلترة الحالية', 'warning');
+    } else {
+      alert('لا توجد بيانات للطباعة بالفلترة الحالية');
+    }
+    return;
+  }
+
+  const reportTitle = REPORT_TITLES[currentFilter] || REPORT_TITLES[''];
+
+  // سؤال المستخدم عن إضافة التوقيع/الختم
+  const addSignature = await new Promise((resolve) => {
+    if(typeof showConfirm === 'function'){
+      showConfirm({
+        title: '🖋️ إضافة التوقيع والختم',
+        message: 'هل ترغب في إضافة اسم ممثل الشركة والتوقيع والختم أسفل التقرير؟',
+        confirmText: 'نعم، أضف',
+        cancelText: 'لا، بدون توقيع',
+        onConfirm: () => resolve(true),
+        onCancel: () => resolve(false)
+      });
+    } else {
+      resolve(confirm('هل ترغب في إضافة اسم ممثل الشركة والتوقيع والختم أسفل التقرير؟'));
+    }
+  });
+
+  // بناء التقرير
+  const w = window.open('','_blank');
   const now = new Date();
   const today = now.toLocaleDateString('ar-SA');
   const timeStr = now.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
-  const rows = ALL_DATA.map((p,i) => {
+
+  const rows = filteredList.map((p,i) => {
     const s = p['حالة بطاقة نسك']||'لم تطبع';
     const si = NUSUK_STATUSES.indexOf(s);
     return `<tr>
@@ -472,7 +962,29 @@ function exportNusukReport() {
       <td>${p['نسك_time']||'—'}</td>
     </tr>`;
   }).join('');
-  w.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>تقرير بطاقات نسك</title>
+
+  // قسم التوقيع (اختياري)
+  const signatureSection = addSignature ? `
+    <div style="margin-top:18mm;padding-top:6mm;border-top:2px solid #b8860b;page-break-inside:avoid">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5mm">
+        <div style="font-size:13px;font-weight:bold;color:#3d2000">${companyName}</div>
+        ${license?`<div style="font-size:11px;color:#555">رقم الترخيص: ${license}</div>`:''}
+      </div>
+      ${repName ? `<div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:5mm;text-align:center">ممثل الشركة: ${repName}</div>` : ''}
+      <div style="display:flex;justify-content:space-around;align-items:flex-end;gap:20mm;margin-top:3mm">
+        <div style="text-align:center;flex:1">
+          ${repSig?`<img src="${repSig}" alt="توقيع" style="max-width:150px;max-height:60px;object-fit:contain;border:1px solid #eee;border-radius:4px;padding:4px;background:#fafafa">`:'<div style="height:60px;border:1px dashed #ccc;border-radius:4px"></div>'}
+          <div style="font-size:11px;color:#666;margin-top:2mm">التوقيع</div>
+        </div>
+        <div style="text-align:center;flex:1">
+          ${stamp?`<img src="${stamp}" alt="ختم" style="max-width:80px;max-height:80px;object-fit:contain">`:'<div style="height:80px;border:1px dashed #ccc;border-radius:4px"></div>'}
+          <div style="font-size:11px;color:#666;margin-top:2mm">الختم الرسمي</div>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
+  w.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>${reportTitle}</title>
   <style>
     @page{size:A4 landscape;margin:8mm 10mm}
     *{box-sizing:border-box}
@@ -497,12 +1009,12 @@ function exportNusukReport() {
           </div>
           <div style="text-align:center">
             ${_buildPrintLogoHTML(60)}
-            <div style="font-size:14px;font-weight:bold;color:#3d2000;margin-top:4px">تقرير بطاقات نسك</div>
+            <div style="font-size:14px;font-weight:bold;color:#3d2000;margin-top:4px">📋 ${reportTitle}</div>
           </div>
           <div style="text-align:right;width:fit-content;margin:0 auto">
             <div class="dt-sub">التاريخ: ${today}</div>
             <div class="dt-sub">وقت الطباعة: ${timeStr}</div>
-            <div class="dt-sub">عدد الحجاج: <strong>${ALL_DATA.length}</strong></div>
+            <div class="dt-sub">عدد الحجاج: <strong>${filteredList.length}</strong></div>
           </div>
         </div>
       </td></tr>
@@ -510,6 +1022,7 @@ function exportNusukReport() {
     </thead>
     <tbody>${rows}</tbody>
   </table>
+  ${signatureSection}
   <script>window.onload=()=>window.print()<\/script>
   </body></html>`);
   w.document.close();
