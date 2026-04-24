@@ -754,7 +754,24 @@ const NUSUK_REOPEN_REASONS_FROM_SUPERVISOR = [
 ];
 
 function openNusukReopenModal(pilgrimId){
-  const pilgrim = ALL_DATA.find(r=>String(r['_supabase_id'])===String(pilgrimId))||{};
+  // v23.0-pre-mmm: دعم بوابة المشرف
+  let pilgrim = (typeof ALL_DATA !== 'undefined' ? ALL_DATA : []).find(r=>String(r['_supabase_id'])===String(pilgrimId));
+
+  if(!pilgrim && window._supPilgrims){
+    const supP = window._supPilgrims.find(p => String(p.id) === String(pilgrimId));
+    if(supP){
+      pilgrim = {
+        '_supabase_id': supP.id,
+        'اسم الحاج': supP.name || '—',
+        'رقم الهوية': supP.id_num || '—',
+        'حالة بطاقة نسك': supP.nusuk_card_status || 'لدى المشرف',
+        'نسك_time': supP.nusuk_card_time || '—'
+      };
+    }
+  }
+
+  if(!pilgrim) { showToast('لم يُعثر على بيانات الحاج', 'error'); return; }
+
   const currentStatus = pilgrim['حالة بطاقة نسك']||'—';
   const sigTime = pilgrim['نسك_time']||'—';
 
@@ -903,6 +920,11 @@ async function confirmNusukReopen(pilgrimId){
     closeModals();
     showToast(`✅ تم فتح القفل — الحالة الآن: ${reasonDef.target}`, 'success');
     render();
+
+    // v23.0-pre-mmm: تحديث بوابة المشرف إن كانت مفتوحة
+    if(window._currentUser?.role === 'supervisor' && typeof loadSupervisorPanel === 'function'){
+      setTimeout(() => loadSupervisorPanel(window._currentUser), 500);
+    }
   } catch(e){ showToast('خطأ: '+e.message, 'error'); }
 }
 
@@ -1071,14 +1093,35 @@ function openPilgrimAck(pilgrimId, pilgrim) {
       <span>🖨️ فتح صفحة طباعة للإقرار بعد الحفظ (يمكن حفظها كـ PDF)</span>
     </label>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <button onclick="clearCanvas('pilgrim-ack-canvas')" style="padding:10px;background:#f5f5f5;border:none;border-radius:8px;cursor:pointer;font-family:inherit">🗑️ مسح</button>
-      <button onclick="confirmPilgrimAck(${pilgrimId})" style="padding:10px;background:#1a7a1a;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit">✅ تأكيد الاستلام</button>
+    <!-- v23.0-pre-jjj: تخطيط محسّن للأزرار -->
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+      <!-- السطر 1: زر التأكيد (عريض وبارز) -->
+      <button onclick="confirmPilgrimAck(${pilgrimId})"
+        style="width:100%;padding:14px;background:linear-gradient(135deg,#2e7d32,#1b5e20);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 3px 8px rgba(46,125,50,0.3);transition:all 0.2s">
+        ✅ تأكيد الاستلام
+      </button>
+
+      <!-- السطر 2: زر المسح + زر الإلغاء (نصف/نصف) -->
+      <div style="display:flex;gap:8px">
+        <button onclick="clearCanvas('pilgrim-ack-canvas')"
+          style="flex:1;padding:11px;background:#f5f5f5;color:#555;border:1.5px solid #ddd;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s">
+          🗑️ مسح التوقيع
+        </button>
+        <button onclick="closeModals()"
+          style="flex:1;padding:11px;background:#fff;color:#c00;border:1.5px solid #c00;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s">
+          ❌ إلغاء
+        </button>
+      </div>
     </div>
-    <button onclick="closeModals()" style="margin-top:8px;width:100%;padding:8px;background:#fff;border:1px solid #ddd;border-radius:8px;cursor:pointer;font-family:inherit;color:#888;font-size:13px">إلغاء</button>
   `);
   setTimeout(() => initAckCanvas('pilgrim-ack-canvas'), 100);
 }
+
+// v23.0-pre-ccc: تصدير openPilgrimAck للاستخدام من supervisor.js
+window.openPilgrimAck = openPilgrimAck;
+
+// إضافة دوال أخرى إن وُجدت (اختياري)
+if(typeof confirmPilgrimAck === 'function') window.confirmPilgrimAck = confirmPilgrimAck;
 
 // v23.0-pre-oo: تحديد/إلغاء كل بنود إقرار الحاج
 function _toggleAllPilgrimAckPledges(checkAllEl){
@@ -1105,8 +1148,8 @@ async function confirmPilgrimAck(pilgrimId) {
 
   // v22.1: قفل التسليم الصارم — يجب استلام المشرف البطاقة قبل تسليمها للحاج
   const pilgrimRef = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
-  const bypassNoSupAck = !_hasSupervisorAck(pilgrimRef) && _isSuperAdmin();
-  if(!_hasSupervisorAck(pilgrimRef) && !_isSuperAdmin()){
+  const pilgrimStatus_1130 = pilgrimRef?.['حالة بطاقة نسك'] || pilgrimRef?.nusuk_card_status || '';
+  if(pilgrimStatus_1130 === 'لدى الإدارة' && !_isSuperAdmin()){
     showToast('🔒 يجب استلام البطاقة من الإدارة (عبر المشرف) أولاً', 'error');
     return;
   }
@@ -1137,7 +1180,7 @@ async function confirmPilgrimAck(pilgrimId) {
       if(_isSuperAdmin() && before.nusuk_card_sig && before.nusuk_card_status === 'مسلّمة للحاج'){
         meta.bypass_lock = true;
       }
-      if(bypassNoSupAck) meta.bypass_no_supervisor_ack = true;
+      if(_isSuperAdmin() && pilgrimStatus_1130 === 'لدى الإدارة') meta.bypass_no_supervisor_ack = true;
       _recordAudit({
         action_type:  'update',
         entity_type:  'pilgrim',
@@ -1150,6 +1193,23 @@ async function confirmPilgrimAck(pilgrimId) {
 
     showToast('تم تسجيل استلام الحاج', 'success');
     closeModals(); render();
+
+    // v23.0-pre-hhh: تحديث بوابة المشرف + نافذة القائمة بعد التوقيع
+    setTimeout(() => {
+      // 1. تحديث بيانات المشرف إن كان مسجّلاً دخولاً
+      if(window._currentUser?.role === 'supervisor'){
+        if(typeof loadSupervisorPanel === 'function'){
+          console.log('[pilgrim-ack] Refreshing supervisor panel after signature');
+          loadSupervisorPanel(window._currentUser);
+        }
+      }
+
+      // 2. إعادة رسم أي قائمة مفتوحة (modal handover list)
+      if(typeof window.refreshNusukHandoverList === 'function'){
+        window.refreshNusukHandoverList();
+      }
+    }, 500);
+
     // v20.4: فتح صفحة الإقرار للطباعة/Save as PDF (اختياري، مُفعَّل افتراضياً)
     if(shouldPrint && typeof viewPilgrimAck === 'function'){
       setTimeout(() => viewPilgrimAck(pilgrimId), 200);
@@ -1966,3 +2026,9 @@ async function saveQuickEdit(pid) {
     if(bookingNum || pid) showBookingGroup(bookingNum, pid, qectx); else closeModals();
   } catch(e){ showToast('خطأ: '+e.message,'error'); }
 }
+
+// v23.0-pre-mmm: تصدير دوال إعادة فتح نسك للمشرف
+window.openNusukReopenModal = openNusukReopenModal;
+window._selectReopenReason = _selectReopenReason;
+window._checkReopenDetails = _checkReopenDetails;
+window.confirmNusukReopen = confirmNusukReopen;

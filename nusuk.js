@@ -890,7 +890,7 @@ async function applyBulkNusuk() {
   if(status === 'مسلّمة للحاج' && !isSuper){
     ids = ids.filter(id => {
       const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(id));
-      if(!_hasSupervisorAck(r)){ noSupAckSkipped.push(id); return false; }
+      if((r?.['حالة بطاقة نسك'] || r?.nusuk_card_status || '') === 'لدى الإدارة'){ noSupAckSkipped.push(id); return false; }
       return true;
     });
     if(!ids.length){
@@ -1174,4 +1174,7 @@ async function exportNusukReport() {
   </body></html>`);
   w.document.close();
 }
+
+// v23.0-pre-mmm: تصدير دالة فحص صلاحية إعادة فتح نسك للمشرف
+window._canReopenNusuk = _canReopenNusuk;
 

@@ -2235,6 +2235,41 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
       visibility: visible !important;
       opacity: 1 !important;
       pointer-events: auto !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 9999 !important;
+    }
+
+    /* v23.0-pre-eee: إصلاح modal-box داخل modal-overlay.is-open */
+    html body .modal-overlay.is-open .modal-box {
+      width: auto !important;
+      height: auto !important;
+      min-width: 320px !important;
+      min-height: 200px !important;
+      max-width: 560px !important;
+      max-height: 90vh !important;
+      margin: auto !important;
+      display: block !important;
+      overflow-y: auto !important;
+      padding: 16px !important;
+      background: #fff !important;
+      border-radius: 14px !important;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3) !important;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      html body .modal-overlay.is-open .modal-box {
+        max-width: 95% !important;
+        width: 95% !important;
+        max-height: 92vh !important;
+        padding: 12px !important;
+      }
     }
 
     @media (max-width: 768px) {
@@ -3872,6 +3907,15 @@ async function refreshNusukData(btn){
           renderNusukTable(window._nusukFilter);
         }
         if(typeof markNusukUpdated === 'function') markNusukUpdated();
+
+        // v23.0-pre-ggg: تحديث بوابة المشرف إن كانت مفتوحة
+        const supPanel = document.getElementById('supervisor-panel');
+        if(supPanel && supPanel.style.display !== 'none' && window._currentUser?.role === 'supervisor'){
+          if(typeof loadSupervisorPanel === 'function'){
+            console.log('[Realtime] Refreshing supervisor panel');
+            await loadSupervisorPanel(window._currentUser);
+          }
+        }
       } catch(e){
         console.warn('[Realtime] Refresh failed:', e);
       }

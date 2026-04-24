@@ -42,13 +42,21 @@ function openSupBulkAck() {
   window._sigBulkReady    = ready;
   window._sigType         = 'bulk_nusuk';
 
-  document.getElementById('sig-modal-title').textContent = '🪪 إقرار استلام بطاقات نسك — دفعة واحدة';
+  document.getElementById('sig-modal-title').textContent = '';  // إخلاء header المودال
   const searchHtml = ready.length > 10
     ? `<input id="sup-bulk-search" type="text" placeholder="🔍 بحث بالاسم أو رقم الهوية..." oninput="_filterSupBulkTable()" style="width:100%;padding:8px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:12px;font-family:inherit;margin-bottom:8px;direction:rtl">`
     : '';
 
   document.getElementById('sig-pilgrim-name').innerHTML = `
     <div style="text-align:right;direction:rtl">
+      <div style="text-align:center;padding:14px 10px 10px;border-bottom:2px solid #c8971a;margin-bottom:14px">
+        ${(typeof _buildPrintLogoHTML === 'function') ? _buildPrintLogoHTML(60) : ((window._devSettings?.logo) ? `<img src="${window._devSettings.logo}" alt="شعار" style="max-width:70px;max-height:70px;object-fit:contain;margin-bottom:6px">` : '')}
+        <div style="font-size:15px;font-weight:800;color:#3d2000;margin-top:4px">${(window._devSettings?.companyName) || 'شركة الحج'}</div>
+        ${(window._devSettings?.license) ? `<div style="font-size:11px;color:#888;margin-top:2px">رقم الترخيص: ${window._devSettings.license}</div>` : ''}
+      </div>
+      <div style="text-align:center;padding:10px;margin-bottom:14px">
+        <div style="font-size:16px;font-weight:800;color:#3d2000">🪪 إقرار استلام بطاقات نسك — دفعة واحدة</div>
+      </div>
       <div style="background:#fff8e1;border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.8;margin-bottom:10px">
         <strong>الحملة:</strong> ${_esc(companyName+license)}<br>
         <strong>المشرف:</strong> ${_esc(user.name||user.username||'—')} &nbsp;•&nbsp; <strong>الحافلة:</strong> ${_esc(String(user.group_num||'—'))}<br>
@@ -288,15 +296,21 @@ function renderSupActionBtns() {
   const hasNusukReady   = readyPilgrims.length > 0;
   const hasNusukWithSup = window._supPilgrims.some(p=>p.nusuk_card_status==='لدى المشرف');
   const readyCount      = readyPilgrims.length;
+  // v23.0-pre-iii: حساب الحجاج الذين لم يستلموا بطاقات نسك بعد
+  const unsignedCount   = window._supPilgrims.filter(p=>p.nusuk_card_status==='لدى المشرف').length;
   const hasBracelet     = window._supSettings.braceletAvailable;
+  // v23.0-pre-nnn: أعداد للأزرار الأخرى
+  const unboardedCount = window._supPilgrims.filter(p => p.bus_status !== 'ركب').length;
+  const notArrivedCount = window._supPilgrims.filter(p => p.camp_status !== 'حضر').length;
+  const noBraceletCount = window._supPilgrims.filter(p => !p.bracelet_time).length;
   const cols = 2 + (hasNusukWithSup?1:0) + (hasNusukReady?1:0) + (hasBracelet?1:0);
   container.style.gridTemplateColumns = `repeat(${cols},1fr)`;
   container.innerHTML = `
-    <button onclick="openSupAction('bus')" style="background:#1a7a1a;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🚌 إركاب</button>
-    <button onclick="openSupAction('camp')" style="background:#1a5fa8;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🏕️ وصول المخيم</button>
-    ${hasNusukWithSup?`<button onclick="openSupAction('nusuk')" style="background:#7a4500;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🪪 بطاقة نسك</button>`:''}
+    <button onclick="openSupAction('bus')" style="position:relative;background:#1a7a1a;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🚌 إركاب${unboardedCount > 0 ? `<span class="sup-badge-new" aria-label="${unboardedCount} حاج لم يركب بعد">${unboardedCount}</span>` : ''}</button>
+    <button onclick="openSupAction('camp')" style="position:relative;background:#1a5fa8;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🏕️ وصول المخيم${notArrivedCount > 0 ? `<span class="sup-badge-new" aria-label="${notArrivedCount} حاج لم يصل بعد">${notArrivedCount}</span>` : ''}</button>
+    ${hasNusukWithSup?`<button onclick="openSupAction('nusuk')" style="position:relative;background:#7a4500;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🪪 بطاقة نسك${unsignedCount > 0 ? `<span class="sup-badge-new" aria-label="${unsignedCount} حاج لم يستلم بعد">${unsignedCount}</span>` : ''}</button>`:''}
     ${hasNusukReady?`<button onclick="openSupBulkAck()" style="position:relative;background:#c8971a;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📦 استلام دفعة<span class="sup-badge-new" aria-label="${readyCount} بطاقة جاهزة">${readyCount}</span></button>`:''}
-    ${hasBracelet?`<button onclick="openSupAction('bracelet')" style="background:#444;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🚆 أسوارة</button>`:''}
+    ${hasBracelet?`<button onclick="openSupAction('bracelet')" style="position:relative;background:#444;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🚆 أسوارة${noBraceletCount > 0 ? `<span class="sup-badge-new" aria-label="${noBraceletCount} حاج لم يستلم أسوارة بعد">${noBraceletCount}</span>` : ''}</button>`:''}
   `;
 }
 
@@ -453,6 +467,35 @@ function openSupAction(action) {
 
 function closeSupModal() { document.getElementById('sup-modal').style.display = 'none'; }
 
+// v23.0-pre-hhh: تحديث قائمة تسليم بطاقة نسك
+window.refreshNusukHandoverList = function(){
+  const modal = document.getElementById('sup-modal');
+  if(!modal || modal.style.display === 'none') return;
+
+  // تحقّق أن هذه نافذة "تسليم بطاقة نسك"
+  const title = document.getElementById('sup-modal-title')?.textContent || '';
+  if(!title.includes('تسليم بطاقة نسك')) return;
+
+  console.log('[refreshNusukHandoverList] Refreshing nusuk handover list...');
+
+  // أعد تحميل بيانات المشرف أولاً
+  if(window._currentUser && typeof loadSupervisorPanel === 'function'){
+    loadSupervisorPanel(window._currentUser).then(() => {
+      // بعد تحديث البيانات، أعد رسم القائمة
+      if(typeof supModalSearch === 'function'){
+        supModalSearch();
+        console.log('[refreshNusukHandoverList] List refreshed');
+      }
+    });
+  } else {
+    // fallback: أعد رسم القائمة مباشرة
+    if(typeof supModalSearch === 'function'){
+      supModalSearch();
+      console.log('[refreshNusukHandoverList] List refreshed (fallback)');
+    }
+  }
+};
+
 function supModalSearch() {
   const q = document.getElementById('sup-modal-search').value.toLowerCase();
   const action = window._supAction;
@@ -464,7 +507,22 @@ function supModalSearch() {
   const el = document.getElementById('sup-modal-results');
   if(!list.length){ el.innerHTML = '<div class="plc-empty">لا يوجد نتائج</div>'; return; }
 
-  el.innerHTML = list.map(p => {
+  // v23.0-pre-iii: ترتيب الحجاج - غير المستلمين أولاً
+  const sortedList = list.slice().sort((a, b) => {
+    const aStatus = a.nusuk_card_status || '';
+    const bStatus = b.nusuk_card_status || '';
+
+    // الأولوية: لدى المشرف (لم يستلم) يأتي أولاً
+    const aUnsigned = aStatus === 'لدى المشرف' ? 0 : 1;
+    const bUnsigned = bStatus === 'لدى المشرف' ? 0 : 1;
+
+    if(aUnsigned !== bUnsigned) return aUnsigned - bUnsigned;
+
+    // ضمن نفس المجموعة، رتّب بالاسم
+    return (a.name || '').localeCompare(b.name || '', 'ar');
+  });
+
+  el.innerHTML = sortedList.map(p => {
     let done, label, color;
     if(action==='bus'){        done=p.bus_status==='ركب';              label=done?'✅ ركب':'🚌 تسجيل إركاب';   color=done?'#888':'#1a7a1a'; }
     else if(action==='camp'){  done=p.camp_status==='حضر';             label=done?'✅ حضر':'🏕️ تسجيل وصول';   color=done?'#888':'#1a5fa8'; }
@@ -541,6 +599,189 @@ function openSigModal(pilgrimId, type) {
   window._sigPilgrimId = pilgrimId;
   window._sigType = type;
   const p = window._supPilgrims.find(x=>String(x.id)===String(pilgrimId));
+
+  // v20.4: فحص عزل دفاعي — التحقق من أن الحاج من حافلة المشرف
+  const user = window._currentUser;
+  const supBus = user && user.group_num != null ? String(user.group_num) : null;
+  const pBus = p && p.bus_num != null ? String(p.bus_num) : null;
+  if(supBus && pBus !== supBus){
+    console.warn('[isolation] openSigModal blocked — pilgrim', pilgrimId, 'bus:', pBus, '!= supervisor bus:', supBus);
+    showToast('🔒 خطأ عزل: هذا الحاج ليس من حافلتك', 'error');
+    return;
+  }
+
+  // v23.0-pre-ddd: تسليم بطاقة نسك - تحويل بيانات الحاج من صيغة إنجليزية إلى عربية ثم استدعاء openPilgrimAck
+  if(type === 'nusuk' || type === 'بطاقة نسك'){
+    // ابحث في _supPilgrims (قائمة المشرف)
+    const supPilgrim = (window._supPilgrims || []).find(p =>
+      String(p.id) === String(pilgrimId)
+    );
+
+    // أو في ALL_DATA (إن كانت متاحة)
+    const adminPilgrim = (typeof ALL_DATA !== 'undefined' ? ALL_DATA : []).find(p =>
+      String(p['_supabase_id']) === String(pilgrimId)
+    );
+
+    // استخدم adminPilgrim إن وُجد (بالصيغة العربية جاهزة)
+    // أو حوّل supPilgrim إلى صيغة عربية
+    let pilgrim = adminPilgrim;
+
+    if(!pilgrim && supPilgrim){
+      // تحويل الصيغة الإنجليزية إلى عربية لتوافق openPilgrimAck
+      pilgrim = {
+        '_supabase_id': supPilgrim.id,
+        'اسم الحاج': supPilgrim.name || '—',
+        'رقم الهوية': supPilgrim.id_num || '—',
+        'رقم الجوال': supPilgrim.phone || '',
+        'رقم الحافلة الخاصة بك': supPilgrim.bus_num || supPilgrim.group_num || '',
+        'حالة بطاقة نسك': supPilgrim.nusuk_card_status || 'لدى المشرف',
+        'نسك_time': supPilgrim.nusuk_card_time || '',
+        'نسك_sig': supPilgrim.nusuk_card_sig || null,
+        'رقم الحجز': supPilgrim.booking_num || '',
+        'الجنسية': supPilgrim.nationality || '',
+        'الجنس': supPilgrim.gender || '',
+        'المدينة': supPilgrim.city || ''
+      };
+    }
+
+    if(pilgrim && typeof window.openPilgrimAck === 'function'){
+      console.log('[openSigModal] استخدام openPilgrimAck لإقرار الحاج');
+      console.log('[DEBUG] Before openPilgrimAck call');
+      setTimeout(() => {
+        const modal = document.querySelector('.modal-overlay.is-open, .ack-modal, #pilgrim-ack-modal');
+        console.log('[DEBUG] Modal after 100ms:', modal);
+        if(modal){
+          const rect = modal.getBoundingClientRect();
+          const cs = getComputedStyle(modal);
+          console.log('[DEBUG] Position:', rect);
+          console.log('[DEBUG] Display:', cs.display, 'Visibility:', cs.visibility, 'Opacity:', cs.opacity, 'Z-index:', cs.zIndex);
+          console.log('[DEBUG] Dimensions:', rect.width, 'x', rect.height);
+        }
+      }, 100);
+      window.openPilgrimAck(pilgrimId, pilgrim);
+
+      setTimeout(() => {
+        const overlay = document.getElementById('modal-overlay');
+        if(!overlay) { console.error('NO OVERLAY'); return; }
+
+        console.log('=== COMPLETE DIAGNOSTIC ===');
+
+        // 1. الخصائص المحسوبة
+        const cs = getComputedStyle(overlay);
+        console.log('1. Computed:', {
+          display: cs.display,
+          position: cs.position,
+          visibility: cs.visibility,
+          opacity: cs.opacity,
+          transform: cs.transform,
+          clip: cs.clip,
+          clipPath: cs.clipPath,
+          width: cs.width,
+          height: cs.height,
+          top: cs.top,
+          left: cs.left
+        });
+
+        // 2. Body و parent
+        console.log('2. Parent:', overlay.parentElement?.tagName, overlay.parentElement?.id);
+        console.log('3. Body display:', getComputedStyle(document.body).display);
+        console.log('4. Body overflow:', getComputedStyle(document.body).overflow);
+
+        // 3. offsetWidth/Height (مختلف عن getBoundingClientRect)
+        console.log('5. offsetWidth x offsetHeight:', overlay.offsetWidth, 'x', overlay.offsetHeight);
+        console.log('6. clientWidth x clientHeight:', overlay.clientWidth, 'x', overlay.clientHeight);
+        console.log('7. scrollWidth x scrollHeight:', overlay.scrollWidth, 'x', overlay.scrollHeight);
+
+        // 4. جرّب append إلى body من جديد
+        console.log('8. Re-appending to body...');
+        document.body.appendChild(overlay);
+
+        // 5. بعد append
+        setTimeout(() => {
+          console.log('9. After re-append:', overlay.getBoundingClientRect());
+          console.log('10. offsetWidth now:', overlay.offsetWidth);
+        }, 50);
+
+      }, 100);
+
+      setTimeout(() => {
+        const existingOverlay = document.getElementById('modal-overlay');
+        if(!existingOverlay || existingOverlay.offsetWidth > 0) return;
+
+        console.log('[Fix] Moving modal to body and resetting styles');
+
+        // استخرج المحتوى
+        const content = existingOverlay.innerHTML;
+
+        // أنشئ nav جديد تماماً
+        const newOverlay = document.createElement('div');
+        newOverlay.id = 'modal-overlay-fixed';
+        newOverlay.innerHTML = content;
+        newOverlay.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          z-index: 999999;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 10px;
+          overflow-y: auto;
+          box-sizing: border-box;
+        `;
+
+        // أضف onclick للإغلاق
+        newOverlay.onclick = (e) => {
+          if(e.target === newOverlay){
+            newOverlay.remove();
+            existingOverlay.classList.remove('is-open');
+            existingOverlay.style.display = 'none';
+          }
+        };
+
+        // أخفِ القديم وأضف الجديد
+        existingOverlay.style.display = 'none';
+        existingOverlay.classList.remove('is-open');
+        document.body.appendChild(newOverlay);
+
+        // نمّط الصندوق الداخلي
+        const box = newOverlay.querySelector('#modal-content, .modal-box');
+        if(box){
+          box.style.cssText = `
+            width: auto;
+            max-width: 560px;
+            max-height: 90vh;
+            margin: auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow-y: auto;
+            box-sizing: border-box;
+          `;
+
+          if(window.innerWidth <= 768){
+            box.style.maxWidth = '95%';
+            box.style.width = '95%';
+            box.style.padding = '14px';
+          }
+        }
+
+        console.log('[Fix] New modal created and appended');
+        console.log('[Fix] Dimensions:', newOverlay.getBoundingClientRect());
+      }, 150);
+
+      return;
+    }
+
+    // fallback: لم توجد الدالة أو الحاج
+    console.warn('[openSigModal] openPilgrimAck not available or pilgrim not found, using fallback');
+  }
+
+  // ... باقي الكود القديم للأسوارة وغيرها
   const titles = { nusuk:'🪪 تسليم بطاقة نسك', bracelet:'🚆 تسليم أسوارة القطار' };
   document.getElementById('sig-modal-title').textContent = titles[type]||'';
   document.getElementById('sig-pilgrim-name').textContent = (p?.name||'—') + ' — ' + (p?.id_num||'—');
@@ -757,10 +998,10 @@ async function confirmSignature() {
       return;
     }
 
-    // v22.1: قفل التسليم — tasليم نسك للحاج يتطلب استلام المشرف أولاً (superadmin يتجاوز)
+    // v22.1: قفل التسليم — تسليم نسك للحاج يتطلب استلام المشرف أولاً (superadmin يتجاوز)
     const isSuper = window._currentUser && window._currentUser.role === 'superadmin';
-    const bypassNoSupAck = type === 'nusuk' && !(p && (p.nusuk_supervisor_sig)) && isSuper;
-    if(type === 'nusuk' && !(p && (p.nusuk_supervisor_sig)) && !isSuper){
+    const pilgrimCardStatus = p?.nusuk_card_status || p?.['حالة بطاقة نسك'] || '';
+    if(type === 'nusuk' && pilgrimCardStatus === 'لدى الإدارة' && !isSuper){
       showToast('🔒 لم تستلم هذه البطاقة من الإدارة بعد — استخدم 📦 استلام دفعة', 'error');
       return;
     }
@@ -778,7 +1019,7 @@ async function confirmSignature() {
     const changes = _maskSigInChanges(_buildFieldChanges(before, updates));
     if(changes){
       const meta = { source: type==='nusuk' ? 'supervisor_nusuk' : 'supervisor_bracelet' };
-      if(bypassNoSupAck) meta.bypass_no_supervisor_ack = true;
+      if(isSuper && pilgrimCardStatus === 'لدى الإدارة') meta.bypass_no_supervisor_ack = true;
       _recordAudit({
         action_type:  'update',
         entity_type:  'pilgrim',
