@@ -33,7 +33,10 @@ function showToast(msg, type='success', duration, options) {
   const hasAction = !!(options && options.action && typeof options.action.handler === 'function');
   // المدة الديناميكية: 3s ثابتة + 40ms لكل حرف، محصورة بين 3s و 10s
   // عند وجود action: الافتراضي 10s (كافٍ للتفاعل) إذا لم يُمرَّر duration صراحة
-  const safeMsg = String(msg||'');
+  let safeMsg = String(msg||'');
+  // إزالة emoji مكرر من بداية النص (لأن showToast يضيفه تلقائياً)
+  const leadingEmojiRegex = /^[\s]*(✅|❌|⚠️|ℹ️)[\s]*/;
+  safeMsg = safeMsg.replace(leadingEmojiRegex, '');
   const autoDuration = hasAction
     ? 10000
     : Math.min(10000, Math.max(3000, 3000 + safeMsg.length * 40));

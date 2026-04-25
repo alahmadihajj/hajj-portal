@@ -846,27 +846,63 @@ async function applyBulkBracelet() {
   const status = document.getElementById('bracelet-bulk-status').value;
   if(!status) { showToast('اختر الحالة الجديدة أولاً', 'warning'); return; }
 
-  // v23.0-pre-mm: تأكيد قبل التحديث الجماعي
-  const checkedCount = document.querySelectorAll('#bracelet-tbody .bracelet-row-check:checked').length;
+  // جلب جميع الـ IDs المحدَّدة
+  let allIds = [...document.querySelectorAll('#bracelet-tbody .bracelet-row-check:checked')].map(c=>c.dataset.id);
+  const checkedCount = allIds.length;
   if(checkedCount === 0){
     showToast('⚠️ لم يتم تحديد أي حاج', 'warning');
     return;
   }
 
-  const msg = `سيتم تحديث ${checkedCount} حاج إلى حالة "${status}"\n\nهل أنت متأكد؟`;
-  const confirmed = (typeof showConfirm === 'function')
-    ? await showConfirm(msg, 'تأكيد التحديث الجماعي', 'نعم، تحديث', '#c8971a', '⚠️')
-    : confirm(msg);
-
-  if(!confirmed) return;
-
-  // v22.6: دفاع عميق — الحالات التي تتطلّب توقيعاً لا تُضبط من bulk admin مباشرة
+  // v23.0-pre-nn: حماية ذكية — استبعاد الحجاج في الحالات المحمية بدلاً من الحظر الكامل
+  const protectedSkipped = [];
   if(status === 'لدى المشرف' || status === 'مسلّمة للحاج'){
-    showToast('⚠️ هذه الحالة تُضبط تلقائياً عند توقيع المشرف/الحاج — استخدم "لدى الإدارة" ثم دع المشرف يوقّع الإقرار', 'warning');
-    return;
+    // فلترة المحدَّدين لاستبعاد من هم بالفعل في حالات محمية
+    allIds = allIds.filter(id => {
+      const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(id));
+      const currentStatus = r?.['حالة أسوارة القطار'] || 'لم تُطلب';
+
+      // استبعاد من هم بالفعل في حالات محمية
+      if(currentStatus === 'لدى المشرف' || currentStatus === 'مسلّمة للحاج'){
+        protectedSkipped.push(id);
+        return false;
+      }
+
+      // للحالة "لدى المشرف": يجب أن يكون في "لدى الإدارة" فقط
+      if(status === 'لدى المشرف' && currentStatus !== 'لدى الإدارة'){
+        protectedSkipped.push(id);
+        return false;
+      }
+
+      return true;
+    });
+
+    if(protectedSkipped.length > 0){
+      const skipMsg = `تم استبعاد ${protectedSkipped.length} حاج`;
+      const reasonMsg = status === 'لدى المشرف'
+        ? '(ليسوا في حالة "لدى الإدارة" أو محميون)'
+        : '(محميون أو في حالات متقدمة)';
+
+      if(allIds.length === 0){
+        showToast(`⚠️ ${skipMsg} ${reasonMsg} — لا يوجد حجاج مؤهلون للتحديث`, 'warning');
+        return;
+      }
+    }
   }
 
-  const allIds = [...document.querySelectorAll('#bracelet-tbody .bracelet-row-check:checked')].map(c=>c.dataset.id);
+  // تأكيد التحديث الجماعي
+  const finalCount = allIds.length;
+  const confirmMsg = status === 'لدى المشرف' || status === 'مسلّمة للحاج'
+    ? `سيتم تحديث ${finalCount} حاج إلى حالة "${status}"\n\n` +
+      (protectedSkipped.length > 0 ? `(تم استبعاد ${protectedSkipped.length} حاج محمي)\n\n` : '') +
+      'هل أنت متأكد؟'
+    : `سيتم تحديث ${finalCount} حاج إلى حالة "${status}"\n\nهل أنت متأكد؟`;
+
+  const confirmed = (typeof showConfirm === 'function')
+    ? await showConfirm(confirmMsg, 'تأكيد التحديث الجماعي', 'نعم، تحديث', '#c8971a', '⚠️')
+    : confirm(confirmMsg);
+
+  if(!confirmed) return;
   if(!allIds.length) return;
 
   // v20.2: فلترة المقفولة (superadmin يتجاوز)
