@@ -24,6 +24,8 @@
 // ═══════════════════════════════════════════════════════════════════════
 window._sigBulkExcluded = null; // Set<id>
 window._sigBulkReady    = [];   // cached ready pilgrims for re-render
+window._sigBraceletBulkExcluded = null; // Set<id> for bracelets
+window._sigBraceletBulkReady    = [];   // cached ready bracelet pilgrims
 
 function openSupBulkAck() {
   const ready = window._supPilgrims.filter(p=>p.nusuk_card_status==='لدى الإدارة');
@@ -139,6 +141,195 @@ function openSupBulkAck() {
   if(modal){
     modal.classList.add('is-open');
     modal.style.display = 'flex';
+  }
+}
+
+function openSupBraceletBulkAck() {
+  const ready = window._supPilgrims.filter(p=>p.bracelet_card_status==='لدى الإدارة');
+  if(!ready.length) { showToast('لا توجد أساور جاهزة للاستلام', 'warning'); return; }
+
+  const dev = window._devSettings||{};
+  const companyName = dev.companyName||'';
+  const license = dev.license?` — ${dev.license}`:'';
+  const user = window._currentUser||{};
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ar-SA-u-ca-islamic');
+  const timeStr = now.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+
+  // Reset state
+  window._sigBraceletBulkExcluded = new Set();
+  window._sigBraceletBulkReady    = ready;
+  window._sigType         = 'bulk_bracelet';
+
+  document.getElementById('sig-modal-title').textContent = '';  // إخلاء header المودال
+  const searchHtml = ready.length > 10
+    ? `<input id="sup-bracelet-bulk-search" type="text" placeholder="🔍 بحث بالاسم أو رقم الهوية..." oninput="_filterSupBraceletBulkTable()" style="width:100%;padding:8px 10px;border:1.5px solid #e0d5c5;border-radius:8px;font-size:12px;font-family:inherit;margin-bottom:8px;direction:rtl">`
+    : '';
+
+  document.getElementById('sig-pilgrim-name').innerHTML = `
+    <div style="text-align:right;direction:rtl">
+      <div style="text-align:center;padding:14px 10px 10px;border-bottom:2px solid #c8971a;margin-bottom:14px">
+        ${(typeof _buildPrintLogoHTML === 'function') ? _buildPrintLogoHTML(60) : ((window._devSettings?.logo) ? `<img src="${window._devSettings.logo}" alt="شعار" style="max-width:70px;max-height:70px;object-fit:contain;margin-bottom:6px">` : '')}
+        <div style="font-size:15px;font-weight:800;color:#3d2000;margin-top:4px">${(window._devSettings?.companyName) || 'شركة الحج'}</div>
+        ${(window._devSettings?.license) ? `<div style="font-size:11px;color:#888;margin-top:2px">رقم الترخيص: ${window._devSettings.license}</div>` : ''}
+      </div>
+      <div style="text-align:center;padding:10px;margin-bottom:14px">
+        <div style="font-size:16px;font-weight:800;color:#3d2000">🚆 إقرار استلام أساور القطار — دفعة واحدة</div>
+      </div>
+      <div style="background:#fff8e1;border-radius:8px;padding:10px 12px;font-size:11.5px;line-height:1.8;margin-bottom:10px">
+        <strong>الحملة:</strong> ${_esc(companyName+license)}<br>
+        <strong>المشرف:</strong> ${_esc(user.name||user.username||'—')} &nbsp;•&nbsp; <strong>الحافلة:</strong> ${_esc(String(user.group_num||'—'))}<br>
+        <strong>التاريخ:</strong> ${_esc(dateStr)} &nbsp;•&nbsp; <strong>الوقت:</strong> ${_esc(timeStr)}
+      </div>
+      ${searchHtml}
+      <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;margin-bottom:8px;max-height:220px;overflow-y:auto">
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%">
+          <table style="width:100%;min-width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap">
+            <thead style="background:#3d2000;position:sticky;top:0;z-index:1">
+              <tr>
+                <th style="padding:7px 4px;font-weight:700;color:#fff;width:30px;border-bottom:1px solid #555">#</th>
+                <th style="padding:7px 8px;font-weight:700;color:#fff;text-align:right;border-bottom:1px solid #555">اسم الحاج</th>
+                <th style="padding:7px 8px;font-weight:700;color:#fff;width:92px;text-align:center;border-bottom:1px solid #555;direction:ltr">الهوية</th>
+                <th style="padding:7px 4px;font-weight:700;color:#fff;width:50px;text-align:center;border-bottom:1px solid #555;background:#c00" title="استبعاد حاج من الدفعة">حذف</th>
+              </tr>
+            </thead>
+            <tbody id="sup-bracelet-bulk-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="sup-bracelet-bulk-counter" style="background:#fff3e0;border:1px solid #c8971a;border-radius:8px;padding:8px 12px;font-size:12px;color:#7a4500;text-align:center;font-weight:700;margin-bottom:8px"></div>
+      <div style="background:#fff8e8;border:1.5px solid #c8971a;border-radius:10px;padding:12px 14px;margin-bottom:10px;direction:rtl">
+        <div style="font-weight:700;color:#3d2000;margin-bottom:10px;font-size:13px;display:flex;align-items:center;gap:6px">
+          📜 التعهّدات (يرجى القراءة قبل التوقيع):
+        </div>
+
+        <div style="margin:8px 0 12px;padding:6px 10px;background:#fff;border:1px dashed #c8971a;border-radius:6px;display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="sup-bracelet-ack-check-all" onchange="_toggleAllSupBraceletAckPledges(this)" style="width:18px;height:18px;cursor:pointer;accent-color:#7a4500">
+          <label for="sup-bracelet-ack-check-all" style="font-size:12px;color:#7a4500;font-weight:700;cursor:pointer">✅ تحديد الكل</label>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-bracelet-ack-pledge" id="sup-bracelet-pledge-1" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-bracelet-pledge-1" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>1.</strong> المحافظة على الأساور وعدم تسليمها لأي شخص غير صاحبها.
+            </label>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-bracelet-ack-pledge" id="sup-bracelet-pledge-2" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-bracelet-pledge-2" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>2.</strong> التحقق من هوية كل حاج قبل التسليم وأخذ توقيعه على الإقرار الخاص به.
+            </label>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-bracelet-ack-pledge" id="sup-bracelet-pledge-3" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-bracelet-pledge-3" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>3.</strong> الالتزام بالتعليمات والإرشادات المتعلقة بتوزيع الأساور.
+            </label>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-bracelet-ack-pledge" id="sup-bracelet-pledge-4" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-bracelet-pledge-4" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>4.</strong> إبلاغ الحملة فوراً في حال فقدان أي أسوارة أو وجود أي مشكلة.
+            </label>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-bracelet-ack-pledge" id="sup-bracelet-pledge-5" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-bracelet-pledge-5" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>5.</strong> إعادة الأساور غير المسلّمة إلى الإدارة بعد انتهاء الرحلة.
+            </label>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:6px;background:#fff;border-radius:6px">
+            <input type="checkbox" class="sup-bracelet-ack-pledge" id="sup-bracelet-pledge-6" style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0;accent-color:#7a4500">
+            <label for="sup-bracelet-pledge-6" style="font-size:12px;color:#3d2000;cursor:pointer;line-height:1.5">
+              <strong>6.</strong> أتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.
+            </label>
+          </div>
+        </div>
+      </div>
+      <label style="display:flex;gap:8px;align-items:center;background:#fffbf0;border:1.5px solid #e0d5c5;border-radius:8px;padding:8px 10px;font-size:11px;color:#3d2000;direction:rtl;cursor:pointer;margin-bottom:4px">
+        <input type="checkbox" id="sup-bracelet-bulk-ack-print" checked style="width:16px;height:16px;accent-color:#7a4500;cursor:pointer">
+        <span>🖨️ فتح صفحة الإقرار الرسمي للطباعة بعد التأكيد</span>
+      </label>
+    </div>`;
+  _renderSupBraceletBulkTable();
+  clearSigCanvas();
+  const modal = document.getElementById('sig-modal');
+  if(modal){
+    modal.classList.add('is-open');
+    modal.style.display = 'flex';
+  }
+}
+
+// v23.1-pre-i: تحديد/إلغاء كل بنود إقرار المشرف الأساور
+function _toggleAllSupBraceletAckPledges(checkAllEl){
+  const allChecked = checkAllEl.checked;
+  document.querySelectorAll('.sup-bracelet-ack-pledge').forEach(cb => {
+    cb.checked = allChecked;
+  });
+}
+window._toggleAllSupBraceletAckPledges = _toggleAllSupBraceletAckPledges;
+
+function _renderSupBraceletBulkTable() {
+  const ready    = window._sigBraceletBulkReady || [];
+  const excluded = window._sigBraceletBulkExcluded || new Set();
+  const q = (document.getElementById('sup-bracelet-bulk-search')?.value||'').toLowerCase().trim();
+  const tbody = document.getElementById('sup-bracelet-bulk-tbody');
+  if(!tbody) return;
+
+  const filtered = q
+    ? ready.filter(p => (p.name||'').toLowerCase().includes(q) || (p.id_num||'').includes(q))
+    : ready;
+
+  tbody.innerHTML = filtered.map((p,i) => {
+    // v22.7: String(p.id) للتوافق — Set يحوي نصوصاً (من onclick template)، p.id رقم من DB
+    const isExcl = excluded.has(String(p.id));
+    return `<tr style="border-bottom:1px solid #f5f5f5;${isExcl?'background:#fafafa;opacity:0.55':''}">
+      <td style="padding:7px 4px;text-align:center;color:#999;font-size:11px">${i+1}</td>
+      <td style="padding:7px 8px;font-weight:600;color:${isExcl?'#999':'#333'};${isExcl?'text-decoration:line-through':''}">${_esc(p.name||'—')}</td>
+      <td style="padding:7px 8px;text-align:center;color:#666;font-size:11px;direction:ltr;${isExcl?'text-decoration:line-through':''}">${_esc(p.id_num||'—')}</td>
+      <td style="padding:7px 4px;text-align:center;width:50px">
+        ${isExcl
+          ? `<button onclick="_toggleSupBraceletBulkExcluded('${p.id}')" title="إعادة إضافة" style="background:#1a7a1a;color:#fff;border:none;border-radius:6px;width:36px;height:30px;cursor:pointer;font-size:14px;font-family:inherit;line-height:1">↩</button>`
+          : `<button onclick="_toggleSupBraceletBulkExcluded('${p.id}')" title="استبعاد من الدفعة" style="background:#c00;color:#fff;border:none;border-radius:6px;width:36px;height:30px;cursor:pointer;font-size:16px;font-family:inherit;line-height:1;font-weight:700;box-shadow:0 1px 3px rgba(204,0,0,0.3)">✕</button>`}
+      </td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="4" style="padding:20px;text-align:center;color:#888;font-size:12px">لا توجد نتائج مطابقة</td></tr>`;
+
+  _updateSupBraceletBulkCounter();
+}
+
+function _toggleSupBraceletBulkExcluded(id) {
+  const excluded = window._sigBraceletBulkExcluded;
+  if(!excluded) return;
+  // v22.7: توحيد على String لتجنّب عدم تطابق 5 !== "5"
+  const key = String(id);
+  if(excluded.has(key)) excluded.delete(key);
+  else                  excluded.add(key);
+  _renderSupBraceletBulkTable();
+}
+
+function _filterSupBraceletBulkTable() {
+  _renderSupBraceletBulkTable();
+}
+
+function _updateSupBraceletBulkCounter() {
+  const ready    = window._sigBraceletBulkReady || [];
+  const excluded = window._sigBraceletBulkExcluded || new Set();
+  const included = ready.length - excluded.size;
+  const counter  = document.getElementById('sup-bracelet-bulk-counter');
+  if(!counter) return;
+
+  if(included === 0){
+    counter.style.background = '#fde8e8';
+    counter.style.borderColor = '#c00';
+    counter.style.color = '#c00';
+    counter.innerHTML = `⚠️ يجب اختيار أسوارة واحدة على الأقل`;
+  } else {
+    counter.style.background = '#fff3e0';
+    counter.style.borderColor = '#c8971a';
+    counter.style.color = '#7a4500';
+    counter.innerHTML = `✓ سيتم توقيع <strong>${included}</strong> أسوارة${excluded.size?` &nbsp;•&nbsp; مستبعدة: <strong>${excluded.size}</strong>`:''}`;
   }
 }
 
@@ -302,7 +493,10 @@ function renderSupActionBtns() {
   // v23.0-pre-nnn: أعداد للأزرار الأخرى
   const unboardedCount = window._supPilgrims.filter(p => p.bus_status !== 'ركب').length;
   const notArrivedCount = window._supPilgrims.filter(p => p.camp_status !== 'حضر').length;
-  const noBraceletCount = window._supPilgrims.filter(p => !p.bracelet_time).length;
+  const hasBraceletReady = window._supPilgrims.some(p=>p.bracelet_card_status==='لدى الإدارة');
+  const braceletReadyCount = window._supPilgrims.filter(p=>p.bracelet_card_status==='لدى الإدارة').length;
+  const hasBraceletWithSup = window._supPilgrims.some(p=>p.bracelet_card_status==='لدى المشرف');
+  const braceletUnsignedCount = window._supPilgrims.filter(p=>p.bracelet_card_status==='لدى المشرف').length;
   const cols = 2 + (hasNusukWithSup?1:0) + (hasNusukReady?1:0) + (hasBracelet?1:0);
   container.style.gridTemplateColumns = `repeat(${cols},1fr)`;
   container.innerHTML = `
@@ -310,7 +504,8 @@ function renderSupActionBtns() {
     <button onclick="openSupAction('camp')" style="position:relative;background:#1a5fa8;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🏕️ وصول المخيم${notArrivedCount > 0 ? `<span class="sup-badge-new" aria-label="${notArrivedCount} حاج لم يصل بعد">${notArrivedCount}</span>` : ''}</button>
     ${hasNusukWithSup?`<button onclick="openSupAction('nusuk')" style="position:relative;background:#7a4500;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🪪 بطاقة نسك${unsignedCount > 0 ? `<span class="sup-badge-new" aria-label="${unsignedCount} حاج لم يستلم بعد">${unsignedCount}</span>` : ''}</button>`:''}
     ${hasNusukReady?`<button onclick="openSupBulkAck()" style="position:relative;background:#c8971a;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📦 استلام دفعة<span class="sup-badge-new" aria-label="${readyCount} بطاقة جاهزة">${readyCount}</span></button>`:''}
-    ${hasBracelet?`<button onclick="openSupAction('bracelet')" style="position:relative;background:#444;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🚆 أسوارة${noBraceletCount > 0 ? `<span class="sup-badge-new" aria-label="${noBraceletCount} حاج لم يستلم أسوارة بعد">${noBraceletCount}</span>` : ''}</button>`:''}
+    ${hasBracelet && hasBraceletReady?`<button onclick="openSupBraceletBulkAck()" style="position:relative;background:#1a7a4a;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">📦 استلام دفعة أساور<span class="sup-badge-new" aria-label="${braceletReadyCount} أسوارة جاهزة">${braceletReadyCount}</span></button>`:''}
+    ${hasBracelet && hasBraceletWithSup?`<button onclick="openSupAction('bracelet')" style="position:relative;background:#444;color:#fff;border:none;border-radius:12px;padding:14px 8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">🚆 أسوارة${braceletUnsignedCount > 0 ? `<span class="sup-badge-new" aria-label="${braceletUnsignedCount} حاج لم يستلم أسوارة بعد">${braceletUnsignedCount}</span>` : ''}</button>`:''}
   `;
 }
 
@@ -496,6 +691,34 @@ window.refreshNusukHandoverList = function(){
   }
 };
 
+window.refreshBraceletHandoverList = function(){
+  const modal = document.getElementById('sup-modal');
+  if(!modal || modal.style.display === 'none') return;
+
+  // تحقّق أن هذه نافذة "تسليم أسوارة القطار"
+  const title = document.getElementById('sup-modal-title')?.textContent || '';
+  if(!title.includes('تسليم أسوارة القطار')) return;
+
+  console.log('[refreshBraceletHandoverList] Refreshing bracelet handover list...');
+
+  // أعد تحميل بيانات المشرف أولاً
+  if(window._currentUser && typeof loadSupervisorPanel === 'function'){
+    loadSupervisorPanel(window._currentUser).then(() => {
+      // بعد تحديث البيانات، أعد رسم القائمة
+      if(typeof supModalSearch === 'function'){
+        supModalSearch();
+        console.log('[refreshBraceletHandoverList] List refreshed');
+      }
+    });
+  } else {
+    // fallback: أعد رسم القائمة مباشرة
+    if(typeof supModalSearch === 'function'){
+      supModalSearch();
+      console.log('[refreshBraceletHandoverList] List refreshed (fallback)');
+    }
+  }
+};
+
 function supModalSearch() {
   const q = document.getElementById('sup-modal-search').value.toLowerCase();
   const action = window._supAction;
@@ -503,6 +726,7 @@ function supModalSearch() {
 
   // فلترة حسب النوع
   if(action==='nusuk') list = list.filter(p=>p.nusuk_card_status==='لدى المشرف'||p.nusuk_card_status==='مسلّمة للحاج');
+  if(action==='bracelet') list = list.filter(p=>p.bracelet_card_status==='لدى المشرف'||p.bracelet_card_status==='مسلّمة للحاج');
 
   const el = document.getElementById('sup-modal-results');
   if(!list.length){ el.innerHTML = '<div class="plc-empty">لا يوجد نتائج</div>'; return; }
@@ -527,7 +751,7 @@ function supModalSearch() {
     if(action==='bus'){        done=p.bus_status==='ركب';              label=done?'✅ ركب':'🚌 تسجيل إركاب';   color=done?'#888':'#1a7a1a'; }
     else if(action==='camp'){  done=p.camp_status==='حضر';             label=done?'✅ حضر':'🏕️ تسجيل وصول';   color=done?'#888':'#1a5fa8'; }
     else if(action==='nusuk'){ done=p.nusuk_card_status==='مسلّمة للحاج'; label=done?'✅ مُسلَّمة':'🪪 تسليم + توقيع'; color=done?'#888':'#7a4500'; }
-    else if(action==='bracelet'){ done=!!p.bracelet_time;              label=done?'✅ مُسلَّمة':'🚆 تسليم + توقيع'; color=done?'#888':'#444'; }
+    else if(action==='bracelet'){ done=p.bracelet_card_status==='مسلّمة للحاج'; label=done?'✅ مُسلَّمة':'🚆 تسليم + توقيع'; color=done?'#888':'#444'; }
     const needsSig = (action==='nusuk'||action==='bracelet') && !done;
     return _buildPilgrimCard(p, {
       showFields: ['id'],
@@ -846,7 +1070,7 @@ async function confirmSignature() {
     // حفظ في Supabase
     let updates = {};
     if(type==='nusuk') { updates = { nusuk_card_status: 'مسلّمة للحاج', nusuk_card_sig: sigUrl, nusuk_card_time: timeStr }; }
-    else if(type==='bracelet') { updates = { bracelet_sig: sigUrl, bracelet_time: timeStr }; }
+    else if(type==='bracelet') { updates = { bracelet_card_status: 'مسلّمة للحاج', bracelet_sig: sigUrl, bracelet_time: timeStr }; }
     else if(type==='bulk_nusuk') {
       // v20.3: استخراج ids من ready - excluded (بدل _sigBulkIds الثابتة)
       // v22.7: مقارنة String لأن Set يحوي نصوصاً
@@ -974,6 +1198,147 @@ async function confirmSignature() {
       // v20.3: تنظيف state
       window._sigBulkReady = [];
       window._sigBulkExcluded = null;
+      updateSupStats(); renderSupTable(); renderSupActionBtns();
+
+      // v22.1: فتح الإقرار الرسمي للطباعة (إذا المستخدم لم يلغِ الخيار)
+      if(shouldPrintAck && typeof openBulkAckReceipt === 'function'){
+        setTimeout(() => openBulkAckReceipt({
+          ackId: bulkSessionId,
+          pilgrims: ackPilgrimsSnapshot,
+          supervisor: user,
+          sigUrl,
+          timeStr
+        }), 200);
+      }
+      return;
+    }
+    else if(type==='bulk_bracelet') {
+      // v20.3: استخراج ids من ready - excluded (بدل _sigBulkIds الثابتة)
+      // v22.7: مقارنة String لأن Set يحوي نصوصاً
+      const ready    = window._sigBraceletBulkReady || [];
+      const excluded = window._sigBraceletBulkExcluded || new Set();
+      let ids = ready.filter(p => !excluded.has(String(p.id))).map(p => p.id);
+      if(!ids.length) { showToast('⚠️ يجب اختيار أسوارة واحدة على الأقل', 'warning'); return; }
+
+      // v20.4: فحص عزل دفاعي — استبعاد أي حاج لا ينتمي لحافلة المشرف
+      const supBus = user && user.group_num != null ? String(user.group_num) : null;
+      const isolationSkipped = [];
+      if(supBus){
+        ids = ids.filter(bid => {
+          const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
+          const bpBus = bp && bp.bus_num != null ? String(bp.bus_num) : null;
+          if(bpBus !== supBus){
+            isolationSkipped.push(String(bid));
+            console.warn('[isolation] pilgrim', bid, 'bus:', bpBus, '!= supervisor bus:', supBus);
+            return false;
+          }
+          return true;
+        });
+      }
+      if(!ids.length){
+        showToast('🔒 خطأ عزل: لا يوجد حاج من حافلتك في الدفعة', 'error');
+        return;
+      }
+
+      // v22.0: UUID يُولَّد أولاً ويُخزَّن في bracelet_supervisor_ack_id (لربط جميع أساور الدفعة بنفس الإقرار)
+      const bulkSessionId = (crypto.randomUUID && crypto.randomUUID())
+        || ('bulk-' + Date.now() + '-' + Math.random().toString(36).substring(2,10));
+
+      // v22.0: snapshot قبل التحديث — حقول المشرف المنفصلة
+      const beforeMap = new Map();
+      ids.forEach(bid => {
+        const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
+        beforeMap.set(String(bid), {
+          bracelet_card_status:       bp ? (bp.bracelet_card_status       ?? null) : null,
+          bracelet_supervisor_sig:    bp ? (bp.bracelet_supervisor_sig    ?? null) : null,
+          bracelet_supervisor_time:   bp ? (bp.bracelet_supervisor_time   ?? null) : null,
+          bracelet_supervisor_ack_id: bp ? (bp.bracelet_supervisor_ack_id ?? null) : null
+        });
+      });
+      // v22.0: استلام المشرف يكتب في bracelet_supervisor_* (منفصل عن bracelet_* الذي يحتفظ بتوقيع الحاج)
+      const bulkUpdates = {
+        bracelet_card_status:       'لدى المشرف',
+        bracelet_supervisor_sig:    sigUrl,
+        bracelet_supervisor_time:   timeStr,
+        bracelet_supervisor_ack_id: bulkSessionId,
+        bracelet_supervisor_name:    user.name || user.username || '',
+        bracelet_supervisor_id_num:  user.id_num || '',
+        bracelet_supervisor_user_id: String(user.id || '')
+      };
+      await Promise.all(ids.map(bid => window.DB.Pilgrims.update(parseInt(bid), bulkUpdates)));
+      ids.forEach(bid => {
+        const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
+        if(bp){
+          bp.bracelet_card_status       = 'لدى المشرف';
+          bp.bracelet_supervisor_sig    = sigUrl;
+          bp.bracelet_supervisor_time   = timeStr;
+          bp.bracelet_supervisor_ack_id = bulkSessionId;
+          bp.bracelet_supervisor_name    = user.name || user.username || '';
+          bp.bracelet_supervisor_id_num  = user.id_num || '';
+          bp.bracelet_supervisor_user_id = String(user.id || '');
+        }
+      });
+
+      // v17.2: audit — N صفوف فردية + 1 صف جماعي + bulk_session
+      // v20.3: bus_num + إحصائيات الاستبعاد
+      // v22.0: bulkSessionId نُوِّلد أعلاه
+      const bulkMeta = {
+        source: 'bracelet_supervisor_receive',
+        bulk_session: bulkSessionId,
+        bulk_target_field: 'bracelet_card_status',
+        bulk_target_value: 'لدى المشرف',
+        bulk_total_count: ids.length,
+        bus_num: user && user.group_num != null ? String(user.group_num) : null,
+        total_included: ids.length
+      };
+      if(excluded.size > 0){
+        bulkMeta.total_excluded    = excluded.size;
+        bulkMeta.excluded_pilgrims = [...excluded].map(String);
+      }
+      if(isolationSkipped.length > 0){
+        bulkMeta.isolation_skipped   = true;
+        bulkMeta.isolation_mismatch  = isolationSkipped;
+      }
+      ids.forEach(bid => {
+        const bp = window._supPilgrims.find(x=>String(x.id)===String(bid));
+        const bBefore = beforeMap.get(String(bid)) || {};
+        const changes = _maskSigInChanges(_buildFieldChanges(bBefore, bulkUpdates));
+        if(!changes) return;
+        _recordAudit({
+          action_type:  'update',
+          entity_type:  'pilgrim',
+          entity_id:    String(bid),
+          entity_label: _buildPilgrimLabel(bp),
+          field_changes: changes,
+          metadata: bulkMeta
+        });
+      });
+      _recordAudit({
+        action_type:  'bulk_update',
+        entity_type:  'pilgrim',
+        entity_id:    null,
+        entity_label: 'استلام جماعي: ' + ids.length + ' أسوارة قطار',
+        field_changes: {
+          bracelet_card_status:       { before: null, after: 'لدى المشرف', note: 'bulk' },
+          bracelet_supervisor_sig:    { before: null, after: sigUrl,               note: 'bulk' },
+          bracelet_supervisor_ack_id: { before: null, after: bulkSessionId,        note: 'bulk' }
+        },
+        bulk_ids:   ids,
+        bulk_count: ids.length,
+        metadata: bulkMeta
+      });
+
+      // v22.1: قراءة تفضيل الطباعة قبل إغلاق الـ modal (العنصر يُحذف مع الإغلاق)
+      const shouldPrintAck = !!document.getElementById('sup-bracelet-bulk-ack-print')?.checked;
+      const ackPilgrimsSnapshot = ids.map(bid => window._supPilgrims.find(x=>String(x.id)===String(bid))).filter(Boolean);
+
+      closeSigModal();
+      const exclMsg = excluded.size ? ` • استبعاد يدوي: ${excluded.size}` : '';
+      const isoMsg  = isolationSkipped.length ? ` • عزل تلقائي: ${isolationSkipped.length}` : '';
+      showToast(`✅ تم تسجيل استلام ${ids.length} أسوارة${exclMsg}${isoMsg}`, isolationSkipped.length ? 'warning' : 'success');
+      // v20.3: تنظيف state
+      window._sigBraceletBulkReady = [];
+      window._sigBraceletBulkExcluded = null;
       updateSupStats(); renderSupTable(); renderSupActionBtns();
 
       // v22.1: فتح الإقرار الرسمي للطباعة (إذا المستخدم لم يلغِ الخيار)
@@ -1293,6 +1658,7 @@ function _buildSupHistCard(entry){
     supervisor_camp:         { icon:'🏕️', label:'وصول مخيم',          color:'#1a5fa8' },
     supervisor_nusuk:        { icon:'🪪', label:'تسليم بطاقة نسك',    color:'#7a4500' },
     supervisor_bracelet:     { icon:'🚆', label:'تسليم أسوارة',       color:'#444'    },
+    bracelet_supervisor_receive: { icon:'🚆', label:'استلام دفعة أساور', color:'#1a7a4a' },
     supervisor_bulk_receive: { icon:'📦', label:'استلام جماعي',        color:'#c8971a' }
   };
   const s = labels[source] || { icon:'📝', label:'عملية', color:'#888' };
@@ -1529,3 +1895,10 @@ async function openBulkAckReceipt(opts){
   </body></html>`);
   w.document.close();
 }
+
+// v23.1-pre-i: تصدير دوال الأساور للنطاق العام
+window.openSupBraceletBulkAck = openSupBraceletBulkAck;
+window._toggleSupBraceletBulkExcluded = _toggleSupBraceletBulkExcluded;
+window._filterSupBraceletBulkTable = _filterSupBraceletBulkTable;
+window._updateSupBraceletBulkCounter = _updateSupBraceletBulkCounter;
+window._renderSupBraceletBulkTable = _renderSupBraceletBulkTable;

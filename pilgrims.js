@@ -1208,6 +1208,9 @@ async function confirmPilgrimAck(pilgrimId) {
       if(typeof window.refreshNusukHandoverList === 'function'){
         window.refreshNusukHandoverList();
       }
+      if(typeof window.refreshBraceletHandoverList === 'function'){
+        window.refreshBraceletHandoverList();
+      }
     }, 500);
 
     // v20.4: فتح صفحة الإقرار للطباعة/Save as PDF (اختياري، مُفعَّل افتراضياً)
