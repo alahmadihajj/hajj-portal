@@ -595,7 +595,7 @@ function renderBraceletTable(filter) {
           const BRACELET_BTN_STYLE = 'display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;color:#fff;border:none;border-radius:8px;padding:0;font-size:14px;cursor:pointer;font-family:inherit;margin:0 3px;vertical-align:middle';
 
           const btnView = hasPilgrimAck
-            ? `<button onclick="viewPilgrimAck('${p['_supabase_id']}')" title="عرض إقرار الحاج" style="${BRACELET_BTN_STYLE};background:#1a5fa8">📄</button>`
+            ? `<button onclick="viewPilgrimBraceletAck('${p['_supabase_id']}')" title="عرض إقرار الحاج" style="${BRACELET_BTN_STYLE};background:#1a5fa8">📄</button>`
             : '';
           const btnReopen = canReopen
             ? `<button onclick="openBraceletReopenModal('${p['_supabase_id']}')" title="إعادة فتح الأسوارة" style="${BRACELET_BTN_STYLE};background:#c07000">🔓</button>`
@@ -647,7 +647,7 @@ function _renderBraceletMobileCards(list){
     const hasSupAck = (p['حالة أسوارة القطار'] || '').includes('لدى المشرف') || (p['حالة أسوارة القطار'] || '').includes('مسلّمة');
 
     const btnView = hasPilgrimAck
-      ? `<button onclick="viewPilgrimAck('${pid}')" style="background:#1a5fa8;color:#fff" title="إقرار الحاج">📄</button>`
+      ? `<button onclick="viewPilgrimBraceletAck('${pid}')" style="background:#1a5fa8;color:#fff" title="إقرار الحاج">📄</button>`
       : '';
     const btnReopen = canReopen
       ? `<button onclick="openBraceletReopenModal('${pid}')" style="background:#c07000;color:#fff" title="إعادة فتح">🔓</button>`
@@ -709,7 +709,7 @@ function _renderBraceletMobileCards(list){
   }).join('');
 }
 
-function viewPilgrimAck(pilgrimId) {
+function viewPilgrimBraceletAck(pilgrimId) {
   const p = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
   if(!p || !p['أسوارة_sig']) return showToast('لا يوجد إقرار محفوظ', 'warning');
   const dev = window._devSettings||{};
@@ -767,7 +767,7 @@ function viewPilgrimAck(pilgrimId) {
     <strong>تاريخ التسليم:</strong> ${p['أسوارة_time']||'—'}
   </div>
   <div class="pledge">
-    <p>أقر أنا المذكور أعلاه بأنني استلمت أسوارة "نسك" الخاصة بي من <strong>${companyName}</strong>، وأتعهد بما يلي:</p>
+    <p>أقر أنا المذكور أعلاه بأنني استلمت أسوارة القطار الخاصة بي من <strong>${companyName}</strong>، وأتعهد بما يلي:</p>
     <ol>
       <li>المحافظة على أسوارة القطار وعدم فقدانها أو إتلافها.</li>
       <li>إبراز الأسوارة عند الطلب في جميع مراحل التنقل وأداء المناسك.</li>
@@ -980,7 +980,7 @@ async function applyBulkBracelet() {
       action_type:  'bulk_update',
       entity_type:  'pilgrim',
       entity_id:    null,
-      entity_label: `تحديث جماعي نسك: ${ids.length} حاج → ${status}`,
+      entity_label: `تحديث جماعي أساور: ${ids.length} حاج → ${status}`,
       field_changes: { bracelet_card_status: { before: null, after: status, note: 'bulk' } },
       bulk_ids:   ids,
       bulk_count: ids.length,
@@ -1252,7 +1252,7 @@ window.refreshBraceletData = refreshBraceletData;
 window.updateBraceletBulkBar = updateBraceletBulkBar;
 window.quickBraceletUpdate = quickBraceletUpdate;
 window.openSupervisorAckFor = openSupervisorAckFor;
-window.viewPilgrimAck = viewPilgrimAck;
+window.viewPilgrimBraceletAck = viewPilgrimBraceletAck;
 window.openBraceletReopenModal = openBraceletReopenModal;
 
 // v23.0-pre-mmm: تصدير دالة فحص صلاحية إعادة فتح نسك للمشرف

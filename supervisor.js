@@ -515,7 +515,7 @@ function updateSupStats() {
   if(document.getElementById('sup-boarded')) document.getElementById('sup-boarded').textContent = p.filter(x=>x.bus_status==='ركب').length;
   if(document.getElementById('sup-arrived')) document.getElementById('sup-arrived').textContent = p.filter(x=>x.camp_status==='حضر').length;
   if(document.getElementById('sup-nusuk')) document.getElementById('sup-nusuk').textContent = p.filter(x=>x.nusuk_card_status==='مسلّمة للحاج').length;
-  if(document.getElementById('sup-bracelet')) document.getElementById('sup-bracelet').textContent = p.filter(x=>x.bracelet_time).length;
+  if(document.getElementById('sup-bracelet')) document.getElementById('sup-bracelet').textContent = p.filter(x=>x.bracelet_card_status==='مسلّمة للحاج').length;
 }
 
 function renderSupTable() {
@@ -538,7 +538,7 @@ function renderSupTable() {
       if(f === 'unboarded')    return p.bus_status  !== 'ركب';
       if(f === 'not_arrived')  return p.camp_status !== 'حضر';
       if(f === 'no_nusuk')     return p.nusuk_card_status !== 'مسلّمة للحاج';
-      if(f === 'no_bracelet')  return !p.bracelet_time;
+      if(f === 'no_bracelet')  return p.bracelet_card_status !== 'مسلّمة للحاج';
       return true;
     });
   }
@@ -560,7 +560,7 @@ function renderSupTable() {
     const arrived = p.camp_status==='حضر';
     const nusukDelivered = p.nusuk_card_status==='مسلّمة للحاج';
     const nusukReady = p.nusuk_card_status==='لدى المشرف';
-    const braceletDone = !!p.bracelet_time;
+    const braceletDone = p.bracelet_card_status === 'مسلّمة للحاج';
     return `<tr style="border-bottom:1px solid #f0e8d0">
       <td style="padding:8px 4px;text-align:center"><input type="checkbox" class="sup-row-check" data-id="${p.id}" onchange="_updateSupBulkBar()" style="width:18px;height:18px;cursor:pointer;accent-color:#c8971a"></td>
       <td style="padding:8px;font-size:12px;font-weight:600">${p.name||'—'}<br><span style="font-size:10px;color:#999;font-weight:400">${p.id_num||''}</span></td>
@@ -591,7 +591,7 @@ function _renderSupCards(list, hasNusuk, hasBracelet){
     const nusukDelivered = p.nusuk_card_status === 'مسلّمة للحاج';
     const nusukReady     = p.nusuk_card_status === 'لدى المشرف';
     const nusukAtAdmin   = p.nusuk_card_status === 'لدى الإدارة';
-    const braceletDone   = !!p.bracelet_time;
+    const braceletDone   = p.bracelet_card_status === 'مسلّمة للحاج';
 
     const chip = (bg, color, text) =>
       `<span style="background:${bg};color:${color};padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap">${text}</span>`;
@@ -1041,7 +1041,155 @@ function openSigModal(pilgrimId, type) {
 
     if(pilgrim && typeof window.openPilgrimBraceletAck === 'function'){
       console.log('[openSigModal] استخدام openPilgrimBraceletAck لإقرار الأسوارة');
+      console.log('[DEBUG] Before openPilgrimBraceletAck call');
+      setTimeout(() => {
+        const modal = document.querySelector('.modal-overlay.is-open, .ack-modal, #pilgrim-ack-modal');
+        console.log('[DEBUG] Modal after 100ms:', modal);
+        if(modal){
+          const rect = modal.getBoundingClientRect();
+          const cs = getComputedStyle(modal);
+          console.log('[DEBUG] Position:', rect);
+          console.log('[DEBUG] Display:', cs.display, 'Visibility:', cs.visibility, 'Opacity:', cs.opacity, 'Z-index:', cs.zIndex);
+          console.log('[DEBUG] Dimensions:', rect.width, 'x', rect.height);
+        }
+      }, 100);
+      // إصلاح overlay فوراً قبل فتح modal الأساور (الحل الجذري)
+      const overlay = document.getElementById('modal-overlay');
+      if(overlay && overlay.offsetWidth === 0) {
+        console.log('[Fix] Pre-fixing overlay before bracelet modal');
+        document.body.appendChild(overlay);
+
+        // إصلاح إضافي إذا لم يحل
+        if(overlay.offsetWidth === 0) {
+          overlay.style.cssText = `
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            display: flex !important;
+            z-index: 999999 !important;
+          `;
+        }
+      }
+
+      // الآن افتح modal الأساور على overlay سليم
       window.openPilgrimBraceletAck(pilgrimId, pilgrim);
+
+      setTimeout(() => {
+        const overlay = document.getElementById('modal-overlay');
+        if(!overlay) { console.error('NO OVERLAY'); return; }
+
+        console.log('=== COMPLETE DIAGNOSTIC ===');
+
+        // 1. الخصائص المحسوبة
+        const cs = getComputedStyle(overlay);
+        console.log('1. Computed:', {
+          display: cs.display,
+          position: cs.position,
+          visibility: cs.visibility,
+          opacity: cs.opacity,
+          transform: cs.transform,
+          clip: cs.clip,
+          clipPath: cs.clipPath,
+          width: cs.width,
+          height: cs.height,
+          top: cs.top,
+          left: cs.left
+        });
+
+        // 2. Body و parent
+        console.log('2. Parent:', overlay.parentElement?.tagName, overlay.parentElement?.id);
+        console.log('3. Body display:', getComputedStyle(document.body).display);
+        console.log('4. Body overflow:', getComputedStyle(document.body).overflow);
+
+        // 3. offsetWidth/Height (مختلف عن getBoundingClientRect)
+        console.log('5. offsetWidth x offsetHeight:', overlay.offsetWidth, 'x', overlay.offsetHeight);
+        console.log('6. clientWidth x clientHeight:', overlay.clientWidth, 'x', overlay.clientHeight);
+        console.log('7. scrollWidth x scrollHeight:', overlay.scrollWidth, 'x', overlay.scrollHeight);
+
+        // 4. جرّب append إلى body من جديد
+        console.log('8. Re-appending to body...');
+        document.body.appendChild(overlay);
+
+        // 5. بعد append
+        setTimeout(() => {
+          console.log('9. After re-append:', overlay.getBoundingClientRect());
+          console.log('10. offsetWidth now:', overlay.offsetWidth);
+        }, 50);
+
+      }, 100);
+
+      setTimeout(() => {
+        const existingOverlay = document.getElementById('modal-overlay');
+        if(!existingOverlay || existingOverlay.offsetWidth > 0) return;
+
+        console.log('[Fix] Moving modal to body and resetting styles');
+
+        // استخرج المحتوى
+        const content = existingOverlay.innerHTML;
+
+        // أنشئ nav جديد تماماً
+        const newOverlay = document.createElement('div');
+        newOverlay.id = 'modal-overlay-fixed';
+        newOverlay.innerHTML = content;
+        newOverlay.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          z-index: 999999;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 10px;
+          overflow-y: auto;
+          box-sizing: border-box;
+        `;
+
+        // أضف onclick للإغلاق
+        newOverlay.onclick = (e) => {
+          if(e.target === newOverlay){
+            newOverlay.remove();
+            existingOverlay.classList.remove('is-open');
+            existingOverlay.style.display = 'none';
+          }
+        };
+
+        // أخفِ القديم وأضف الجديد
+        existingOverlay.style.display = 'none';
+        existingOverlay.classList.remove('is-open');
+        document.body.appendChild(newOverlay);
+
+        // نمّط الصندوق الداخلي
+        const box = newOverlay.querySelector('#modal-content, .modal-box');
+        if(box){
+          box.style.cssText = `
+            width: auto;
+            max-width: 560px;
+            max-height: 90vh;
+            margin: auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow-y: auto;
+            box-sizing: border-box;
+          `;
+
+          if(window.innerWidth <= 768){
+            box.style.maxWidth = '95%';
+            box.style.width = '95%';
+            box.style.padding = '14px';
+          }
+        }
+
+        console.log('[Fix] New modal created and appended');
+        console.log('[Fix] Dimensions:', newOverlay.getBoundingClientRect());
+      }, 150);
+
       return;
     }
 
@@ -1386,8 +1534,8 @@ async function confirmSignature() {
       updateSupStats(); renderSupTable(); renderSupActionBtns();
 
       // v22.1: فتح الإقرار الرسمي للطباعة (إذا المستخدم لم يلغِ الخيار)
-      if(shouldPrintAck && typeof openBulkAckReceipt === 'function'){
-        setTimeout(() => openBulkAckReceipt({
+      if(shouldPrintAck && typeof openBulkBraceletAckReceipt === 'function'){
+        setTimeout(() => openBulkBraceletAckReceipt({
           ackId: bulkSessionId,
           pilgrims: ackPilgrimsSnapshot,
           supervisor: user,
@@ -1897,6 +2045,206 @@ async function openBulkAckReceipt(opts){
       <li>الالتزام بالتعليمات والإرشادات المتعلقة بتوزيع البطاقات.</li>
       <li>إبلاغ الحملة فوراً في حال فقدان أي بطاقة أو وجود أي مشكلة.</li>
       <li>إعادة البطاقات غير المُسلَّمة إلى الإدارة بعد انتهاء الرحلة.</li>
+      <li>أتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.</li>
+    </ol>
+  </div>
+  <div class="sig-section">
+    <div class="sig-box">
+      <label>توقيع المشرف</label>
+      ${sigUrl?`<img class="sig-img" src="${esc(sigUrl)}" alt="توقيع المشرف">`:'<div class="sig-placeholder"></div>'}
+      <div style="margin-top:6px;font-size:12px;font-weight:600">${esc(supName)}</div>
+    </div>
+    ${(repName || repSig || stamp) ? `
+    <div class="sig-box">
+      <label>ممثل الشركة</label>
+      ${repName?`<div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:8px">${esc(repName)}</div>`:''}
+      <div style="display:flex;gap:14px;justify-content:center;align-items:flex-start">
+        ${repSig?`<div style="text-align:center">
+          <img src="${esc(repSig)}" alt="توقيع الممثل" style="max-width:120px;max-height:60px;object-fit:contain;border:1px solid #eee;border-radius:4px;background:#fafafa">
+          <div style="font-size:10px;color:#888;margin-top:3px">التوقيع</div>
+        </div>`:''}
+        ${stamp?`<div style="text-align:center">
+          <img src="${esc(stamp)}" alt="ختم" style="max-width:70px;max-height:70px;object-fit:contain">
+          <div style="font-size:10px;color:#888;margin-top:3px">الختم</div>
+        </div>`:''}
+      </div>
+      <div style="margin-top:8px;font-size:11px;color:#666">${esc(companyName)}</div>
+    </div>
+    ` : `
+    <div class="sig-box">
+      <label>ممثل الشركة والختم الرسمي</label>
+      <div class="sig-placeholder"></div>
+      <div style="margin-top:6px;font-size:12px;font-weight:600">${esc(companyName)}</div>
+    </div>
+    `}
+  </div>
+  <div class="footer">
+    تم إنشاء هذا الإقرار إلكترونياً &nbsp;•&nbsp; معرّف: <span style="direction:ltr">${esc(ackId)}</span>
+  </div>
+  <div class="no-print" style="text-align:center;margin-top:20px">
+    <button onclick="window.print()" style="padding:10px 30px;background:#3d2000;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-family:Arial,sans-serif">🖨️ طباعة / حفظ PDF</button>
+  </div>
+  </body></html>`);
+  w.document.close();
+}
+
+// v23.1-pre-n: دالة طباعة إقرار الأساور — نسخة منفصلة من openBulkAckReceipt
+async function openBulkBraceletAckReceipt(opts){
+  opts = opts || {};
+  let { ackId, pilgrims, supervisor, sigUrl, timeStr } = opts;
+  if(!ackId) { showToast('معرّف الإقرار غير صالح', 'error'); return; }
+
+  // جلب من DB إذا البيانات غير مُمرَّرة (عرض تاريخي)
+  if(!pilgrims || !pilgrims.length){
+    try {
+      const all = await window.DB.Pilgrims.getAll();
+      pilgrims = all.filter(p => String(p.bracelet_supervisor_ack_id||'') === String(ackId));
+    } catch(e){ showToast('فشل جلب البيانات: '+(e.message||''), 'error'); return; }
+    if(!pilgrims.length){ showToast('لا يوجد حجاج بهذا الإقرار', 'warning'); return; }
+    sigUrl  = sigUrl  || pilgrims[0].bracelet_supervisor_sig  || '';
+    timeStr = timeStr || pilgrims[0].bracelet_supervisor_time || '';
+  }
+
+  // v23.0-pre-p: نقرأ معلومات المشرف من pilgrim نفسه (محفوظة وقت التوقيع)
+  if(!supervisor && pilgrims[0]){
+    const p0 = pilgrims[0];
+    if(p0.bracelet_supervisor_name || p0.bracelet_supervisor_id_num){
+      supervisor = {
+        name:   p0.bracelet_supervisor_name,
+        id_num: p0.bracelet_supervisor_id_num,
+        id:     p0.bracelet_supervisor_user_id
+      };
+    }
+  }
+  // fallback للبيانات القديمة (قبل v23.0-pre-p)
+  if(!supervisor) supervisor = window._currentUser || {};
+  if((!supervisor.name || !supervisor.id_num) && pilgrims[0] && pilgrims[0].bus_num != null){
+    try {
+      const users = await window.DB.SysUsers.getAll();
+      const sup = users.find(u => u.role === 'supervisor' && String(u.group_num) === String(pilgrims[0].bus_num));
+      if(sup){ supervisor = Object.assign({}, sup, supervisor); }
+    } catch(_){}
+  }
+
+  const dev = window._devSettings || {};
+  const companyName = dev.companyName || '';
+  const license = dev.license || '';
+  const stamp = dev.stamp || '';
+  const logo  = dev.logo  || '';        // v22.7: شعار الشركة المرفوع (بدلاً من Kaaba fallback)
+  const repName = dev.rep_name || '';   // v22.5
+  const repSig  = dev.rep_sig  || '';   // v22.5
+  const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ar-SA-u-ca-islamic');
+  const timeDisplay = timeStr || now.toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit' });
+
+  const printDate = new Date().toLocaleDateString('ar-SA-u-ca-gregory', { year:'numeric', month:'2-digit', day:'2-digit' });
+  const printTime = new Date().toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit', hour12:true });
+
+  const supName  = supervisor.name || supervisor.username || '—';
+  const supIdNum = supervisor.id_num || '—';
+  const supBus   = supervisor.group_num || (pilgrims[0] && pilgrims[0].bus_num) || '—';
+
+  const rows = pilgrims.map((p,i) => `
+    <tr>
+      <td style="padding:4px;text-align:center;font-size:10px">${i+1}</td>
+      <td style="padding:4px;text-align:right;font-size:10px">${esc(p.name||'—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p.id_num||'—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p.booking_num||'—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.gender||'—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.city||'—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.bus_num||'—')}</td>
+    </tr>`).join('');
+
+  const w = window.open('', '_blank');
+  if(!w){ showToast('المتصفح حجب النافذة — فعّل النوافذ المنبثقة', 'warning'); return; }
+  w.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8">
+  <title>إقرار استلام أساور القطار — ${esc(String(ackId).substring(0,8))}</title>
+  <style>
+    @page{size:A4 portrait;margin:8mm 10mm}
+    @media print { body{margin:0;padding:0;max-width:none!important} .no-print{display:none} }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{font-family:Arial,sans-serif;direction:rtl;padding:20px;font-size:12px;color:#222;max-width:800px;margin:0 auto;background:#f5f5f5;min-height:100vh}
+    /* v22.8: responsive للشاشات الصغيرة */
+    @media screen and (max-width:820px){
+      body{padding:10px;font-size:11px}
+      .header{grid-template-columns:1fr!important;gap:8px;text-align:center}
+      .header>div:first-child,.header>div:last-child{display:none}
+      table.pilgrims{font-size:10px!important}
+      table.pilgrims th,table.pilgrims td{padding:4px 4px!important}
+      .sig-section{grid-template-columns:1fr!important;gap:14px!important}
+    }
+    .header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:3px solid #3d2000;padding-bottom:12px;margin-bottom:14px}
+    .co-name{font-size:15px;font-weight:bold;color:#3d2000}
+    .co-sub{font-size:11px;color:#555}
+    .doc-title{font-size:15px;font-weight:bold;color:#3d2000;margin-top:4px}
+    .info-box{background:#fffbf0;border:1px solid #e0d0b0;border-radius:8px;padding:10px 14px;margin-bottom:14px;line-height:1.9;font-size:12px}
+    table.pilgrims{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:11px}
+    table.pilgrims thead{background:#f5ead0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    table.pilgrims th{padding:6px 8px;text-align:center;border:1px solid #d5c098;font-weight:bold;color:#3d2000}
+    table.pilgrims td{padding:5px 8px;border:1px solid #e0d0b0;text-align:center}
+    table.pilgrims tbody tr:nth-child(even){background:#fffbf0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .pledge{background:#fff;border:1px solid #eee;border-radius:8px;padding:12px 14px;margin-bottom:14px;line-height:2;font-size:12px}
+    .pledge ol{margin:6px 20px 0 0;padding:0}
+    .pledge li{margin-bottom:4px}
+    .sig-section{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:16px;border-top:1px solid #eee;padding-top:14px}
+    .sig-box{text-align:center}
+    .sig-box label{font-size:12px;color:#666;display:block;margin-bottom:8px;font-weight:bold}
+    .sig-img{max-width:180px;max-height:80px;object-fit:contain;border:1px solid #ddd;border-radius:6px;background:#fafafa}
+    .stamp{max-width:90px;max-height:90px;object-fit:contain;display:block;margin:0 auto}
+    .sig-placeholder{width:180px;height:80px;border:1px dashed #ccc;border-radius:6px;margin:0 auto}
+    .footer{text-align:center;font-size:10px;color:#999;margin-top:14px;border-top:1px solid #f0f0f0;padding-top:8px}
+  </style></head><body>
+  <div class="header">
+    <div style="text-align:right">
+      <div class="co-name">${esc(companyName)}</div>
+      ${license?`<div class="co-sub">رقم الترخيص: ${esc(license)}</div>`:''}
+    </div>
+    <div style="text-align:center">
+      ${logo
+        ? `<img src="${esc(logo)}" alt="شعار" style="height:60px;max-width:150px;object-fit:contain;display:block;margin:0 auto 4px">`
+        : ''}
+      <div class="doc-title">إقرار استلام أساور القطار</div>
+    </div>
+    <div style="text-align:left;font-size:10px;color:#555;line-height:1.8;justify-self:end;direction:ltr">
+      <div style="white-space:nowrap">📅 <strong>التاريخ:</strong> ${printDate}</div>
+      <div style="white-space:nowrap">🕐 <strong>الوقت:</strong> ${printTime}</div>
+      <div style="white-space:nowrap">📄 <strong>الصفحات:</strong> 1 من 1</div>
+    </div>
+  </div>
+  <div class="info-box">
+    <strong>اسم المشرف:</strong> ${esc(supName)} &nbsp;|&nbsp;
+    <strong>🪪 رقم الهوية:</strong> <span style="direction:ltr">${esc(supIdNum)}</span><br>
+    <strong>🚌 الحافلة:</strong> ${esc(String(supBus))} &nbsp;|&nbsp;
+    <strong>عدد الأساور:</strong> ${pilgrims.length}<br>
+    <strong>📅 التاريخ:</strong> ${esc(dateStr)} &nbsp;|&nbsp;
+    <strong>🕒 الوقت:</strong> ${esc(timeDisplay)}<br>
+    <strong>معرّف الإقرار:</strong> <span style="direction:ltr;color:#888;font-size:10px">${esc(ackId)}</span>
+  </div>
+  <table class="pilgrims">
+    <thead>
+      <tr>
+        <th style="width:28px;padding:5px;background:#f5ead0;font-size:10px">#</th>
+        <th style="padding:5px;background:#f5ead0;font-size:10px;text-align:right">اسم الحاج</th>
+        <th style="width:90px;padding:5px;background:#f5ead0;font-size:10px">رقم الهوية</th>
+        <th style="width:75px;padding:5px;background:#f5ead0;font-size:10px">رقم الحجز</th>
+        <th style="width:45px;padding:5px;background:#f5ead0;font-size:10px">الجنس</th>
+        <th style="width:70px;padding:5px;background:#f5ead0;font-size:10px">المدينة</th>
+        <th style="width:50px;padding:5px;background:#f5ead0;font-size:10px">الحافلة</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="pledge">
+    أقر أنا المشرف المذكور أعلاه بأنني استلمت من <strong>${esc(companyName)}</strong> عدد <strong>${pilgrims.length}</strong> أسوارة القطار للحجاج المذكورة أسماؤهم أعلاه وأتعهد بما يلي:
+    <ol>
+      <li>المحافظة على الأساور وعدم تسليمها لأي شخص غير صاحبها.</li>
+      <li>التحقق من هوية كل حاج قبل التسليم وأخذ توقيعه على الإقرار الخاص به.</li>
+      <li>الالتزام بالتعليمات والإرشادات المتعلقة بتوزيع الأساور.</li>
+      <li>إبلاغ الحملة فوراً في حال فقدان أي أسوارة أو وجود أي مشكلة.</li>
+      <li>إعادة الأساور غير المُسلَّمة إلى الإدارة بعد انتهاء الرحلة.</li>
       <li>أتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.</li>
     </ol>
   </div>
