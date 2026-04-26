@@ -1117,11 +1117,126 @@ function openPilgrimAck(pilgrimId, pilgrim) {
   setTimeout(() => initAckCanvas('pilgrim-ack-canvas'), 100);
 }
 
+function openPilgrimBraceletAck(pilgrimId, pilgrim) {
+  const dev = window._devSettings || {};
+  const companyName = dev.companyName||'';
+  const license = dev.license || '';
+  const stamp = dev.stamp || '';
+  const repName = dev.rep_name || '';   // v22.5
+  const repSig  = dev.rep_sig  || '';   // v22.5
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ar-SA-u-ca-islamic');
+  const timeStr = now.toLocaleTimeString('ar-SA', {hour:'2-digit',minute:'2-digit'});
+  const name  = pilgrim['اسم الحاج']||'—';
+  const idNum = pilgrim['رقم الهوية']||'—';
+  const phone = pilgrim['رقم الجوال']||'—';
+
+  // v22.2: تصميم رسمي — شعار + ترخيص + 4 تعهّدات مرقّمة + ختم + التوقيع
+  openModal(`
+    <style>#modal-overlay .modal-box{max-width:560px}</style>
+    <div style="border-bottom:3px solid #3d2000;padding-bottom:12px;margin-bottom:14px;text-align:center">
+      <div style="margin-bottom:6px">${_buildPrintLogoHTML(55)}</div>
+      <div style="font-size:14px;font-weight:800;color:#3d2000">${_esc(companyName||'—')}</div>
+      ${license?`<div style="font-size:11px;color:#777;margin-top:2px">رقم الترخيص: ${_esc(license)}</div>`:''}
+      <div style="font-size:15px;font-weight:700;color:#7a4500;margin-top:10px">📋 تعهد استلام أسوارة القطار</div>
+    </div>
+
+    <div style="background:#fffbf0;border:1px solid #e0d5c5;border-radius:10px;padding:12px 14px;font-size:12px;line-height:2;color:#333;margin-bottom:12px;direction:rtl">
+      <strong>الحاج/ـة:</strong> ${_esc(name)}<br>
+      <strong>🪪 رقم الهوية/الإقامة:</strong> <span style="direction:ltr">${_esc(idNum)}</span><br>
+      <strong>📱 رقم الجوال:</strong> <span style="direction:ltr">${_esc(phone)}</span><br>
+      <strong>📅 التاريخ:</strong> ${_esc(dateStr)} &nbsp;•&nbsp; <strong>🕒 الوقت:</strong> ${_esc(timeStr)}
+    </div>
+
+    <div style="font-size:12px;color:#333;margin-bottom:10px;direction:rtl;line-height:1.9">
+      أقر أنا المذكور/ـة أعلاه بأنني استلمت أسوارة "القطار" الخاصة بي من <strong>${_esc(companyName||'الشركة')}</strong>، وأتعهد بما يلي:
+    </div>
+
+    <div style="background:#fff;border:1.5px solid #e0d5c5;border-radius:10px;padding:10px 14px;margin-bottom:10px;direction:rtl">
+      <div style="margin:0 0 8px;padding:6px 10px;background:#fffbf0;border:1px dashed #c8971a;border-radius:6px;display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="pilgrim-bracelet-ack-check-all" onchange="_toggleAllPilgrimBraceletAckPledges(this)" style="width:18px;height:18px;cursor:pointer;accent-color:#1a7a1a">
+        <label for="pilgrim-bracelet-ack-check-all" style="font-size:12px;color:#7a4500;font-weight:700;cursor:pointer">✅ تحديد الكل (جميع البنود)</label>
+      </div>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:12px;line-height:1.9;cursor:pointer">
+        <input type="checkbox" id="bracelet-ack1" style="margin-top:4px;width:16px;height:16px;accent-color:#1a7a1a;cursor:pointer">
+        <span><strong style="color:#7a4500">1.</strong> المحافظة على أسوارة القطار وعدم فقدانها أو إتلافها.</span>
+      </label>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:12px;line-height:1.9;cursor:pointer">
+        <input type="checkbox" id="bracelet-ack2" style="margin-top:4px;width:16px;height:16px;accent-color:#1a7a1a;cursor:pointer">
+        <span><strong style="color:#7a4500">2.</strong> إبراز الأسوارة عند الطلب في جميع مراحل التنقل وأداء المناسك.</span>
+      </label>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:6px;font-size:12px;line-height:1.9;cursor:pointer">
+        <input type="checkbox" id="bracelet-ack3" style="margin-top:4px;width:16px;height:16px;accent-color:#1a7a1a;cursor:pointer">
+        <span><strong style="color:#7a4500">3.</strong> الالتزام بالتعليمات والإرشادات المرتبطة باستخدام الأسوارة.</span>
+      </label>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-bottom:0;font-size:12px;line-height:1.9;cursor:pointer">
+        <input type="checkbox" id="bracelet-ack4" style="margin-top:4px;width:16px;height:16px;accent-color:#1a7a1a;cursor:pointer">
+        <span><strong style="color:#7a4500">4.</strong> إبلاغ الحملة فوراً في حال فقدان الأسوارة أو وجود أي مشكلة.</span>
+      </label>
+    </div>
+
+    <div style="font-size:11px;color:#666;direction:rtl;margin-bottom:12px;line-height:1.7;text-align:center;font-style:italic">
+      وأتحمل كامل المسؤولية في حال الإهمال أو إساءة الاستخدام.
+    </div>
+
+    ${(repName || repSig || stamp) ? `
+    <div style="text-align:center;padding:14px;border:1.5px dashed #c8971a;border-radius:10px;background:#fdfbf5;margin-bottom:14px">
+      <div style="font-size:12px;color:#888;margin-bottom:8px;font-weight:600">ممثل الشركة</div>
+      ${repName ? `<div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:10px">${_esc(repName)}</div>` : ''}
+      <div style="display:flex;gap:16px;justify-content:center;align-items:flex-start;flex-wrap:wrap">
+        ${repSig ? `<div style="text-align:center">
+          <img src="${_esc(repSig)}" alt="توقيع الممثل" style="max-width:120px;max-height:60px;object-fit:contain;border:1px solid #eee;border-radius:4px;background:#fff">
+          <div style="font-size:10px;color:#aaa;margin-top:4px">التوقيع</div>
+        </div>` : ''}
+        ${stamp ? `<div style="text-align:center">
+          <img src="${_esc(stamp)}" alt="الختم" style="max-width:70px;max-height:70px;object-fit:contain">
+          <div style="font-size:10px;color:#aaa;margin-top:4px">الختم</div>
+        </div>` : ''}
+      </div>
+    </div>
+    ` : ''}
+
+    <div style="font-size:13px;font-weight:700;color:#3d2000;margin-bottom:6px;direction:rtl">✍️ توقيع الحاج</div>
+    <div style="border:2px dashed #c8971a;border-radius:10px;overflow:hidden;background:#fafafa;margin-bottom:10px">
+      <canvas id="pilgrim-bracelet-ack-canvas" width="420" height="150" style="width:100%;display:block;touch-action:none;cursor:crosshair"></canvas>
+    </div>
+
+    <label style="display:flex;gap:8px;align-items:center;background:#fffbf0;border:1.5px solid #e0d5c5;border-radius:8px;padding:10px 12px;font-size:12px;color:#3d2000;margin-bottom:10px;direction:rtl;cursor:pointer">
+      <input type="checkbox" id="pilgrim-bracelet-ack-print" checked style="width:16px;height:16px;accent-color:#7a4500;cursor:pointer">
+      <span>🖨️ فتح صفحة طباعة للإقرار بعد الحفظ (يمكن حفظها كـ PDF)</span>
+    </label>
+
+    <!-- v23.0-pre-jjj: تخطيط محسّن للأزرار -->
+    <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+      <!-- السطر 1: زر التأكيد (عريض وبارز) -->
+      <button onclick="confirmPilgrimBraceletAck(${pilgrimId})"
+        style="width:100%;padding:14px;background:linear-gradient(135deg,#2e7d32,#1b5e20);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 3px 8px rgba(46,125,50,0.3);transition:all 0.2s">
+        ✅ تأكيد الاستلام
+      </button>
+
+      <!-- السطر 2: زر المسح + زر الإلغاء (نصف/نصف) -->
+      <div style="display:flex;gap:8px">
+        <button onclick="clearCanvas('pilgrim-bracelet-ack-canvas')"
+          style="flex:1;padding:11px;background:#f5f5f5;color:#555;border:1.5px solid #ddd;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s">
+          🗑️ مسح التوقيع
+        </button>
+        <button onclick="closeModals()"
+          style="flex:1;padding:11px;background:#fff;color:#c00;border:1.5px solid #c00;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s">
+          ❌ إلغاء
+        </button>
+      </div>
+    </div>
+  `);
+  setTimeout(() => initAckCanvas('pilgrim-bracelet-ack-canvas'), 100);
+}
+
 // v23.0-pre-ccc: تصدير openPilgrimAck للاستخدام من supervisor.js
 window.openPilgrimAck = openPilgrimAck;
+window.openPilgrimBraceletAck = openPilgrimBraceletAck;
 
 // إضافة دوال أخرى إن وُجدت (اختياري)
 if(typeof confirmPilgrimAck === 'function') window.confirmPilgrimAck = confirmPilgrimAck;
+if(typeof confirmPilgrimBraceletAck === 'function') window.confirmPilgrimBraceletAck = confirmPilgrimBraceletAck;
 
 // v23.0-pre-oo: تحديد/إلغاء كل بنود إقرار الحاج
 function _toggleAllPilgrimAckPledges(checkAllEl){
@@ -1134,6 +1249,18 @@ function _toggleAllPilgrimAckPledges(checkAllEl){
   });
 }
 window._toggleAllPilgrimAckPledges = _toggleAllPilgrimAckPledges;
+
+// v23.0-pre-oo: تحديد/إلغاء كل بنود إقرار الأسوارة
+function _toggleAllPilgrimBraceletAckPledges(checkAllEl){
+  const allChecked = checkAllEl.checked;
+  // ابحث عن كل checkboxes داخل نافذة الإقرار (ليس زر "تحديد الكل" نفسه)
+  const pledgeIds = ['bracelet-ack1', 'bracelet-ack2', 'bracelet-ack3', 'bracelet-ack4'];
+  pledgeIds.forEach(id => {
+    const cb = document.getElementById(id);
+    if(cb) cb.checked = allChecked;
+  });
+}
+window._toggleAllPilgrimBraceletAckPledges = _toggleAllPilgrimBraceletAckPledges;
 
 async function confirmPilgrimAck(pilgrimId) {
   const checks = ['ack1','ack2','ack3','ack4'];
@@ -1216,6 +1343,91 @@ async function confirmPilgrimAck(pilgrimId) {
     // v20.4: فتح صفحة الإقرار للطباعة/Save as PDF (اختياري، مُفعَّل افتراضياً)
     if(shouldPrint && typeof viewPilgrimAck === 'function'){
       setTimeout(() => viewPilgrimAck(pilgrimId), 200);
+    }
+  } catch(e) { showToast('خطأ: '+e.message, 'error'); }
+}
+
+async function confirmPilgrimBraceletAck(pilgrimId) {
+  const checks = ['bracelet-ack1','bracelet-ack2','bracelet-ack3','bracelet-ack4'];
+  const allChecked = checks.every(id => document.getElementById(id)?.checked);
+  if(!allChecked) { showToast('يرجى الموافقة على جميع البنود أولاً', 'warning'); return; }
+  const canvas = document.getElementById('pilgrim-bracelet-ack-canvas');
+  if(!canvas || isCanvasBlank(canvas)) { showToast('يرجى التوقيع أولاً', 'warning'); return; }
+  // v20.4: قراءة تفضيل الطباعة (مُفعَّل افتراضياً)
+  const shouldPrint = !!document.getElementById('pilgrim-bracelet-ack-print')?.checked;
+  const sig = canvas.toDataURL('image/png', 0.7);
+  const now = new Date().toLocaleString('ar-SA');
+
+  // v22.1: قفل التسليم الصارم — يجب استلام المشرف الأسوارة قبل تسليمها للحاج
+  const pilgrimRef = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
+  const pilgrimStatus = pilgrimRef?.['حالة أسوارة القطار'] || pilgrimRef?.bracelet_card_status || '';
+  if(pilgrimStatus === 'لدى الإدارة' && !_isSuperAdmin()){
+    showToast('🔒 يجب استلام الأسوارة من الإدارة (عبر المشرف) أولاً', 'error');
+    return;
+  }
+
+  // v20.1: snapshot قبل التحديث (لـ audit)
+  const r = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
+  const before = {
+    bracelet_card_status: r ? (r['حالة أسوارة القطار'] ?? null) : null,
+    bracelet_sig:         r ? (r['أسوارة_sig']      ?? null) : null,
+    bracelet_time:        r ? (r['أسوارة_time']     ?? null) : null
+  };
+  const updates = { bracelet_card_status: 'مسلّمة للحاج', bracelet_sig: sig, bracelet_time: now };
+
+  try {
+    await window.DB.Pilgrims.update(parseInt(pilgrimId), updates);
+    if(r) {
+      r['حالة أسوارة القطار'] = 'مسلّمة للحاج';
+      r['أسوارة_sig']        = sig;
+      r['أسوارة_time']       = now;
+    }
+
+    // v20.1: audit (sig مقنّع تلقائياً عبر _maskSensitiveInChanges في _recordAudit)
+    // v20.2: bypass_lock عند تجاوز superadmin لقفل 'مسلّمة للحاج' (إعادة توقيع)
+    // v22.1: bypass_no_supervisor_ack عند تجاوز superadmin لقفل التسليم قبل المشرف
+    const changes = _buildFieldChanges(before, updates);
+    if(changes){
+      const meta = { source: 'admin_bracelet_pilgrim_receive' };
+      if(_isSuperAdmin() && before.bracelet_sig && before.bracelet_card_status === 'مسلّمة للحاج'){
+        meta.bypass_lock = true;
+      }
+      if(_isSuperAdmin() && pilgrimStatus === 'لدى الإدارة') meta.bypass_no_supervisor_ack = true;
+      _recordAudit({
+        action_type:  'update',
+        entity_type:  'pilgrim',
+        entity_id:    String(pilgrimId),
+        entity_label: _buildPilgrimLabel(r),
+        field_changes: changes,
+        metadata: meta
+      });
+    }
+
+    showToast('تم تسجيل استلام الحاج للأسوارة', 'success');
+    closeModals(); render();
+
+    // v23.0-pre-hhh: تحديث بوابة المشرف + نافذة القائمة بعد التوقيع
+    setTimeout(() => {
+      // 1. تحديث بيانات المشرف إن كان مسجّلاً دخولاً
+      if(window._currentUser?.role === 'supervisor'){
+        if(typeof loadSupervisorPanel === 'function'){
+          console.log('[pilgrim-ack] Refreshing supervisor panel after bracelet signature');
+          loadSupervisorPanel(window._currentUser);
+        }
+      }
+
+      // 2. إعادة رسم أي قائمة مفتوحة (modal handover list)
+      if(typeof window.refreshNusukHandoverList === 'function'){
+        window.refreshNusukHandoverList();
+      }
+      if(typeof window.refreshBraceletHandoverList === 'function'){
+        window.refreshBraceletHandoverList();
+      }
+    }, 500);
+
+    // v20.4: فتح صفحة الإقرار للطباعة/Save as PDF (اختياري، مُفعَّل افتراضياً)
+    if(shouldPrint && typeof viewPilgrimBraceletAck === 'function'){
+      setTimeout(() => viewPilgrimBraceletAck(pilgrimId), 200);
     }
   } catch(e) { showToast('خطأ: '+e.message, 'error'); }
 }

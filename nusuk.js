@@ -988,6 +988,13 @@ async function quickNusukUpdate(pilgrimId, status, selectEl) {
     return;
   }
 
+  // v23.2.3: حظر التحديد اليدوي للحالات التي تتطلّب توقيع
+  if (status === 'لدى المشرف' || status === 'مسلّمة للحاج') {
+    if (selectEl) selectEl.value = currentStatus;
+    showToast('⚠️ هذه الحالة تتطلّب توقيع - تتم عبر بوابة المشرف فقط', 'warning');
+    return;
+  }
+
   if(status==='لدى المشرف'||status==='مسلّمة للحاج') {
     // v23.0-pre-aa: حفظ الحالة الأصلية ليرجع إليها select إذا ألغى المستخدم
     if(selectEl){

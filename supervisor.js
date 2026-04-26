@@ -1005,7 +1005,51 @@ function openSigModal(pilgrimId, type) {
     console.warn('[openSigModal] openPilgrimAck not available or pilgrim not found, using fallback');
   }
 
-  // ... باقي الكود القديم للأسوارة وغيرها
+  // v23.2.4: تسليم أسوارة القطار - تحويل بيانات الحاج من صيغة إنجليزية إلى عربية ثم استدعاء openPilgrimBraceletAck
+  if(type === 'bracelet' || type === 'أسوارة القطار'){
+    // ابحث في _supPilgrims (قائمة المشرف)
+    const supPilgrim = (window._supPilgrims || []).find(p =>
+      String(p.id) === String(pilgrimId)
+    );
+
+    // أو في ALL_DATA (إن كانت متاحة)
+    const adminPilgrim = (typeof ALL_DATA !== 'undefined' ? ALL_DATA : []).find(p =>
+      String(p['_supabase_id']) === String(pilgrimId)
+    );
+
+    // استخدم adminPilgrim إن وُجد (بالصيغة العربية جاهزة)
+    // أو حوّل supPilgrim إلى صيغة عربية
+    let pilgrim = adminPilgrim;
+
+    if(!pilgrim && supPilgrim){
+      // تحويل الصيغة الإنجليزية إلى عربية لتوافق openPilgrimBraceletAck
+      pilgrim = {
+        '_supabase_id': supPilgrim.id,
+        'اسم الحاج': supPilgrim.name || '—',
+        'رقم الهوية': supPilgrim.id_num || '—',
+        'رقم الجوال': supPilgrim.phone || '',
+        'رقم الحافلة الخاصة بك': supPilgrim.bus_num || supPilgrim.group_num || '',
+        'حالة أسوارة القطار': supPilgrim.bracelet_card_status || 'لدى المشرف',
+        'أسوارة_time': supPilgrim.bracelet_time || '',
+        'أسوارة_sig': supPilgrim.bracelet_sig || null,
+        'رقم الحجز': supPilgrim.booking_num || '',
+        'الجنسية': supPilgrim.nationality || '',
+        'الجنس': supPilgrim.gender || '',
+        'المدينة': supPilgrim.city || ''
+      };
+    }
+
+    if(pilgrim && typeof window.openPilgrimBraceletAck === 'function'){
+      console.log('[openSigModal] استخدام openPilgrimBraceletAck لإقرار الأسوارة');
+      window.openPilgrimBraceletAck(pilgrimId, pilgrim);
+      return;
+    }
+
+    // fallback: لم توجد الدالة أو الحاج
+    console.warn('[openSigModal] openPilgrimBraceletAck not available or pilgrim not found, using fallback');
+  }
+
+  // ... باقي الكود القديم للحالات الأخرى
   const titles = { nusuk:'🪪 تسليم بطاقة نسك', bracelet:'🚆 تسليم أسوارة القطار' };
   document.getElementById('sig-modal-title').textContent = titles[type]||'';
   document.getElementById('sig-pilgrim-name').textContent = (p?.name||'—') + ' — ' + (p?.id_num||'—');

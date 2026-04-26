@@ -1024,33 +1024,13 @@ async function quickBraceletUpdate(pilgrimId, status, selectEl) {
     return;
   }
 
-  if(status==='لدى المشرف'||status==='مسلّمة للحاج') {
-    // v23.0-pre-aa: حفظ الحالة الأصلية ليرجع إليها select إذا ألغى المستخدم
-    if(selectEl){
-      selectEl._originalStatus = currentStatus;
-      // مراقبة: إذا خرج المستخدم بدون تحديث DB، أرجع القيمة
-      const rollbackOnCancel = () => {
-        setTimeout(() => {
-          // تحقّق من الحالة الفعلية في ALL_DATA
-          const fresh = ALL_DATA.find(x=>String(x['_supabase_id'])===String(pilgrimId));
-          const actualStatus = (fresh && fresh['حالة أسوارة القطار']) || currentStatus;
-          if(selectEl && selectEl.value !== actualStatus){
-            selectEl.value = actualStatus;
-          }
-        }, 300);
-      };
-
-      // استخدام closeModals hook
-      window._onModalClose = rollbackOnCancel;
-      // auto-cleanup بعد 5 دقائق
-      setTimeout(() => {
-        if(window._onModalClose === rollbackOnCancel) window._onModalClose = null;
-      }, 300000);
-    }
-
-    if(status==='لدى المشرف') { openSupAck(pilgrimId, pilgrim); return; }
-    if(status==='مسلّمة للحاج') { openPilgrimAck(pilgrimId, pilgrim); return; }
+  // v23.2.2: حظر التحديد اليدوي للحالات التي تتطلّب توقيع
+  if (status === 'لدى المشرف' || status === 'مسلّمة للحاج') {
+    if (selectEl) selectEl.value = currentStatus;
+    showToast('⚠️ هذه الحالة تتطلّب توقيع - تتم عبر بوابة المشرف فقط', 'warning');
+    return;
   }
+
   try {
     await window.DB.Pilgrims.update(parseInt(pilgrimId), { bracelet_card_status: status });
     const r = ALL_DATA.find(p=>String(p['_supabase_id'])===String(pilgrimId));
