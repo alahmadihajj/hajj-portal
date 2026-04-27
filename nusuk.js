@@ -824,15 +824,26 @@ function toggleAllNusuk(cb) {
 }
 
 function updateNusukBulkBar() {
-  const checks = document.querySelectorAll('.nusuk-row-check:checked');
+  // إصلاح العدّ المضاعف — عدّ الحجاج الفريدين بدل checkboxes
+  const checkedIds = [...new Set(
+    Array.from(document.querySelectorAll('.nusuk-row-check:checked'))
+      .map(c => c.dataset.id)
+      .filter(Boolean)
+  )];
+  const totalIds = [...new Set(
+    Array.from(document.querySelectorAll('.nusuk-row-check'))
+      .map(c => c.dataset.id)
+      .filter(Boolean)
+  )];
+
   const bar = document.getElementById('nusuk-bulk-bar');
   const count = document.getElementById('nusuk-selected-count');
   const all = document.getElementById('nusuk-check-all');
-  const total = document.querySelectorAll('.nusuk-row-check').length;
-  if(bar) bar.style.display = checks.length ? 'flex' : 'none';
-  if(count) count.textContent = `تم تحديد ${checks.length} حاج`;
-  if(all) all.indeterminate = checks.length > 0 && checks.length < total;
-  if(all) all.checked = checks.length === total && total > 0;
+
+  if(bar) bar.style.display = checkedIds.length ? 'flex' : 'none';
+  if(count) count.textContent = `تم تحديد ${checkedIds.length} حاج`;
+  if(all) all.indeterminate = checkedIds.length > 0 && checkedIds.length < totalIds.length;
+  if(all) all.checked = checkedIds.length === totalIds.length && totalIds.length > 0;
 }
 
 function clearNusukSelection() {
@@ -846,8 +857,13 @@ async function applyBulkNusuk() {
   const status = document.getElementById('nusuk-bulk-status').value;
   if(!status) { showToast('اختر الحالة الجديدة أولاً', 'warning'); return; }
 
-  // v23.0-pre-mm: تأكيد قبل التحديث الجماعي
-  const checkedCount = document.querySelectorAll('.nusuk-row-check:checked').length;
+  // v23.0-pre-mm: تأكيد قبل التحديث الجماعي — إصلاح العدّ المضاعف
+  const checkedIds = [...new Set(
+    Array.from(document.querySelectorAll('.nusuk-row-check:checked'))
+      .map(c => c.dataset.id)
+      .filter(Boolean)
+  )];
+  const checkedCount = checkedIds.length;
   if(checkedCount === 0){
     showToast('⚠️ لم يتم تحديد أي حاج', 'warning');
     return;
@@ -866,7 +882,7 @@ async function applyBulkNusuk() {
     return;
   }
 
-  const allIds = [...document.querySelectorAll('.nusuk-row-check:checked')].map(c=>c.dataset.id);
+  const allIds = checkedIds;
   if(!allIds.length) return;
 
   // v20.2: فلترة المقفولة (superadmin يتجاوز)

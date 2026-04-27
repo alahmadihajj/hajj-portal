@@ -1785,7 +1785,7 @@ tbody tr[data-rel="1"]:hover td{background:#e8e8e8}
     flex:1;min-width:0;
   }
   .bracelet-card-actions > button[onclick*="viewPilgrimAck"],
-  .bracelet-card-actions > button[onclick*="openSupervisorAckFor"]{
+  .bracelet-card-actions > button[onclick*="openBraceletSupervisorAckFor"]{
     flex:0 0 auto;
   }
 
@@ -4258,6 +4258,9 @@ async function loadData() {
         'نسك_supervisor_sig': p.nusuk_supervisor_sig||'',
         'نسك_supervisor_time': p.nusuk_supervisor_time||'',
         'نسك_supervisor_ack_id': p.nusuk_supervisor_ack_id||'',
+        'نسك_supervisor_name': p.nusuk_supervisor_name||'',
+        'نسك_supervisor_id_num': p.nusuk_supervisor_id_num||'',
+        'نسك_supervisor_user_id': p.nusuk_supervisor_user_id||'',
         // v23.1-pre-h: حقول أسوارة القطار
         'حالة أسوارة القطار': p.bracelet_card_status||'لم تُطلب',
         'أسوارة_sig': p.bracelet_sig||'',
@@ -4265,6 +4268,9 @@ async function loadData() {
         'أسوارة_supervisor_sig': p.bracelet_supervisor_sig||'',
         'أسوارة_supervisor_time': p.bracelet_supervisor_time||'',
         'أسوارة_supervisor_ack_id': p.bracelet_supervisor_ack_id||'',
+        'أسوارة_supervisor_name': p.bracelet_supervisor_name||'',
+        'أسوارة_supervisor_id_num': p.bracelet_supervisor_id_num||'',
+        'أسوارة_supervisor_user_id': p.bracelet_supervisor_user_id||'',
         'حالة الإركاب': p.bus_status,
         'موقع الجلوس في منى': p.mina_seat,
         'موقع الجلوس في عرفات': p.arafat_seat,

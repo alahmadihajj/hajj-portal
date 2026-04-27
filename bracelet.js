@@ -248,21 +248,21 @@ function _canReopenBracelet(){
   return r === 'admin' || r === 'superadmin';
 }
 // v22.1: قفل التسليم — هل استلم المشرف الأسوارة من الإدارة؟
-function _hasSupervisorAck(pilgrim){
+function _hasBraceletSupervisorAck(pilgrim){
   if(!pilgrim) return false;
   return !!(pilgrim['أسوارة_supervisor_sig'] || pilgrim.bracelet_supervisor_sig);
 }
 
-function openSupervisorAckFor(pilgrimSupabaseId) {
+function openBraceletSupervisorAckFor(pilgrimSupabaseId) {
   const p = ALL_DATA.find(x => String(x['_supabase_id']) === String(pilgrimSupabaseId));
-  if (!p || !_hasSupervisorAck(p)) {
+  if (!p || !_hasBraceletSupervisorAck(p)) {
     return showToast('لا يوجد إقرار مشرف موقّع', 'warning');
   }
   const ackId = p['أسوارة_supervisor_ack_id'];
   if (!ackId) {
     return showToast('معرّف الإقرار غير متوفر', 'warning');
   }
-  openBulkAckReceipt({ ackId });
+  openBulkBraceletAckReceipt({ ackId });
 }
 
 function initBraceletBusFilter() {
@@ -601,7 +601,7 @@ function renderBraceletTable(filter) {
             ? `<button onclick="openBraceletReopenModal('${p['_supabase_id']}')" title="إعادة فتح الأسوارة" style="${BRACELET_BTN_STYLE};background:#c07000">🔓</button>`
             : '';
           const btnSupAck = hasSupAck
-            ? `<button onclick="openSupervisorAckFor('${p['_supabase_id']}')" title="إقرار استلام المشرف" style="${BRACELET_BTN_STYLE};background:#6b4a28">📋</button>`
+            ? `<button onclick="openBraceletSupervisorAckFor('${p['_supabase_id']}')" title="إقرار استلام المشرف" style="${BRACELET_BTN_STYLE};background:#6b4a28">📋</button>`
             : '';
 
           const anyButton = btnSupAck + btnView + btnReopen;
@@ -653,7 +653,7 @@ function _renderBraceletMobileCards(list){
       ? `<button onclick="openBraceletReopenModal('${pid}')" style="background:#c07000;color:#fff" title="إعادة فتح">🔓</button>`
       : '';
     const btnSupAck = hasSupAck
-      ? `<button onclick="openSupervisorAckFor('${pid}')" style="background:#6b4a28;color:#fff" title="إقرار المشرف">📋</button>`
+      ? `<button onclick="openBraceletSupervisorAckFor('${pid}')" style="background:#6b4a28;color:#fff" title="إقرار المشرف">📋</button>`
       : '';
     const anyButton = btnSupAck + btnView + btnReopen;
 
@@ -819,24 +819,35 @@ function viewPilgrimBraceletAck(pilgrimId) {
 // ===== v11.5 Phase 2/5 openSupBulkAck extracted → supervisor.js =====
 
 function toggleAllBracelet(cb) {
-  document.querySelectorAll('#bracelet-tbody .bracelet-row-check:not([disabled])').forEach(c => c.checked = cb.checked);
+  document.querySelectorAll('.bracelet-row-check:not([disabled])').forEach(c => c.checked = cb.checked);
   updateBraceletBulkBar();
 }
 
 function updateBraceletBulkBar() {
-  const checks = document.querySelectorAll('#bracelet-tbody .bracelet-row-check:checked');
+  // توسيع لشمول البطاقات المحمولة + Set للحجاج الفريدين
+  const checkedIds = [...new Set(
+    Array.from(document.querySelectorAll('.bracelet-row-check:checked'))
+      .map(c => c.dataset.id)
+      .filter(Boolean)
+  )];
+  const totalIds = [...new Set(
+    Array.from(document.querySelectorAll('.bracelet-row-check'))
+      .map(c => c.dataset.id)
+      .filter(Boolean)
+  )];
+
   const bar = document.getElementById('bracelet-bulk-bar');
   const count = document.getElementById('bracelet-selected-count');
   const all = document.getElementById('bracelet-check-all');
-  const total = document.querySelectorAll('#bracelet-tbody .bracelet-row-check').length;
-  if(bar) bar.style.display = checks.length ? 'flex' : 'none';
-  if(count) count.textContent = `تم تحديد ${checks.length} حاج`;
-  if(all) all.indeterminate = checks.length > 0 && checks.length < total;
-  if(all) all.checked = checks.length === total && total > 0;
+
+  if(bar) bar.style.display = checkedIds.length ? 'flex' : 'none';
+  if(count) count.textContent = `تم تحديد ${checkedIds.length} حاج`;
+  if(all) all.indeterminate = checkedIds.length > 0 && checkedIds.length < totalIds.length;
+  if(all) all.checked = checkedIds.length === totalIds.length && totalIds.length > 0;
 }
 
 function clearBraceletSelection() {
-  document.querySelectorAll('#bracelet-tbody .bracelet-row-check').forEach(c => c.checked = false);
+  document.querySelectorAll('.bracelet-row-check').forEach(c => c.checked = false);
   const all = document.getElementById('bracelet-check-all');
   if(all) { all.checked = false; all.indeterminate = false; }
   updateBraceletBulkBar();
@@ -846,9 +857,14 @@ async function applyBulkBracelet() {
   const status = document.getElementById('bracelet-bulk-status').value;
   if(!status) { showToast('اختر الحالة الجديدة أولاً', 'warning'); return; }
 
-  // جلب جميع الـ IDs المحدَّدة
-  let allIds = [...document.querySelectorAll('#bracelet-tbody .bracelet-row-check:checked')].map(c=>c.dataset.id);
-  const checkedCount = allIds.length;
+  // جلب جميع الـ IDs المحدَّدة — توسيع لشمول البطاقات المحمولة + Set للحجاج الفريدين
+  const checkedIds = [...new Set(
+    Array.from(document.querySelectorAll('.bracelet-row-check:checked'))
+      .map(c => c.dataset.id)
+      .filter(Boolean)
+  )];
+  let allIds = checkedIds;
+  const checkedCount = checkedIds.length;
   if(checkedCount === 0){
     showToast('⚠️ لم يتم تحديد أي حاج', 'warning');
     return;
@@ -1251,7 +1267,7 @@ window.initBraceletBusFilter = initBraceletBusFilter;
 window.refreshBraceletData = refreshBraceletData;
 window.updateBraceletBulkBar = updateBraceletBulkBar;
 window.quickBraceletUpdate = quickBraceletUpdate;
-window.openSupervisorAckFor = openSupervisorAckFor;
+window.openBraceletSupervisorAckFor = openBraceletSupervisorAckFor;
 window.viewPilgrimBraceletAck = viewPilgrimBraceletAck;
 window.openBraceletReopenModal = openBraceletReopenModal;
 

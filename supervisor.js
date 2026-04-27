@@ -1897,27 +1897,29 @@ async function openBulkAckReceipt(opts){
   // جلب من DB إذا البيانات غير مُمرَّرة (عرض تاريخي)
   if(!pilgrims || !pilgrims.length){
     try {
-      const all = await window.DB.Pilgrims.getAll();
-      pilgrims = all.filter(p => String(p.nusuk_supervisor_ack_id||'') === String(ackId));
+      const all = (typeof ALL_DATA !== 'undefined' && ALL_DATA.length > 0)
+        ? ALL_DATA
+        : await window.DB.Pilgrims.getAll();
+      pilgrims = all.filter(p => String(p['نسك_supervisor_ack_id'] || p.nusuk_supervisor_ack_id || '') === String(ackId));
     } catch(e){ showToast('فشل جلب البيانات: '+(e.message||''), 'error'); return; }
     if(!pilgrims.length){ showToast('لا يوجد حجاج بهذا الإقرار', 'warning'); return; }
-    sigUrl  = sigUrl  || pilgrims[0].nusuk_supervisor_sig  || '';
-    timeStr = timeStr || pilgrims[0].nusuk_supervisor_time || '';
+    sigUrl  = sigUrl  || pilgrims[0]['نسك_supervisor_sig'] || pilgrims[0].nusuk_supervisor_sig || '';
+    timeStr = timeStr || pilgrims[0]['نسك_supervisor_time'] || pilgrims[0].nusuk_supervisor_time || '';
   }
 
   // v23.0-pre-p: نقرأ معلومات المشرف من pilgrim نفسه (محفوظة وقت التوقيع)
   if(!supervisor && pilgrims[0]){
     const p0 = pilgrims[0];
-    if(p0.nusuk_supervisor_name || p0.nusuk_supervisor_id_num){
+    if(p0['نسك_supervisor_name'] || p0.nusuk_supervisor_name || p0['نسك_supervisor_id_num'] || p0.nusuk_supervisor_id_num){
       supervisor = {
-        name:   p0.nusuk_supervisor_name,
-        id_num: p0.nusuk_supervisor_id_num,
-        id:     p0.nusuk_supervisor_user_id
+        name:   p0['نسك_supervisor_name'] || p0.nusuk_supervisor_name,
+        id_num: p0['نسك_supervisor_id_num'] || p0.nusuk_supervisor_id_num,
+        id:     p0['نسك_supervisor_user_id'] || p0.nusuk_supervisor_user_id
       };
     }
   }
-  // fallback للبيانات القديمة (قبل v23.0-pre-p)
-  if(!supervisor) supervisor = window._currentUser || {};
+  // fallback للبيانات القديمة (قبل v23.0-pre-p) — إصلاح: لا نستخدم _currentUser
+  if(!supervisor) supervisor = {};
   if((!supervisor.name || !supervisor.id_num) && pilgrims[0] && pilgrims[0].bus_num != null){
     try {
       const users = await window.DB.SysUsers.getAll();
@@ -1949,12 +1951,12 @@ async function openBulkAckReceipt(opts){
   const rows = pilgrims.map((p,i) => `
     <tr>
       <td style="padding:4px;text-align:center;font-size:10px">${i+1}</td>
-      <td style="padding:4px;text-align:right;font-size:10px">${esc(p.name||'—')}</td>
-      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p.id_num||'—')}</td>
-      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p.booking_num||'—')}</td>
-      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.gender||'—')}</td>
-      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.city||'—')}</td>
-      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.bus_num||'—')}</td>
+      <td style="padding:4px;text-align:right;font-size:10px">${esc(p['اسم الحاج'] || p.name || '—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p['رقم الهوية'] || p.id_num || '—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p['رقم الحجز'] || p.booking_num || '—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p['الجنس'] || p.gender || '—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p['المدينة'] || p.city || '—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p['رقم الحافلة الخاصة بك'] || p.bus_num || '—')}</td>
     </tr>`).join('');
 
   const w = window.open('', '_blank');
@@ -2097,27 +2099,29 @@ async function openBulkBraceletAckReceipt(opts){
   // جلب من DB إذا البيانات غير مُمرَّرة (عرض تاريخي)
   if(!pilgrims || !pilgrims.length){
     try {
-      const all = await window.DB.Pilgrims.getAll();
-      pilgrims = all.filter(p => String(p.bracelet_supervisor_ack_id||'') === String(ackId));
+      const all = (typeof ALL_DATA !== 'undefined' && ALL_DATA.length > 0)
+        ? ALL_DATA
+        : await window.DB.Pilgrims.getAll();
+      pilgrims = all.filter(p => String(p['أسوارة_supervisor_ack_id'] || p.bracelet_supervisor_ack_id || '') === String(ackId));
     } catch(e){ showToast('فشل جلب البيانات: '+(e.message||''), 'error'); return; }
     if(!pilgrims.length){ showToast('لا يوجد حجاج بهذا الإقرار', 'warning'); return; }
-    sigUrl  = sigUrl  || pilgrims[0].bracelet_supervisor_sig  || '';
-    timeStr = timeStr || pilgrims[0].bracelet_supervisor_time || '';
+    sigUrl  = sigUrl  || pilgrims[0]['أسوارة_supervisor_sig'] || pilgrims[0].bracelet_supervisor_sig || '';
+    timeStr = timeStr || pilgrims[0]['أسوارة_supervisor_time'] || pilgrims[0].bracelet_supervisor_time || '';
   }
 
   // v23.0-pre-p: نقرأ معلومات المشرف من pilgrim نفسه (محفوظة وقت التوقيع)
   if(!supervisor && pilgrims[0]){
     const p0 = pilgrims[0];
-    if(p0.bracelet_supervisor_name || p0.bracelet_supervisor_id_num){
+    if(p0['أسوارة_supervisor_name'] || p0.bracelet_supervisor_name || p0['أسوارة_supervisor_id_num'] || p0.bracelet_supervisor_id_num){
       supervisor = {
-        name:   p0.bracelet_supervisor_name,
-        id_num: p0.bracelet_supervisor_id_num,
-        id:     p0.bracelet_supervisor_user_id
+        name:   p0['أسوارة_supervisor_name'] || p0.bracelet_supervisor_name,
+        id_num: p0['أسوارة_supervisor_id_num'] || p0.bracelet_supervisor_id_num,
+        id:     p0['أسوارة_supervisor_user_id'] || p0.bracelet_supervisor_user_id
       };
     }
   }
-  // fallback للبيانات القديمة (قبل v23.0-pre-p)
-  if(!supervisor) supervisor = window._currentUser || {};
+  // fallback للبيانات القديمة (قبل v23.0-pre-p) — إصلاح: لا نستخدم _currentUser
+  if(!supervisor) supervisor = {};
   if((!supervisor.name || !supervisor.id_num) && pilgrims[0] && pilgrims[0].bus_num != null){
     try {
       const users = await window.DB.SysUsers.getAll();
@@ -2149,12 +2153,12 @@ async function openBulkBraceletAckReceipt(opts){
   const rows = pilgrims.map((p,i) => `
     <tr>
       <td style="padding:4px;text-align:center;font-size:10px">${i+1}</td>
-      <td style="padding:4px;text-align:right;font-size:10px">${esc(p.name||'—')}</td>
-      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p.id_num||'—')}</td>
-      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p.booking_num||'—')}</td>
-      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.gender||'—')}</td>
-      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.city||'—')}</td>
-      <td style="padding:4px;text-align:center;font-size:10px">${esc(p.bus_num||'—')}</td>
+      <td style="padding:4px;text-align:right;font-size:10px">${esc(p['اسم الحاج'] || p.name || '—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p['رقم الهوية'] || p.id_num || '—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px;direction:ltr">${esc(p['رقم الحجز'] || p.booking_num || '—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p['الجنس'] || p.gender || '—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p['المدينة'] || p.city || '—')}</td>
+      <td style="padding:4px;text-align:center;font-size:10px">${esc(p['رقم الحافلة الخاصة بك'] || p.bus_num || '—')}</td>
     </tr>`).join('');
 
   const w = window.open('', '_blank');
